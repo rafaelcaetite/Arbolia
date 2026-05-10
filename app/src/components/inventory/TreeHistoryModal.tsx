@@ -1,9 +1,34 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 
 // ── Visualizador de Anexos ──────────────────────────────────────────────────
 function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachment; onClose: () => void }) {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (attachment.type === 'pdf' && attachment.dataUrl.startsWith('data:')) {
+      try {
+        const base64 = attachment.dataUrl.split(',')[1];
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        return () => URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Erro ao converter PDF para Blob:', e);
+        setPdfUrl(attachment.dataUrl);
+      }
+    } else {
+      setPdfUrl(attachment.dataUrl);
+    }
+  }, [attachment]);
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
@@ -17,7 +42,7 @@ function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachme
           {attachment.type === 'image' ? (
             <img src={attachment.dataUrl} alt={attachment.name} className="max-w-full max-h-full rounded-xl object-contain" />
           ) : (
-            <iframe src={attachment.dataUrl} title={attachment.name} className="w-full h-[60vh] rounded-xl border border-slate-200" />
+            <iframe src={pdfUrl || ''} title={attachment.name} className="w-full h-[60vh] rounded-xl border border-slate-200" />
           )}
         </div>
       </div>

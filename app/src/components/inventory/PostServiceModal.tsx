@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { X, Calendar, Clock, CheckCircle2, AlertTriangle, ChevronRight, Trees } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle2, AlertTriangle, ChevronRight, Trees, FileText } from 'lucide-react';
 
 // ── Motivos de supressão pré-definidos ────────────────────────────────────────
 const MOTIVOS_SUPRESSAO = [
@@ -18,6 +18,7 @@ export function PostServiceModal() {
     isPostServiceModalOpen, activePostServiceId,
     closePostServiceModal, services, trees,
     completeService, deactivateTrees,
+    openLaudoModal
   } = useAppStore();
 
   // ── Estado fluxo normal ────────────────────────────────────────────────────
@@ -34,6 +35,8 @@ export function PostServiceModal() {
 
   const service = services.find(s => s.id === activePostServiceId);
   const isSupressao = service?.tipo === 'Supressão';
+  const isAvaliacao = service?.tipo === 'Avaliação';
+  const laudoGerado = service?.laudoGerado ?? false;
 
   const validadeDateStr = useMemo(() => {
     if (!cicloMeses) return null;
@@ -51,10 +54,20 @@ export function PostServiceModal() {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleNormalFinish = () => {
+    // Para avaliações, a frequência de inspeção já foi calculada pelo ISA e o serviço principal concluído
     const finalReavaliacao = needsReavaliacao && reavaliacaoData
       ? `${reavaliacaoData}${reavaliacaoHora ? `T${reavaliacaoHora}` : ''}`
       : undefined;
-    completeService(service.id, finalReavaliacao, validadeDateStr || undefined);
+      
+    // Se for avaliação e tiver um laudo, usar a data de reavaliação sugerida pelo laudo como validade
+    let finalValidade = validadeDateStr;
+    if (isAvaliacao && service?.laudoData) {
+      const dataLaudo = new Date(service.laudoData.dataLaudo);
+      dataLaudo.setMonth(dataLaudo.getMonth() + service.laudoData.resultado.metadataGeral.frequenciaMeses);
+      finalValidade = dataLaudo.toISOString().split('T')[0];
+    }
+    
+    completeService(service.id, finalReavaliacao, finalValidade || undefined);
     handleClose();
   };
 
@@ -323,14 +336,39 @@ export function PostServiceModal() {
           </div>
 
           <div className="p-6 border-t border-slate-100 bg-white">
-            <button onClick={handleNormalFinish}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all active:scale-[0.98] shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2">
-              <CheckCircle2 size={18} /> Finalizar e Agendar Retorno
-            </button>
-            <button onClick={() => { completeService(service.id); handleClose(); }}
-              className="w-full mt-2 bg-white hover:bg-slate-50 text-slate-500 font-bold py-3 px-4 rounded-xl transition-colors text-xs">
-              Pular e apenas concluir
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {isAvaliacao && !laudoGerado && (
+                <button
+                  onClick={() => openLaudoModal(service.id)}
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 px-5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <FileText size={18} /> Gerar Relatório
+                </button>
+              )}
+              <button onClick={handleNormalFinish}
+                disabled={isAvaliacao && !laudoGerado}
+                className={`flex-1 font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${
+                  isAvaliacao && !laudoGerado
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white active:scale-[0.98] shadow-md shadow-emerald-500/20'
+                }`}>
+                <CheckCircle2 size={18} /> Finalizar e Agendar Retorno
+              </button>
+            </div>
+            
+            {(!isAvaliacao || laudoGerado) && (
+              <button onClick={() => { completeService(service.id); handleClose(); }}
+                className="w-full mt-2 bg-white hover:bg-slate-50 text-slate-500 font-bold py-3 px-4 rounded-xl transition-colors text-xs">
+                Pular e apenas concluir
+              </button>
+            )}
+            
+            {isAvaliacao && !laudoGerado && (
+              <button onClick={handleClose}
+                className="w-full mt-2 bg-white hover:bg-slate-50 text-slate-500 font-bold py-3 px-4 rounded-xl transition-colors text-xs">
+                Cancelar
+              </button>
+            )}
           </div>
         </>
         )}

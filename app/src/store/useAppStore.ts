@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { Limitante, ResultadoISA, EntradaRisco } from '../lib/isaRiskEngine'
 
 export interface Client {
   id: string
@@ -9,6 +10,12 @@ export interface Client {
   endereco?: string
   data_cadastro: string
   status: 'ativo' | 'inativo'
+}
+
+// Dados do técnico responsável (usados no rodapé do PDF com peso legal)
+export interface TecnicoInfo {
+  nome: string
+  registro_crea: string  // Ex: 'MG-123456'
 }
 
 export interface MapBounds {
@@ -40,6 +47,33 @@ export interface ServiceAttachment {
   size: number      // bytes
 }
 
+// Dados completos do laudo ISA — persistidos no serviço para rebuild do PDF
+export interface ISALaudoData {
+  // Etapa 1 e 3: Tabela de alvos cruzada com avaliação de risco
+  entradasRisco: EntradaRisco[]
+  descricaoLocal: string
+  // Etapa 2
+  defeitos: string[]
+  // Etapa 4
+  limitantes: Limitante[]
+  // Etapa 4
+  mitigacoesSelecionadas: string[]  // ids das OpcaoMitigacao
+  parecer: 'final' | 'preliminar'
+  avaliacaoAvancada: boolean
+  observacoes: string
+  // Resultado calculado (salvo para não recalcular ao exibir histórico)
+  resultado: ResultadoISA
+  // Metadados do técnico (capturados no momento da geração — imutabilidade legal)
+  tecnicoNome: string
+  tecnicoCrea: string
+  dataLaudo: string  // ISO string
+  // Interpretação por IA (Opcional)
+  aiResumo?: {
+    resumo_estado_geral: string
+    explicacao_mitigacao: string
+  }
+}
+
 export interface Service {
   id: string
   treeIds: string[]
@@ -52,6 +86,16 @@ export interface Service {
   status: 'concluido' | 'agendado' | 'atrasado'
   // Chave = treeId; cada árvore tem sua própria lista de anexos
   attachmentsByTree?: Record<string, ServiceAttachment[]>
+  // Laudo ISA — presente apenas em serviços do tipo 'Avaliação'
+  laudoGerado?: boolean
+  laudoData?: ISALaudoData
+}
+
+// Perfil do técnico ativo (em produção virá do contexto de autenticação)
+// Por ora usamos um mock que pode ser editado nas configurações
+export const TECNICO_ATIVO: TecnicoInfo = {
+  nome: 'Técnico Responsável',
+  registro_crea: 'CREA-XX 000000',
 }
 
 interface AppState {
@@ -80,6 +124,10 @@ interface AppState {
 
   isPostServiceModalOpen: boolean
   activePostServiceId: string | null
+
+  // Modal de Laudo ISA
+  isLaudoModalOpen: boolean
+  activeLaudoServiceId: string | null
 
   mapBounds: MapBounds | null
   setMapBounds: (bounds: MapBounds | null) => void
@@ -113,6 +161,11 @@ interface AppState {
 
   openPostServiceModal: (id: string) => void
   closePostServiceModal: () => void
+
+  openLaudoModal: (serviceId: string) => void
+  closeLaudoModal: () => void
+  // Salva o laudo e marca laudoGerado=true no serviço
+  saveLaudo: (serviceId: string, laudo: ISALaudoData) => void
   
   openHistoryModal: (treeId: string) => void
   closeHistoryModal: () => void
@@ -125,6 +178,10 @@ interface AppState {
 
   openReminderModal: (serviceId: string) => void
   closeReminderModal: () => void
+
+  // Clima
+  weatherCity: { name: string, lat: number, lon: number }
+  setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -153,6 +210,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   isPostServiceModalOpen: false,
   activePostServiceId: null,
+
+  isLaudoModalOpen: false,
+  activeLaudoServiceId: null,
 
   mapBounds: null,
   setMapBounds: (bounds) => set({ mapBounds: bounds }),
@@ -259,6 +319,14 @@ export const useAppStore = create<AppState>((set) => ({
 
   openPostServiceModal: (id) => set({ isPostServiceModalOpen: true, activePostServiceId: id }),
   closePostServiceModal: () => set({ isPostServiceModalOpen: false, activePostServiceId: null }),
+
+  openLaudoModal: (serviceId) => set({ isLaudoModalOpen: true, activeLaudoServiceId: serviceId }),
+  closeLaudoModal: () => set({ isLaudoModalOpen: false, activeLaudoServiceId: null }),
+  saveLaudo: (serviceId, laudo) => set(state => ({
+    services: state.services.map(s =>
+      s.id !== serviceId ? s : { ...s, laudoGerado: true, laudoData: laudo }
+    )
+  })),
   
   openHistoryModal: (id) => set({ isHistoryModalOpen: true, viewingHistoryTreeId: id }),
   closeHistoryModal: () => set({ isHistoryModalOpen: false, viewingHistoryTreeId: null }),
@@ -270,5 +338,9 @@ export const useAppStore = create<AppState>((set) => ({
   closeClientDetailsModal: () => set({ isClientDetailsModalOpen: false, viewingClientDetailsId: null }),
 
   openReminderModal: (serviceId) => set({ isReminderModalOpen: true, activeReminderServiceId: serviceId }),
-  closeReminderModal: () => set({ isReminderModalOpen: false, activeReminderServiceId: null })
+  closeReminderModal: () => set({ isReminderModalOpen: false, activeReminderServiceId: null }),
+
+  // Clima
+  weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 },
+  setWeatherCity: (city) => set({ weatherCity: city })
 }))

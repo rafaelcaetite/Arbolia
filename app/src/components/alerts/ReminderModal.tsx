@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Mail, MessageCircle, Send, CheckCircle2, Bell, User, Phone } from 'lucide-react';
+import { X, Mail, MessageCircle, Send, CheckCircle2, Bell, User } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 export function ReminderModal() {

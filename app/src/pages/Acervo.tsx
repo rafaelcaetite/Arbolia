@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Search, Image as ImageIcon, FileText, Download, Eye,
   X, ChevronLeft, ChevronRight, AlertTriangle, ArrowLeftRight,
@@ -119,6 +119,31 @@ function Lightbox({ items, index, onClose }: {
 // ── PDF Viewer Lateral ────────────────────────────────────────────────────────
 
 function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => void }) {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (item.dataUrl && item.dataUrl.startsWith('data:')) {
+      try {
+        const base64 = item.dataUrl.split(',')[1];
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        return () => URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Erro ao converter PDF para Blob:', e);
+        setPdfUrl(item.dataUrl);
+      }
+    } else {
+      setPdfUrl(item.dataUrl);
+    }
+  }, [item]);
+
   return (
     <div className="fixed inset-0 z-[300] flex" onClick={onClose}>
       <div className="flex-1 bg-slate-900/50 backdrop-blur-sm" />
@@ -138,7 +163,7 @@ function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => 
             </button>
           </div>
         </div>
-        <iframe src={item.dataUrl} title={item.name} className="flex-1 w-full border-0" />
+        <iframe src={pdfUrl || ''} title={item.name} className="flex-1 w-full border-0" />
       </div>
     </div>
   );

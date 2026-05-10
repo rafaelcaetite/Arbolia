@@ -6,6 +6,8 @@ import { Clients } from './pages/Clients';
 import { Alerts } from './pages/Alerts';
 import { Acervo } from './pages/Acervo';
 import { PostServiceModal } from './components/inventory/PostServiceModal';
+import { LaudoAvaliacaoModal } from './components/inventory/LaudoAvaliacaoModal';
+import { TemplateGallery } from './components/inventory/TemplateGallery';
 
 function App() {
   return (
@@ -17,9 +19,11 @@ function App() {
           <Route path="/clientes" element={<Clients />} />
           <Route path="/alertas" element={<Alerts />} />
           <Route path="/acervo" element={<Acervo />} />
+          <Route path="/templates" element={<TemplateGallery />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <PostServiceModal />
+        <LaudoAvaliacaoModal />
       </MainLayout>
     </Router>
   );

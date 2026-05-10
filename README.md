@@ -13,6 +13,8 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 - **CRM de Clientes** — Cards com badges de árvores, agendamentos e documentos vinculados
 - **Alertas Inteligentes** — Dashboard de vencimentos agrupados por período (esta semana, 30 dias, em breve)
 - **Acervo Documental** — Galeria de fotos e repositório de PDFs com busca por tags automáticas
+- **Monitoramento Climático Premium** — Dashboard meteorológico em tempo real com previsão de 5 dias e análise hora a hora
+- **Inteligência Operacional** — Motor de recomendações técnicas baseado em riscos climáticos (poda/supressão)
 - **Supressão com Rastreio** — Fluxo de inativação de árvore com registro de motivo obrigatório
 - **Anexos por Árvore** — Upload de fotos e PDFs exclusivos por árvore + serviço
 
@@ -27,8 +29,10 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 | Tailwind CSS | Estilização |
 | Zustand | Gerenciamento de estado |
 | React Leaflet | Mapa interativo |
+| Recharts | Gráficos meteorológicos de alta performance |
 | Lucide React | Ícones |
 | React Router | Navegação |
+| Open-Meteo API | Fonte de dados climáticos (Real-time) |
 
 ---
 

@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
 import {
   Bell, Calendar as CalendarIcon, CheckCircle2, ChevronLeft, ChevronRight,
-  Wrench, TrendingUp, Send, ChevronDown, Clock, X
+  Wrench, TrendingUp, Send, ChevronDown, Clock
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { ReminderModal } from '../components/alerts/ReminderModal';

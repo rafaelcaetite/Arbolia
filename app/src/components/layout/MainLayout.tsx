@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
@@ -8,7 +8,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex flex-col flex-1 relative h-full">
         <Header />
-        <main className="flex-1 overflow-hidden p-6 relative">
+        <main className="flex-1 overflow-y-auto p-6 relative">
           {children}
         </main>
       </div>
