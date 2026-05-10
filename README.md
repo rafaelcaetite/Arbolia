@@ -33,6 +33,8 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 | Lucide React | Ícones |
 | React Router | Navegação |
 | Open-Meteo API | Fonte de dados climáticos (Real-time) |
+| Google Gemini API | Inteligência Artificial para análise de laudos |
+| jsPDF + AutoTable | Geração de PDFs técnicos e relatórios |
 
 ---
 
