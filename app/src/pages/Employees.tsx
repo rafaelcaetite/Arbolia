@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 
@@ -61,9 +61,9 @@ export function Employees() {
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
                     emp.role === 'admin' ? 'bg-red-50 text-red-600 border border-red-100' :
                     emp.role === 'tecnico' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                    'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                    'bg-emerald-50 text-emerald-600 border border-blue-100'
                   }`}>
-                    {emp.role === 'admin' ? 'Administrador' : emp.role === 'tecnico' ? 'Técnico' : 'Campo'}
+                    {emp.role === 'admin' ? 'Administrador' : emp.role === 'tecnico' ? 'Técnico' : 'Assistente'}
                   </span>
                 </div>
               </div>
@@ -136,6 +136,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     foto_url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,7 +199,22 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase ml-1">Senha Inicial</label>
-              <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
+              <div className="relative">
+                <input 
+                  required 
+                  type={showPassword ? "text" : "password"} 
+                  value={formData.password} 
+                  onChange={e => setFormData({...formData, password: e.target.value})} 
+                  className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium pr-12" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-1.5">
@@ -206,7 +222,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
               <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as any})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-slate-700">
                 <option value="tecnico">Técnico</option>
                 <option value="admin">Administrador</option>
-                <option value="campo">Campo</option>
+                <option value="campo">Assistente</option>
               </select>
             </div>
 
@@ -251,7 +267,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
           <div className="text-center z-10">
             <h3 className="text-white font-bold text-lg">{employee.nome.split(' ')[0]}</h3>
             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 block">
-              {employee.role === 'admin' ? 'Administrador' : employee.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
+              {employee.role === 'admin' ? 'Administrador' : employee.role === 'tecnico' ? 'Engenheiro' : 'Assistente'}
             </span>
           </div>
         </div>
