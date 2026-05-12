@@ -356,6 +356,15 @@ export function Clients() {
                     <h3 className="text-xl font-bold text-slate-800">Nenhum cliente cadastrado</h3>
                     <p className="text-slate-500 max-w-xs mx-auto">Sua carteira de clientes está vazia. Comece cadastrando um proprietário para gerenciar o inventário.</p>
                   </div>
+                  <button 
+                    onClick={() => {
+                      // O botão de Novo Cliente já está no topo, mas esse facilita o fluxo
+                      document.getElementById('new-client-btn')?.click();
+                    }}
+                    className="mt-2 flex items-center gap-2 text-primary font-bold hover:underline"
+                  >
+                    <Plus size={18} /> Cadastrar agora
+                  </button>
                 </div>
               )}
             </div>
