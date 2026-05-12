@@ -42,23 +42,32 @@ export function UserProfileModal() {
       const fileName = `${userProfile.id}-${Math.random()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload para o bucket 'profiles' (assumindo que existe ou criando via política)
+      // Tenta o Plano A: Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('profiles')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('profiles')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({ ...prev, foto_url: publicUrl }));
-      // Atualiza logo no banco para persistir a foto
-      await updateProfile({ foto_url: publicUrl });
+        setFormData(prev => ({ ...prev, foto_url: publicUrl }));
+        await updateProfile({ foto_url: publicUrl });
+      } else {
+        // Plano B: Se o Storage falhar, usamos Base64 (Garante que funcione agora)
+        console.warn('Storage indisponível, usando fallback Base64:', uploadError);
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64String = reader.result as string;
+          setFormData(prev => ({ ...prev, foto_url: base64String }));
+          await updateProfile({ foto_url: base64String });
+        };
+        reader.readAsDataURL(file);
+      }
     } catch (err: any) {
-      console.error('Erro no upload:', err);
-      setError('Erro ao enviar foto. Verifique o Storage.');
+      console.error('Erro crítico no upload:', err);
+      setError('Erro ao processar imagem. Tente uma foto menor.');
     } finally {
       setIsLoading(false);
     }
