@@ -112,7 +112,7 @@ function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDet
   clientDocs: any[];
   onOpenDetails: () => void;
 }) {
-  const { openClientDetailsModal, openClientModal } = useAppStore();
+  const { openClientModal } = useAppStore();
   const [popover, setPopover] = useState<PopoverType>(null);
 
   const toggle = (type: 'trees' | 'services' | 'docs') => {
