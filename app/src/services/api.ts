@@ -140,23 +140,42 @@ export const api = {
       attachments_by_tree: attachmentsByTree || {}
     };
 
-    const { data, error } = await supabase
+    // 1. Criar o serviço na tabela principal
+    const { data: newService, error: serviceError } = await supabase
       .from('services')
       .insert([dbPayload])
       .select()
       .single();
     
-    if (error) {
-      console.error('Erro ao criar serviço no Supabase:', error);
-      throw error;
+    if (serviceError) {
+      console.error('Erro ao criar serviço no Supabase:', serviceError);
+      throw serviceError;
+    }
+
+    // 2. Criar os vínculos na tabela de junção service_trees
+    if (treeIds && treeIds.length > 0) {
+      const relations = treeIds.map((tId: string) => ({
+        service_id: newService.id,
+        tree_id: tId
+      }));
+      
+      const { error: relError } = await supabase
+        .from('service_trees')
+        .insert(relations);
+        
+      if (relError) {
+        console.error('Erro ao criar vínculos service_trees:', relError);
+        // Não lançamos erro aqui para não invalidar a criação do serviço, 
+        // mas o ideal seria uma transação se o Supabase suportasse via JS (ou usar RPC)
+      }
     }
 
     return {
-      ...data,
-      treeIds: data.tree_ids || [],
-      laudoGerado: data.laudo_gerado,
-      laudoData: data.laudo_data,
-      attachmentsByTree: data.attachments_by_tree || {}
+      ...newService,
+      treeIds: newService.tree_ids || [],
+      laudoGerado: newService.laudo_gerado,
+      laudoData: newService.laudo_data,
+      attachmentsByTree: newService.attachments_by_tree || {}
     } as Service;
   },
 
@@ -169,21 +188,37 @@ export const api = {
     if (laudoData !== undefined) dbPayload.laudo_data = laudoData;
     if (attachmentsByTree !== undefined) dbPayload.attachments_by_tree = attachmentsByTree;
 
-    const { data, error } = await supabase
+    // 1. Atualizar o serviço
+    const { data: updatedService, error: serviceError } = await supabase
       .from('services')
       .update(dbPayload)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
+    if (serviceError) throw serviceError;
+
+    // 2. Sincronizar vínculos na tabela service_trees se treeIds foi alterado
+    if (treeIds !== undefined) {
+      // Deletar vínculos antigos
+      await supabase.from('service_trees').delete().eq('service_id', id);
+      
+      // Inserir novos vínculos
+      if (treeIds.length > 0) {
+        const relations = treeIds.map((tId: string) => ({
+          service_id: id,
+          tree_id: tId
+        }));
+        await supabase.from('service_trees').insert(relations);
+      }
+    }
 
     return {
-      ...data,
-      treeIds: data.tree_ids || [],
-      laudoGerado: data.laudo_gerado,
-      laudoData: data.laudo_data,
-      attachmentsByTree: data.attachments_by_tree || {}
+      ...updatedService,
+      treeIds: updatedService.tree_ids || [],
+      laudoGerado: updatedService.laudo_gerado,
+      laudoData: updatedService.laudo_data,
+      attachmentsByTree: updatedService.attachments_by_tree || {}
     } as Service;
   }
 };
