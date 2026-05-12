@@ -30,7 +30,7 @@ const STEP_TITLES = ['Alvos e Ocupação','Defeitos e Condições','Matrizes de 
 const COR_BADGE: Record<string, string> = { Baixo:'bg-green-100 text-green-800 border-green-300', Moderado:'bg-amber-100 text-amber-800 border-amber-300', Alto:'bg-red-100 text-red-800 border-red-300', Extremo:'bg-red-200 text-red-900 border-red-500' };
 
 export function LaudoAvaliacaoModal() {
-  const { isLaudoModalOpen, activeLaudoServiceId, closeLaudoModal, services, trees, clients, userProfile } = useAppStore();
+  const { isLaudoModalOpen, activeLaudoServiceId, closeLaudoModal, services, trees, clients, userProfile, saveLaudo } = useAppStore();
 
   const service = services.find(s => s.id === activeLaudoServiceId);
   const serviceTree = service && service.treeIds.length > 0 ? trees.find(t => t.id === service.treeIds[0]) : null;
@@ -402,35 +402,29 @@ export function LaudoAvaliacaoModal() {
         const attachmentName = `Laudo ISA — ${new Date().toLocaleDateString('pt-BR')}.pdf`;
         const attachmentSize = Math.round(dataUrl.length * 0.75);
 
-        const updatedServices = services.map(s => {
-          if (s.id !== service.id) return s;
-          const prev = s.attachmentsByTree ?? {};
-          const nextAttachments = { ...prev };
-          service.treeIds.forEach(tId => {
-            nextAttachments[tId] = [...(prev[tId] ?? []), {
-              id: attachmentId, name: attachmentName, type: 'pdf' as const, dataUrl, size: attachmentSize,
-            }];
-          });
-          return { ...s, laudoGerado: true, laudoData: laudo, attachmentsByTree: nextAttachments };
+        const prev = service.attachmentsByTree ?? {};
+        const nextAttachments = { ...prev };
+        service.treeIds.forEach(tId => {
+          nextAttachments[tId] = [...(prev[tId] ?? []), {
+            id: attachmentId, name: attachmentName, type: 'pdf' as const, dataUrl, size: attachmentSize,
+          }];
         });
-        useAppStore.getState().setServices(updatedServices);
+
+        await saveLaudo(service.id, laudo, nextAttachments);
       } else {
         // Plano A: Sucesso no Storage
         const attachmentName = `Laudo ISA — ${new Date().toLocaleDateString('pt-BR')}.pdf`;
         const attachmentSize = pdfBlob.size;
 
-        const updatedServices = services.map(s => {
-          if (s.id !== service.id) return s;
-          const prev = s.attachmentsByTree ?? {};
-          const nextAttachments = { ...prev };
-          service.treeIds.forEach(tId => {
-            nextAttachments[tId] = [...(prev[tId] ?? []), {
-              id: attachmentId, name: attachmentName, type: 'pdf' as const, storagePath, size: attachmentSize,
-            }];
-          });
-          return { ...s, laudoGerado: true, laudoData: laudo, attachmentsByTree: nextAttachments, documentos_url: [...(s.documentos_url || []), storagePath] };
+        const prev = service.attachmentsByTree ?? {};
+        const nextAttachments = { ...prev };
+        service.treeIds.forEach(tId => {
+          nextAttachments[tId] = [...(prev[tId] ?? []), {
+            id: attachmentId, name: attachmentName, type: 'pdf' as const, storagePath, size: attachmentSize,
+          }];
         });
-        useAppStore.getState().setServices(updatedServices);
+
+        await saveLaudo(service.id, laudo, nextAttachments, storagePath);
       }
 
       setIsGenerating(false);

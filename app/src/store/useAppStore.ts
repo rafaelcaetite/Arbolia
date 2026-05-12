@@ -193,7 +193,7 @@ interface AppState {
   openLaudoModal: (serviceId: string) => void
   closeLaudoModal: () => void
   // Salva o laudo e marca laudoGerado=true no serviço
-  saveLaudo: (serviceId: string, laudo: ISALaudoData) => Promise<void>
+  saveLaudo: (serviceId: string, laudo: ISALaudoData, attachmentsByTree: any, storagePath?: string) => Promise<void>
 
   
   openHistoryModal: (treeId: string) => void
@@ -438,6 +438,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
 
+
+  saveLaudo: async (serviceId, laudoData, attachmentsByTree, storagePath) => {
+    try {
+      const state = useAppStore.getState();
+      const service = state.services.find(s => s.id === serviceId);
+      if (!service) return;
+
+      const updates: any = {
+        laudoGerado: true,
+        laudoData,
+        attachmentsByTree
+      };
+
+      if (storagePath) {
+        updates.documentos_url = [...(service.documentos_url || []), storagePath];
+      }
+
+      const updated = await api.updateService(serviceId, updates);
+      
+      set((state) => ({
+        services: state.services.map(s => s.id === serviceId ? updated : s)
+      }));
+    } catch (error) {
+      console.error('Erro ao salvar laudo no banco:', error);
+      throw error;
+    }
+  },
 
   addServiceAttachment: async (serviceId, treeId, attachment) => {
     try {
