@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Save, Scissors, Axe, Stethoscope, Syringe } from 'lucide-react';
 import { useAppStore, type Service } from '../../store/useAppStore';
 
 export function ServiceModal() {
-  const { isServiceModalOpen, closeServiceModal, createService, selectedTreeIds } = useAppStore();
+  const { isServiceModalOpen, closeServiceModal, createService, selectedTreeIds, employees, fetchEmployees } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<Service>>({
     tipo: 'Poda',
@@ -11,6 +11,17 @@ export function ServiceModal() {
     horario: '08:00',
     responsavel: '',
     status: 'agendado'
+  });
+
+  const technicians = useMemo(() => {
+    return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
+  }, [employees]);
+
+  // Carregar funcionários se a lista estiver vazia ao abrir o modal
+  useState(() => {
+    if (employees.length === 0) {
+      fetchEmployees();
+    }
   });
 
   if (!isServiceModalOpen) return null;
@@ -94,14 +105,23 @@ export function ServiceModal() {
             
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Responsável / Equipe</label>
-              <input 
-                type="text" 
+              <select
                 required
                 value={formData.responsavel || ''}
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
-                placeholder="Ex: Equipe Alfa"
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              />
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+              >
+                <option value="" disabled>Selecione um responsável</option>
+                <optgroup label="Técnicos e Admins">
+                  {technicians.map(tech => (
+                    <option key={tech.id} value={tech.nome}>{tech.nome}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Outros">
+                  <option value="Equipe Terceirizada">Equipe Terceirizada</option>
+                  <option value="Equipe Alfa">Equipe Alfa</option>
+                </optgroup>
+              </select>
             </div>
           </form>
         </div>
