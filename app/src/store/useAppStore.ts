@@ -635,7 +635,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
 
       set(state => ({ employees: [profileResult, ...state.employees] }));
-      alert('Funcionário criado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao criar funcionário:', error);
       alert(`Erro ao criar funcionário: ${error.message}`);
