@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
-import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase, AlertCircle } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../../store/useAppStore';
+import { supabase } from '../../lib/supabase';
 
 export function UserProfileModal() {
   const { isProfileModalOpen, userProfile, closeProfileModal, updateProfile } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (userProfile) {
@@ -22,9 +25,49 @@ export function UserProfileModal() {
 
   if (!isProfileModalOpen || !userProfile) return null;
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Limite de 1MB
+    if (file.size > 1024 * 1024) {
+      setError('A foto deve ter no máximo 1MB.');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userProfile.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload para o bucket 'profiles' (assumindo que existe ou criando via política)
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, foto_url: publicUrl }));
+      // Atualiza logo no banco para persistir a foto
+      await updateProfile({ foto_url: publicUrl });
+    } catch (err: any) {
+      console.error('Erro no upload:', err);
+      setError('Erro ao enviar foto. Verifique o Storage.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       await updateProfile(formData);
@@ -33,8 +76,9 @@ export function UserProfileModal() {
         setShowSuccess(false);
         closeProfileModal();
       }, 1500);
-    } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
+    } catch (err: any) {
+      console.error('Erro ao salvar perfil:', err);
+      setError('Falha ao sincronizar com o banco de dados.');
     } finally {
       setIsLoading(false);
     }
@@ -54,13 +98,6 @@ export function UserProfileModal() {
     setFormData({ ...formData, telefone: value });
   };
 
-  const handlePhotoClick = () => {
-    const url = prompt('Cole a URL da sua nova foto de perfil:', formData.foto_url || '');
-    if (url !== null) {
-      setFormData({ ...formData, foto_url: url });
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center p-4 sm:p-6">
       <div 
@@ -76,9 +113,17 @@ export function UserProfileModal() {
             <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-primary rounded-full blur-[60px]"></div>
           </div>
 
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleFileUpload} 
+          />
+
           <div 
             className="group relative w-36 h-36 rounded-[48px] overflow-hidden border-2 border-white/20 shadow-xl cursor-pointer transition-transform hover:scale-105 active:scale-95"
-            onClick={handlePhotoClick}
+            onClick={() => fileInputRef.current?.click()}
           >
             {formData.foto_url ? (
               <img src={formData.foto_url} alt={formData.nome} className="w-full h-full object-cover" />
@@ -87,10 +132,15 @@ export function UserProfileModal() {
                 {userProfile.nome.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1 text-center p-2">
               <Camera size={24} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Editar Foto</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest leading-tight">Trocar Foto (Max 1MB)</span>
             </div>
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 size={32} className="text-white animate-spin" />
+              </div>
+            )}
           </div>
 
           <div className="text-center z-10">
@@ -104,12 +154,12 @@ export function UserProfileModal() {
         {/* Formulário */}
         <div className="flex-1 p-10 md:p-14 bg-white relative">
           {showSuccess ? (
-            <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-90 duration-300 py-10">
-              <div className="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center text-white mb-6 shadow-xl shadow-emerald-100">
-                <CheckCircle2 size={40} />
+            <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-90 duration-500">
+              <div className="w-20 h-20 bg-emerald-500 rounded-[32px] flex items-center justify-center text-white mb-6 shadow-2xl shadow-emerald-100/50">
+                <CheckCircle2 size={44} />
               </div>
-              <h2 className="text-2xl font-black text-slate-800">Perfil Atualizado!</h2>
-              <p className="text-slate-500 mt-2 font-medium">Suas alterações foram salvas com sucesso.</p>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Alterações Salvas!</h2>
+              <p className="text-slate-400 mt-2 font-bold text-[10px] uppercase tracking-[0.3em]">Perfil Sincronizado</p>
             </div>
           ) : (
             <>
@@ -121,14 +171,20 @@ export function UserProfileModal() {
               </button>
 
               <div className="mb-10">
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Meu Perfil Profissional</h2>
-                <div className="flex items-center gap-2 mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-primary/30 decoration-4 underline-offset-8">Meu Perfil</h2>
+                <div className="flex items-center gap-2 mt-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
                   <Briefcase size={14} className="text-primary" /> 
-                  Membro desde {new Date(userProfile.data_cadastro).toLocaleDateString()}
+                  Na equipe Arbolia desde {new Date(userProfile.data_cadastro).toLocaleDateString()}
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6 overflow-y-auto pr-4 max-h-[50vh] scrollbar-hide">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6 overflow-y-auto pr-4 max-h-[55vh] scrollbar-hide">
+                {error && (
+                  <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <AlertCircle size={14} /> {error}
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
                     <User size={12} className="text-primary" /> Nome Completo
@@ -137,7 +193,7 @@ export function UserProfileModal() {
                     type="text"
                     value={formData.nome}
                     onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                    className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:border-primary/20 focus:bg-white transition-all outline-none"
                   />
                 </div>
 
@@ -150,7 +206,7 @@ export function UserProfileModal() {
                       type="date"
                       value={formData.data_nascimento}
                       onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })}
-                      className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:border-primary/20 focus:bg-white transition-all outline-none"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
@@ -162,7 +218,7 @@ export function UserProfileModal() {
                       placeholder="(00) 00000-0000"
                       value={formData.telefone}
                       onChange={handlePhoneChange}
-                      className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:border-primary/20 focus:bg-white transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -176,14 +232,14 @@ export function UserProfileModal() {
                     placeholder="Ex: CREA-MG 123456"
                     value={formData.crea}
                     onChange={e => setFormData({ ...formData, crea: e.target.value })}
-                    className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold placeholder:text-slate-200 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold placeholder:text-slate-200 focus:border-primary/20 focus:bg-white transition-all outline-none"
                   />
                 </div>
 
                 <button 
                   type="submit"
                   disabled={isLoading}
-                  className="mt-6 bg-slate-900 text-white font-black py-5 rounded-3xl shadow-xl shadow-slate-200 hover:bg-primary transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] text-base"
+                  className="mt-4 bg-slate-900 text-white font-black py-5 rounded-3xl shadow-xl shadow-slate-200 hover:bg-primary transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] text-base"
                 >
                   {isLoading ? <Loader2 size={24} className="animate-spin" /> : 'Salvar Alterações'}
                 </button>
