@@ -29,7 +29,7 @@ function daysUntil(dateStr: string) {
 
 function downloadAttachment(att: RichAttachment) {
   const a = document.createElement('a');
-  a.href = att.dataUrl;
+  a.href = att.dataUrl || '';
   a.download = att.name;
   a.click();
 }
@@ -50,7 +50,7 @@ function Lightbox({ items, index, onClose }: {
       <div className="flex items-stretch max-w-5xl w-full mx-4 gap-0 rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Imagem */}
         <div className="flex-1 bg-black flex items-center justify-center relative min-h-[400px]">
-          <img src={item.dataUrl} alt={item.name} className="max-h-[85vh] max-w-full object-contain" />
+          <img src={item.dataUrl || ''} alt={item.name} className="max-h-[85vh] max-w-full object-contain" />
           {items.length > 1 && (
             <>
               <button onClick={() => setCurrent(p => Math.max(0, p-1))} disabled={current === 0}
@@ -137,10 +137,10 @@ function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => 
         return () => URL.revokeObjectURL(url);
       } catch (e) {
         console.error('Erro ao converter PDF para Blob:', e);
-        setPdfUrl(item.dataUrl);
+        setPdfUrl(item.dataUrl || null);
       }
     } else {
-      setPdfUrl(item.dataUrl);
+      setPdfUrl(item.dataUrl || null);
     }
   }, [item]);
 

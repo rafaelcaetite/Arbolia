@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Save, MapPin, Camera, Loader2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { X, Save, MapPin, Camera, Loader2, Trash2 } from 'lucide-react';
 import { useAppStore, type Tree } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 

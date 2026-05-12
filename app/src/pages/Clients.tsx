@@ -90,7 +90,7 @@ function ClientPopover({ type, trees, services, docs, onClose }: {
                     <span className="text-[10px] font-medium text-slate-600 truncate">{d.name}</span>
                   </div>
                   <button
-                    onClick={() => { const a = document.createElement('a'); a.href = d.dataUrl; a.download = d.name; a.click(); }}
+                    onClick={() => { const a = document.createElement('a'); a.href = d.dataUrl || ''; a.download = d.name; a.click(); }}
                     className="shrink-0 p-1 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/30 transition-colors"
                   >
                     <Download size={11} />

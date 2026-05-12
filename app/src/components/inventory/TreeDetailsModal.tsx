@@ -36,15 +36,15 @@ export function TreeDetailsModal() {
         photosToSign.push(...servicePhotos);
 
         if (photosToSign.length > 0) {
-          const { data, error } = await supabase.storage
+          const { data } = await supabase.storage
             .from('Gallery')
             .createSignedUrls(photosToSign, 3600);
 
           if (data) {
             setSignedPhotos(data.map((item, idx) => ({
-              url: item.signedUrl,
+              url: item.signedUrl || '',
               name: `Foto ${idx + 1}`
-            })));
+            })).filter(p => p.url !== ''));
           }
         } else {
           setSignedPhotos([]);
