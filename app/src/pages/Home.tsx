@@ -2,7 +2,7 @@ import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Respons
 import { Trees, Users, AlertTriangle, CloudRain, Clock, CheckCircle2, Thermometer, Droplets, Wind, ShieldAlert, Navigation, Search } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 
 export function Home() {
   const { trees, clients, services, openPostServiceModal, weatherCity, setWeatherCity } = useAppStore();
