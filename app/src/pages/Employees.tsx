@@ -61,7 +61,7 @@ export function Employees() {
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
                     emp.role === 'admin' ? 'bg-red-50 text-red-600 border border-red-100' :
                     emp.role === 'tecnico' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                    'bg-emerald-50 text-emerald-600 border border-blue-100'
+                    'bg-emerald-50 text-emerald-600 border border-emerald-100'
                   }`}>
                     {emp.role === 'admin' ? 'Administrador' : emp.role === 'tecnico' ? 'Técnico' : 'Assistente'}
                   </span>
@@ -222,7 +222,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
               <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as any})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-slate-700">
                 <option value="tecnico">Técnico</option>
                 <option value="admin">Administrador</option>
-                <option value="campo">Assistente</option>
+                <option value="assistente">Assistente</option>
               </select>
             </div>
 

@@ -23,7 +23,7 @@ export interface UserProfile {
   id: string
   nome: string
   email: string
-  role: 'admin' | 'tecnico' | 'campo'
+  role: 'admin' | 'tecnico' | 'assistente'
   crea?: string
   telefone?: string
   foto_url?: string
