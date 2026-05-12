@@ -30,49 +30,59 @@ export function Home() {
   const formattedDate = currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 
   // Busca de Sugestões (Nominatim) com Debounce
+  // Cache para buscas instantâneas
+  const searchCache = useRef<Record<string, any[]>>({});
+
   useEffect(() => {
-    if (searchQuery.length < 2) {
+    if (searchQuery.length < 1) {
       setSuggestions([]);
       return;
     }
 
+    // Se já estiver no cache, retorna na hora
+    if (searchCache.current[searchQuery]) {
+      setSuggestions(searchCache.current[searchQuery]);
+      return;
+    }
+
+    const abortController = new AbortController();
+
     const timer = setTimeout(async () => {
       try {
-        // q= com featuretype=settlement para pegar locais habitados
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&countrycodes=br&limit=15&addressdetails=1&featuretype=settlement`);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&countrycodes=br&limit=15&addressdetails=1&featuretype=settlement`,
+          { signal: abortController.signal }
+        );
         const data = await res.json();
         
-        // Filtro agressivo para garantir apenas cidades
         const filtered = data.filter((item: any) => {
           const type = item.addresstype || item.type;
           const isCityType = ['city', 'town', 'municipality', 'administrative'].includes(type);
-          
-          // Bloquear termos de ruas e prédios mesmo que o tipo venha estranho
           const name = item.display_name.toLowerCase();
-          const isNotStreet = !name.includes('rua ') && 
-                             !name.includes('avenida') && 
-                             !name.includes('av. ') && 
-                             !name.includes('travessa') && 
-                             !name.includes('alameda') &&
-                             !name.includes('praça') &&
-                             !name.includes('pç. ') &&
-                             !name.includes('edifício');
-
+          const isNotStreet = !name.includes('rua ') && !name.includes('avenida') && !name.includes('av. ') && 
+                             !name.includes('travessa') && !name.includes('alameda') && !name.includes('praça') &&
+                             !name.includes('pç. ') && !name.includes('edifício');
           return isCityType && isNotStreet;
         });
         
-        // Remover duplicatas por nome (as vezes vem cidade e município repetidos)
         const unique = filtered.filter((v: any, i: number, a: any[]) => 
           a.findIndex(t => t.display_name === v.display_name) === i
         );
 
-        setSuggestions(unique.slice(0, 5));
-      } catch (e) {
-        console.error('Erro na busca de cidades:', e);
+        const results = unique.slice(0, 5);
+        searchCache.current[searchQuery] = results; // Salva no cache
+        setSuggestions(results);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') {
+          console.error('Erro na busca de cidades:', e);
+        }
       }
-    }, 150);
+    }, 100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
   }, [searchQuery]);
 
   // Busca de Clima (Open-Meteo)
