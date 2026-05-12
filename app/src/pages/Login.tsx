@@ -1,0 +1,120 @@
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAppStore } from '../store/useAppStore';
+import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+
+export function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const setUser = useAppStore(state => state.setUser);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao realizar login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      {/* Background Decor */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
+        {/* Logo Section */}
+        <div className="text-center mb-8">
+          <img src="/logo.png" alt="Arbolia Logo" className="h-16 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bem-vindo ao Arbolia</h1>
+          <p className="text-slate-500 text-sm mt-1">Gestão inteligente de arborização urbana</p>
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 relative overflow-hidden">
+          <form onSubmit={handleLogin} className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm animate-in shake duration-300">
+                <AlertCircle size={18} />
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">E-mail Corporativo</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="exemplo@arbolia.com.br"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Senha</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-emerald-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  Entrar no Sistema
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+            <p className="text-xs text-slate-400">
+              Esqueceu sua senha? Entre em contato com o suporte.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-[10px] text-slate-400 mt-8 uppercase tracking-widest font-bold">
+          Arbolia v2.0 • Sistema de Gestão Premium
+        </p>
+      </div>
+    </div>
+  );
+}

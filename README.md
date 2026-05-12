@@ -13,10 +13,10 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 - **CRM de Clientes** — Cards com badges de árvores, agendamentos e documentos vinculados
 - **Alertas Inteligentes** — Dashboard de vencimentos agrupados por período (esta semana, 30 dias, em breve)
 - **Acervo Documental** — Galeria de fotos e repositório de PDFs com busca por tags automáticas
+- **Login Seguro** — Sistema de autenticação via Supabase com perfis técnicos e níveis de acesso
+- **Software Instalável (PWA)** — O sistema pode ser instalado no Windows, Android e iOS com ícone próprio
+- **Persistência em Nuvem** — Integração total com Supabase para sincronização de dados em tempo real
 - **Monitoramento Climático Premium** — Dashboard meteorológico em tempo real com previsão de 5 dias e análise hora a hora
-- **Inteligência Operacional** — Motor de recomendações técnicas baseado em riscos climáticos (poda/supressão)
-- **Supressão com Rastreio** — Fluxo de inativação de árvore com registro de motivo obrigatório
-- **Anexos por Árvore** — Upload de fotos e PDFs exclusivos por árvore + serviço
 
 ---
 
@@ -25,16 +25,11 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 | Tecnologia | Uso |
 |---|---|
 | React + TypeScript | Frontend SPA |
-| Vite | Build tool |
-| Tailwind CSS | Estilização |
-| Zustand | Gerenciamento de estado |
+| Supabase | Backend (Auth, Database, Storage) |
+| Vite + PWA Plugin | Build tool e suporte a modo offline/instalável |
+| Tailwind CSS | Estilização Minimalista |
+| Zustand | Gerenciamento de estado global |
 | React Leaflet | Mapa interativo |
-| Recharts | Gráficos meteorológicos de alta performance |
-| Lucide React | Ícones |
-| React Router | Navegação |
-| Open-Meteo API | Fonte de dados climáticos (Real-time) |
-| Google Gemini API | Inteligência Artificial para análise de laudos |
-| jsPDF + AutoTable | Geração de PDFs técnicos e relatórios |
 
 ---
 
@@ -49,14 +44,15 @@ cd arbolia/app
 npm install
 
 # Configure as variáveis de ambiente
-cp ../.env.example ../.env
-# Edite o .env com suas credenciais
+# Crie um arquivo .env na pasta /app com:
+# VITE_SUPABASE_URL=sua_url
+# VITE_SUPABASE_ANON_KEY=sua_chave_anon
 
 # Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-Acesse em `http://localhost:5173`
+Acesse em `http://localhost:5173` (ou porta sugerida pelo Vite)
 
 ---
 
@@ -94,11 +90,14 @@ Definidos em `gemini.md` e implementados em `app/src/store/useAppStore.ts`:
 
 ## 📋 Roadmap
 
-- [ ] Autenticação com Supabase Auth
-- [ ] Persistência real no banco (Supabase PostgreSQL)
-- [ ] Storage de arquivos (Supabase Storage)
-- [ ] Relatórios e exportação PDF
-- [ ] App mobile (React Native / PWA)
+- [x] Autenticação com Supabase Auth
+- [x] Persistência real no banco (Supabase PostgreSQL)
+- [x] Software instalável (PWA)
+- [x] Histórico Global e Auditoria
+- [x] Exportação de dados (CSV/Excel)
+- [ ] Relatórios em PDF automatizados (SaaS Ready)
+- [ ] App mobile nativo (React Native)
+
 
 ---
 

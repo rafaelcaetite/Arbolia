@@ -1,13 +1,17 @@
-import { Map as MapIcon, Users, AlertTriangle, Archive, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Map as MapIcon, Users, AlertTriangle, Archive, Settings, LogOut, LayoutDashboard, History } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useAppStore } from '../../store/useAppStore';
 
 export function Sidebar() {
+  const signOut = useAppStore(state => state.signOut);
+
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Início', path: '/' },
     { icon: <MapIcon size={20} />, label: 'Inventário', path: '/inventario' },
     { icon: <Users size={20} />, label: 'Clientes', path: '/clientes' },
     { icon: <AlertTriangle size={20} />, label: 'Alertas', path: '/alertas' },
     { icon: <Archive size={20} />, label: 'Acervo', path: '/acervo' },
+    { icon: <History size={20} />, label: 'Log de Atendimentos', path: '/historico' },
   ];
 
   return (
@@ -15,7 +19,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-20 flex items-center justify-center border-b border-slate-50">
         <img
-          src="/logo_arbolia.png"
+          src="/logo.png"
           alt="Arbolia"
           className="h-14 w-auto object-contain mt-4"
         />
@@ -48,7 +52,10 @@ export function Sidebar() {
           <Settings size={20} />
           <span className="font-medium text-sm">Configurações</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-3 py-3 mt-1 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-red-600 transition-all duration-200">
+        <button 
+          onClick={() => signOut()}
+          className="w-full flex items-center gap-3 px-3 py-3 mt-1 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-red-600 transition-all duration-200"
+        >
           <LogOut size={20} />
           <span className="font-medium text-sm">Sair</span>
         </button>
@@ -56,3 +63,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

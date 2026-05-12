@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History } from 'lucide-react';
+
 import { useAppStore } from '../../store/useAppStore';
 
 export function TreeDetailsModal() {
-  const { isTreeDetailsModalOpen, viewingTreeDetailsId, trees, clients, services, closeTreeDetailsModal } = useAppStore();
+  const { isTreeDetailsModalOpen, viewingTreeDetailsId, trees, clients, services, closeTreeDetailsModal, openHistoryModal } = useAppStore();
+
   const [photoIdx, setPhotoIdx] = useState(0);
   
   if (!isTreeDetailsModalOpen || !viewingTreeDetailsId) return null;
@@ -85,6 +87,18 @@ export function TreeDetailsModal() {
               <span className="font-bold text-slate-700 text-sm mt-1">{new Date(tree.data_cadastro).toLocaleDateString()}</span>
             </div>
           </div>
+          
+          <button 
+            onClick={() => {
+              closeTreeDetailsModal();
+              openHistoryModal(tree.id);
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <History size={18} />
+            Ver Histórico de Atendimentos
+          </button>
+
 
           {/* Carrossel de fotos */}
           {treePhotos.length > 0 && (
