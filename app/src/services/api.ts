@@ -123,15 +123,21 @@ export const api = {
     
     return (data || []).map(s => ({
       ...s,
-      treeIds: s.tree_ids || []
+      treeIds: s.tree_ids || [],
+      laudoGerado: s.laudo_gerado,
+      laudoData: s.laudo_data,
+      attachmentsByTree: s.attachments_by_tree || {}
     })) as Service[];
   },
 
   async createService(service: Omit<Service, 'id'>) {
-    const { treeIds, ...rest } = service as any;
+    const { treeIds, laudoGerado, laudoData, attachmentsByTree, ...rest } = service as any;
     const dbPayload = {
       ...rest,
-      tree_ids: treeIds || []
+      tree_ids: treeIds || [],
+      laudo_gerado: laudoGerado,
+      laudo_data: laudoData,
+      attachments_by_tree: attachmentsByTree || {}
     };
 
     const { data, error } = await supabase
@@ -147,14 +153,21 @@ export const api = {
 
     return {
       ...data,
-      treeIds: data.tree_ids || []
+      treeIds: data.tree_ids || [],
+      laudoGerado: data.laudo_gerado,
+      laudoData: data.laudo_data,
+      attachmentsByTree: data.attachments_by_tree || {}
     } as Service;
   },
 
   async updateService(id: string, updates: Partial<Service>) {
-    const { treeIds, ...rest } = updates as any;
+    const { treeIds, laudoGerado, laudoData, attachmentsByTree, ...rest } = updates as any;
     const dbPayload = { ...rest };
-    if (treeIds) dbPayload.tree_ids = treeIds;
+    
+    if (treeIds !== undefined) dbPayload.tree_ids = treeIds;
+    if (laudoGerado !== undefined) dbPayload.laudo_gerado = laudoGerado;
+    if (laudoData !== undefined) dbPayload.laudo_data = laudoData;
+    if (attachmentsByTree !== undefined) dbPayload.attachments_by_tree = attachmentsByTree;
 
     const { data, error } = await supabase
       .from('services')
@@ -167,7 +180,10 @@ export const api = {
 
     return {
       ...data,
-      treeIds: data.tree_ids || []
+      treeIds: data.tree_ids || [],
+      laudoGerado: data.laudo_gerado,
+      laudoData: data.laudo_data,
+      attachmentsByTree: data.attachments_by_tree || {}
     } as Service;
   }
 };
