@@ -34,7 +34,11 @@ export function TreeList() {
     filtered = filtered.sort((a, b) => {
       if (sortBy === 'recentes') return new Date(b.data_cadastro).getTime() - new Date(a.data_cadastro).getTime();
       if (sortBy === 'altura') return b.altura - a.altura;
-      if (sortBy === 'risco') return riskOrder[b.status_risco] - riskOrder[a.status_risco];
+      if (sortBy === 'risco') {
+        const valA = a.status_risco ? riskOrder[a.status_risco] : 0;
+        const valB = b.status_risco ? riskOrder[b.status_risco] : 0;
+        return valB - valA;
+      }
       return 0;
     });
 
@@ -45,7 +49,7 @@ export function TreeList() {
     return filtered.reduce((acc, tree) => {
       let key = 'Sem Grupo';
       if (groupBy === 'especie') key = tree.especie;
-      if (groupBy === 'risco') key = tree.status_risco;
+      if (groupBy === 'risco') key = tree.status_risco || 'Pendente';
       if (groupBy === 'proprietario') {
         const client = clients.find(c => c.id === tree.cliente_id);
         key = client ? client.nome : 'Sem Proprietário';
