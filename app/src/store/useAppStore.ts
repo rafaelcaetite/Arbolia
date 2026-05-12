@@ -358,7 +358,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   createTree: async (data) => {
     try {
-      const newTree = await api.createTree(data);
+      const newTree = await api.createTree({ ...data, ativo: true });
       set((state) => ({
         trees: [newTree, ...state.trees]
       }));

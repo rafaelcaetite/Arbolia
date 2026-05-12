@@ -28,7 +28,8 @@ export function TreeModal() {
         longitude: -42.8825, 
         status_risco: 'baixo', 
         cliente_id: '',
-        fotos: [] 
+        fotos: [],
+        ativo: true 
       });
     }
   }, [isEditModalOpen, editingTreeId, trees]);
@@ -108,7 +109,11 @@ export function TreeModal() {
     if (isEditing) {
       updateTree(editingTreeId, formData);
     } else {
-      createTree(formData as Omit<Tree, 'id' | 'data_cadastro'>);
+      createTree({
+        ...formData,
+        ativo: true,
+        data_cadastro: new Date().toISOString()
+      } as Omit<Tree, 'id'>);
     }
     closeEditModal();
   };
