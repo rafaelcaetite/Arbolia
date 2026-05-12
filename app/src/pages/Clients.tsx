@@ -346,6 +346,18 @@ export function Clients() {
                   );
                 })}
               </div>
+
+              {groupClients.length === 0 && (
+                <div className="py-24 text-center bg-white rounded-[32px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center gap-4">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                    <Users size={40} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-800">Nenhum cliente cadastrado</h3>
+                    <p className="text-slate-500 max-w-xs mx-auto">Sua carteira de clientes está vazia. Comece cadastrando um proprietário para gerenciar o inventário.</p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
           {Object.keys(processedClients).length === 0 && (

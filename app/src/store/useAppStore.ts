@@ -262,10 +262,30 @@ export const useAppStore = create<AppState>((set) => ({
       const { user } = useAppStore.getState();
       if (!user) return;
 
-      // Buscar perfil do usuário logado
-      const profile = await api.getProfile(user.id);
-      set({ userProfile: profile });
+      // 1. Tenta buscar o perfil do usuário logado
+      let profile;
+      try {
+        profile = await api.getProfile(user.id);
+      } catch (e) {
+        // 2. Se não existir perfil, tenta criar um automaticamente para não ficar como "Técnico"
+        console.log('Perfil não encontrado, tentando criar auto-perfil...');
+        try {
+          profile = await api.createEmployee({
+            id: user.id,
+            nome: user.user_metadata?.nome || user.email?.split('@')[0] || 'Administrador',
+            email: user.email || '',
+            role: 'admin', // O primeiro setup de usuário é tratado como admin
+          });
+        } catch (createErr) {
+          console.error('Falha ao auto-criar perfil:', createErr);
+        }
+      }
+      
+      if (profile) {
+        set({ userProfile: profile });
+      }
 
+      // 3. Carrega os dados principais
       const [clients, trees, services] = await Promise.all([
         api.getClients(),
         api.getTrees(),
@@ -274,7 +294,7 @@ export const useAppStore = create<AppState>((set) => ({
       
       set({ clients, trees, services });
 
-      // Se for admin, carregar funcionários
+      // 4. Se for admin, carregar funcionários
       if (profile?.role === 'admin') {
         const employees = await api.getEmployees();
         set({ employees });
