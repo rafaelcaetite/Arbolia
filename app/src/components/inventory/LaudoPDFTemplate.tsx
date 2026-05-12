@@ -146,7 +146,8 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             {templateId === 'simplificado' ? (
               <>
-                <div style={{ display: 'flex', itemsCenter: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+
                   {narrativeData.icon}
                   <span style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{narrativeData.title}</span>
                   <span style={{ fontSize: '9px', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', background: narrativeData.bg, color: cor, border: `1px solid ${narrativeData.border}`, marginLeft: 'auto' }}>{narrativeData.badge}</span>
@@ -159,7 +160,8 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
               <div style={{ padding: '0 10px' }}>
                 <div style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>Resumo Técnico do Especialista</div>
                 <p style={{ fontSize: '11px', color: '#334155', margin: 0, lineHeight: 1.6 }}>
-                  Esta análise técnica foi conduzida utilizando a metodologia **ISA TRAQ (Tree Risk Assessment Qualification)**. O exemplar foi avaliado em relação a {laudo.entradasRisco.length} alvos específicos, considerando probabilidade de falha, impacto e as consequências associadas. {laudo.avaliacaAvancada ? 'Uma inspeção avançada foi recomendada para aprofundamento do diagnóstico.' : ''}
+                  Esta análise técnica foi conduzida utilizando a metodologia **ISA TRAQ (Tree Risk Assessment Qualification)**. O exemplar foi avaliado em relação a {laudo.entradasRisco.length} alvos específicos, considerando probabilidade de falha, impacto e as consequências associadas. {laudo.avaliacaoAvancada ? 'Uma inspeção avançada foi recomendada para aprofundamento do diagnóstico.' : ''}
+
                 </p>
               </div>
             )}
@@ -200,8 +202,9 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
                     {templateId === 'tecnico' && (
                       <>
                         <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b' }}>{LABELS_PARTE_ARVORE[alvo.parte]}</td>
-                        <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b', textTransform: 'capitalize' }}>{alvo.probabilidadeFalha}</td>
-                        <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b', textTransform: 'capitalize' }}>{alvo.probabilidadeImpacto}</td>
+                        <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b', textTransform: 'capitalize' }}>{alvo.probFalha}</td>
+                        <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b', textTransform: 'capitalize' }}>{alvo.probImpacto}</td>
+
                         <td style={{ padding: '12px 15px', textAlign: 'center', color: '#64748b', textTransform: 'capitalize' }}>{alvo.consequencia}</td>
                       </>
                     )}
@@ -275,12 +278,13 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
 
 LaudoPDFTemplate.displayName = 'LaudoPDFTemplate'
 
-function Section({ title, children, theme }: { title: string; children: React.ReactNode; theme: any }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '35px', display: 'block', width: '100%' }}>
       <div style={{ fontSize: '10px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         {title}
-        <div style={{ flex: 1, h: '1px', background: '#f1f5f9' }} />
+        <div style={{ flex: 1, height: '1px', background: '#f1f5f9' }} />
+
       </div>
       <div style={{ display: 'block', width: '100%' }}>
         {children}

@@ -36,8 +36,9 @@ export function LaudoAvaliacaoModal() {
   const cliente = serviceTree ? clients.find(c => c.id === serviceTree.cliente_id) : null;
 
   const [step, setStep] = useState(0);
-  const [templateId, setTemplateId] = useState<'standard' | 'safety' | 'health' | 'manager'>('standard');
+  const [templateId, setTemplateId] = useState<'standard' | 'safety' | 'health' | 'manager' | 'tecnico' | 'simplificado'>('standard');
   const [isGenerating, setIsGenerating] = useState(false);
+
   const [done, setDone] = useState(false);
   const [aiInterpretation, setAiInterpretation] = useState<{ resumo_estado_geral: string, explicacao_mitigacao: string } | null>(null);
 
@@ -171,11 +172,13 @@ export function LaudoAvaliacaoModal() {
       const margin = 18;
       let y = 20;
 
-      const themes = {
+      const themes: Record<string, any> = {
         tecnico:      { primary: [15, 23, 42], secondary: [71, 85, 105], title: 'LAUDO TÉCNICO DE RISCO (ISA TRAQ)', accent: [51, 65, 85], bg: [248, 250, 252] },
         simplificado: { primary: [22, 101, 52], secondary: [71, 85, 105], title: 'RELATÓRIO DE SEGURANÇA E MANUTENÇÃO', accent: [34, 197, 94], bg: [240, 253, 244] }
       }
-      const theme = themes[templateId === 'tecnico' || templateId === 'simplificado' ? templateId : 'tecnico'];
+      const selectedId = templateId === 'tecnico' || templateId === 'simplificado' ? templateId : 'tecnico';
+      const theme = themes[selectedId];
+
 
       // Logo Real (Expandido, pois contém o nome da empresa)
       if (logoBase64) {

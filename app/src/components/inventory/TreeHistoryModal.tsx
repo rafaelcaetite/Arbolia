@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 

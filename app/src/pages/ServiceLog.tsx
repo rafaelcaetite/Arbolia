@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
-import { Search, Filter, Calendar, FileText, User, ChevronRight, Download, Eye, ExternalLink } from 'lucide-react';
+import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink } from 'lucide-react';
+
 
 export function ServiceLog() {
   const { services, trees, clients } = useAppStore();

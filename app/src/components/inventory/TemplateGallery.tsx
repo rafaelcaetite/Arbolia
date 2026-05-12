@@ -4,35 +4,45 @@ import type { ISALaudoData } from '../../store/useAppStore';
 
 const MOCK_LAUDO: ISALaudoData = {
   entradasRisco: [
-    { alvo: 'Rede Elétrica de Alta Tensão', parte: 'copa', probabilidadeFalha: 'provavel', probabilidadeImpacto: 'alta', consequencia: 'grave' },
-    { alvo: 'Calçada e Pedestres', parte: 'tronco', probabilidadeFalha: 'improvel', probabilidadeImpacto: 'baixa', consequencia: 'menor' }
+    { alvo: 'Rede Elétrica de Alta Tensão', parte: 'copa', probFalha: 'provavel', probImpacto: 'alto', consequencia: 'severa' },
+    { alvo: 'Calçada e Pedestres', parte: 'tronco', probFalha: 'possivel', probImpacto: 'baixo', consequencia: 'minima' }
   ],
   defeitos: ['Cavidade basal extensa', 'Inclinação acentuada', 'Presença de fungos'],
-  limitantes: ['Acesso restrito', 'Tráfego intenso'],
-  mitigacoesSelecionadas: ['poda-equilibrio', 'instalacao-cabos'],
+  limitantes: ['acesso', 'visibilidade'],
+  mitigacoesSelecionadas: ['poda_seguranca'],
   parecer: 'final',
   avaliacaoAvancada: true,
   observacoes: 'Árvore de grande porte com sinais de declínio estrutural. Intervenção necessária em até 30 dias.',
   resultado: {
     classificacaoGeral: 'Alto',
     metadataGeral: { 
+      cor: '#dc2626', corBg: '#fef2f2', corBorder: '#fecaca', frequenciaMeses: 4, frequenciaLabel: '3x ao ano',
       descricao: 'O risco é considerado ELEVADO devido à combinação de probabilidade de falha da copa e o alto valor do alvo (rede elétrica).' 
     },
+    melhorRiscoResidual: 'Moderado',
+    metadataMelhorResidual: { cor: '#d97706', corBg: '#fffbeb', corBorder: '#fde68a', frequenciaMeses: 6, frequenciaLabel: '2x ao ano', descricao: 'Risco moderado' },
     riscos: [
       { 
+        entrada: { alvo: 'Alvo 1', parte: 'copa', probFalha: 'provavel', probImpacto: 'alto', consequencia: 'severa' },
+        falhaeImpacto: 'provavel',
         classificacao: 'Alto', 
+        metadata: { cor: '#dc2626', corBg: '#fef2f2', corBorder: '#fecaca', frequenciaMeses: 4, frequenciaLabel: '3x ao ano', descricao: 'Risco alto' },
         riscoResidualPorMitigacao: [
-          { mitigacao: { id: 'poda-equilibrio', label: 'Poda de Equilíbrio' }, classificacao: 'Moderado' },
-          { mitigacao: { id: 'instalacao-cabos', label: 'Instalação de Cabos' }, classificacao: 'Moderado' }
+          { 
+            mitigacao: { id: 'poda_seguranca', label: 'Poda de Segurança', reducaoPF: 1, reducaoPI: 0 }, 
+            classificacao: 'Moderado',
+            pfMitigado: 'possivel', piMitigado: 'alto', fiMitigado: 'minimo',
+            metadata: { cor: '#d97706', corBg: '#fffbeb', corBorder: '#fde68a', frequenciaMeses: 6, frequenciaLabel: '2x ao ano', descricao: 'Risco moderado' }
+          }
         ] 
-      },
-      { classificacao: 'Baixo', riscoResidualPorMitigacao: [] }
+      }
     ]
   },
   tecnicoNome: 'Rafael Caetité',
   tecnicoCrea: 'CREA-BA 123.456/D',
   dataLaudo: new Date().toISOString()
 };
+
 
 export const TemplateGallery: React.FC = () => {
   return (

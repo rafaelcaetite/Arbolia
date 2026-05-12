@@ -337,8 +337,9 @@ export function Home() {
                   formatter={(value: any, name: string) => {
                     if (name === 'temp') return [`${value}°C`, 'Temperatura'];
                     if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
-                    return null;
+                    return [value, name];
                   }}
+
                 />
                 <Area type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
                 <Bar dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
