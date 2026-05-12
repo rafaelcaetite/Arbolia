@@ -105,11 +105,7 @@ export function TreeModal() {
       // Nota: Para simplificar, manteremos o fluxo de upload imediato, mas agora com preview
       setFormData(prev => ({ 
         ...prev, 
-        fotos: prev.fotos?.map((f, idx) => {
-          // Se for um blob que acabamos de subir, poderíamos substituir aqui
-          // Mas como o usuário quer "preview antes de salvar", o comportamento atual de subir e salvar depois na árvore está correto.
-          return f;
-        }) 
+        fotos: prev.fotos
       }));
     } catch (err) {
       console.error('Erro no upload da galeria:', err);
