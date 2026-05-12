@@ -8,12 +8,13 @@ interface SecureImageProps {
   className?: string;
   fallbackInitial?: string;
   bucket?: 'Profiles' | 'Gallery' | 'Documents';
+  onClick?: () => void;
 }
 
 // Cache global em memória para URLs assinadas (evita requisições repetidas ao Supabase)
 const signedUrlCache: Record<string, { url: string; expires: number }> = {};
 
-export function SecureImage({ src, alt, className = "", fallbackInitial, bucket = 'Profiles' }: SecureImageProps) {
+export function SecureImage({ src, alt, className = "", fallbackInitial, bucket = 'Profiles', onClick }: SecureImageProps) {
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -112,6 +113,7 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
       src={displayUrl} 
       alt={alt} 
       className={`${className} object-cover`}
+      onClick={onClick}
     />
   );
 }
