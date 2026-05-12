@@ -9,9 +9,41 @@ export function UserProfileModal() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const [displayUrl, setDisplayUrl] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const loadSecurePhoto = async () => {
+      if (userProfile?.foto_url) {
+        // Se for uma URL externa ou Base64, usa direto
+        if (userProfile.foto_url.startsWith('http') && !userProfile.foto_url.includes('storage')) {
+          setDisplayUrl(userProfile.foto_url);
+        } else if (userProfile.foto_url.startsWith('data:')) {
+          setDisplayUrl(userProfile.foto_url);
+        } else {
+          // Se for do storage (contém o path), gera URL assinada (Privada)
+          try {
+            // Extrai o path se for uma URL completa do Supabase ou usa o path direto
+            const path = userProfile.foto_url.includes('Profiles/') 
+              ? userProfile.foto_url.split('Profiles/').pop() 
+              : userProfile.foto_url;
+
+            if (path) {
+              const { data, error: signedError } = await supabase.storage
+                .from('Profiles')
+                .createSignedUrl(path, 3600); // 1 hora de validade
+
+              if (data) setDisplayUrl(data.signedUrl);
+              if (signedError) setDisplayUrl(userProfile.foto_url); // Fallback
+            }
+          } catch (err) {
+            setDisplayUrl(userProfile.foto_url);
+          }
+        }
+      }
+    };
+
     if (userProfile) {
       setFormData({
         nome: userProfile.nome,
@@ -20,7 +52,9 @@ export function UserProfileModal() {
         data_nascimento: userProfile.data_nascimento || '',
         foto_url: userProfile.foto_url || ''
       });
+      loadSecurePhoto();
     }
+    if (isProfileModalOpen) setIsEditing(false);
   }, [userProfile, isProfileModalOpen]);
 
   if (!isProfileModalOpen || !userProfile) return null;
@@ -29,7 +63,6 @@ export function UserProfileModal() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Limite de 1MB
     if (file.size > 1024 * 1024) {
       setError('A foto deve ter no máximo 1MB.');
       setTimeout(() => setError(null), 3000);
@@ -39,35 +72,40 @@ export function UserProfileModal() {
     setIsLoading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${userProfile.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${userProfile.id}/${Math.random()}.${fileExt}`;
+      const filePath = fileName;
 
-      // Tenta o Plano A: Supabase Storage
+      // Tenta o Plano A: Supabase Storage (Bucket Privado 'Profiles')
       const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, file);
+        .from('Profiles')
+        .upload(filePath, file, { upsert: true });
 
       if (!uploadError) {
-        const { data: { publicUrl } } = supabase.storage
-          .from('profiles')
-          .getPublicUrl(filePath);
-
-        setFormData(prev => ({ ...prev, foto_url: publicUrl }));
-        await updateProfile({ foto_url: publicUrl });
+        // Salva apenas o path no banco para segurança
+        const storagePath = filePath;
+        setFormData(prev => ({ ...prev, foto_url: storagePath }));
+        await updateProfile({ foto_url: storagePath });
+        
+        // Gera a URL assinada para visualização imediata
+        const { data } = await supabase.storage
+          .from('Profiles')
+          .createSignedUrl(filePath, 3600);
+        if (data) setDisplayUrl(data.signedUrl);
+        
       } else {
-        // Plano B: Se o Storage falhar, usamos Base64 (Garante que funcione agora)
-        console.warn('Storage indisponível, usando fallback Base64:', uploadError);
+        console.warn('Storage Privado falhou, tentando fallback Base64:', uploadError);
         const reader = new FileReader();
         reader.onloadend = async () => {
           const base64String = reader.result as string;
           setFormData(prev => ({ ...prev, foto_url: base64String }));
+          setDisplayUrl(base64String);
           await updateProfile({ foto_url: base64String });
         };
         reader.readAsDataURL(file);
       }
     } catch (err: any) {
       console.error('Erro crítico no upload:', err);
-      setError('Erro ao processar imagem. Tente uma foto menor.');
+      setError('Erro ao processar imagem.');
     } finally {
       setIsLoading(false);
     }
@@ -134,8 +172,8 @@ export function UserProfileModal() {
             className="group relative w-36 h-36 rounded-[48px] overflow-hidden border-2 border-white/20 shadow-xl cursor-pointer transition-transform hover:scale-105 active:scale-95"
             onClick={() => fileInputRef.current?.click()}
           >
-            {formData.foto_url ? (
-              <img src={formData.foto_url} alt={formData.nome} className="w-full h-full object-cover" />
+            {displayUrl ? (
+              <img src={displayUrl} alt={formData.nome} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-primary text-white flex items-center justify-center text-4xl font-black">
                 {userProfile.nome.charAt(0).toUpperCase()}
