@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History, Loader2 } from 'lucide-react';
+import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History, Loader2, FileText } from 'lucide-react';
 
 import { useAppStore } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
@@ -183,7 +183,7 @@ export function TreeDetailsModal() {
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-2">
-                        <Save size={32} className="text-slate-300" />
+                        <FileText size={32} className="text-slate-300" />
                         <span className="text-[10px] font-bold text-slate-500 px-4 text-center truncate w-full">
                           {signedPhotos[photoIdx].name}
                         </span>
