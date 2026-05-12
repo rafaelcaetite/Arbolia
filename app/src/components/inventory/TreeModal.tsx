@@ -10,8 +10,6 @@ export function TreeModal() {
   } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<Tree>>({});
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isEditModalOpen && editingTreeId) {
@@ -62,64 +60,6 @@ export function TreeModal() {
 
   const isEditing = !!editingTreeId;
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    // Gerar previews locais imediatamente
-    const newLocalPreviews: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.size > 5 * 1024 * 1024) continue; // Aumentar limite para 5MB
-      newLocalPreviews.push(URL.createObjectURL(file));
-    }
-
-    // Adicionar previews ao estado para feedback imediato
-    setFormData(prev => ({ 
-      ...prev, 
-      fotos: [...(prev.fotos || []), ...newLocalPreviews] 
-    }));
-
-    setUploading(true);
-    try {
-      const finalFotos = [...(formData.fotos || [])];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.size > 5 * 1024 * 1024) continue;
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${editingTreeId || 'new'}/${Math.random()}.${fileExt}`;
-        const filePath = fileName;
-
-        const { error: uploadError } = await supabase.storage
-          .from('Gallery')
-          .upload(filePath, file);
-
-        if (!uploadError) {
-          finalFotos.push(filePath);
-        }
-      }
-
-      // Filtrar as URLs de blob e substituir pelos caminhos reais após upload
-      // Nota: Para simplificar, manteremos o fluxo de upload imediato, mas agora com preview
-      setFormData(prev => ({ 
-        ...prev, 
-        fotos: prev.fotos
-      }));
-    } catch (err) {
-      console.error('Erro no upload da galeria:', err);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const removePhoto = (path: string) => {
-    setFormData(prev => ({
-      ...prev,
-      fotos: prev.fotos?.filter(f => f !== path)
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,59 +115,6 @@ export function TreeModal() {
         <div className="p-6 bg-slate-50/30 overflow-y-auto">
           <form id="tree-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
             
-            {/* Galeria de Fotos */}
-            <div className="flex flex-col gap-3">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
-                Arquivos e Documentos
-                <span className="text-[9px] font-medium text-slate-300">Máx 10MB por arquivo</span>
-              </label>
-              
-              <div className="grid grid-cols-4 gap-3">
-                {formData.fotos?.map((foto, idx) => (
-                  <div key={idx} className="aspect-square rounded-2xl bg-slate-200 relative group overflow-hidden border border-slate-100">
-                    {foto.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|blob|data)/) || foto.startsWith('blob:') || foto.startsWith('data:') ? (
-                      <img 
-                        src={foto.startsWith('http') || foto.startsWith('data:') || foto.startsWith('blob:') ? foto : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Gallery/${foto}`} 
-                        alt="Tree" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-slate-100 text-slate-400">
-                        <Save size={20} />
-                        <span className="text-[8px] font-bold truncate w-full text-center mt-1">
-                          {foto.split('/').pop()?.slice(-15)}
-                        </span>
-                      </div>
-                    )}
-                    <button 
-                      type="button"
-                      onClick={() => removePhoto(foto)}
-                      className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))}
-                
-                <button 
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-all disabled:opacity-50"
-                >
-                  {uploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
-                  <span className="text-[10px] font-bold">Anexar</span>
-                </button>
-              </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                multiple 
-                accept="*" 
-                className="hidden" 
-                onChange={handleFileUpload} 
-              />
-            </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cliente Proprietário</label>
