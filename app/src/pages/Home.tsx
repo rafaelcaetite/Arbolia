@@ -337,7 +337,11 @@ export function Home() {
 
           <div className="w-full h-[320px] relative z-10 mt-6">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={weatherData} margin={{ top: 10, right: -20, left: -20, bottom: 30 }}>
+              <ComposedChart 
+                data={weatherData} 
+                margin={{ top: 10, right: -20, left: -20, bottom: 30 }}
+                style={{ outline: 'none' }}
+              >
                 <defs>
                   <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
