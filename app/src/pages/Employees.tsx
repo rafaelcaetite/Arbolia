@@ -303,10 +303,12 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
               <input value={formData.telefone} onChange={handlePhoneChange} placeholder="(00) 00000-0000" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase ml-1">CREA (Opcional)</label>
-              <input value={formData.crea} onChange={e => setFormData({...formData, crea: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
-            </div>
+            {formData.role === 'tecnico' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1">CREA (Opcional)</label>
+                <input value={formData.crea} onChange={e => setFormData({...formData, crea: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
+              </div>
+            )}
           </div>
         </form>
 
