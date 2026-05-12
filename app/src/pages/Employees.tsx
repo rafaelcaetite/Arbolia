@@ -4,17 +4,38 @@ import { useAppStore, type UserProfile } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 
 export function Employees() {
-  const { employees, createEmployee } = useAppStore();
+  const { employees, createEmployee, updateEmployee } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<UserProfile | null>(null);
 
+  const rolePriority = {
+    admin: 1,
+    tecnico: 2,
+    campo: 3
+  };
+
   const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => 
-      emp.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return employees
+      .filter(emp => 
+        emp.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        // Primeiro por status (ativos primeiro)
+        if (a.ativo !== b.ativo) return a.ativo ? -1 : 1;
+        // Depois por hierarquia
+        return (rolePriority[a.role as keyof typeof rolePriority] || 99) - 
+               (rolePriority[b.role as keyof typeof rolePriority] || 99);
+      });
   }, [employees, searchTerm]);
+
+  const handleToggleStatus = async (emp: UserProfile) => {
+    const action = emp.ativo ? 'inativar' : 'ativar';
+    if (confirm(`Tem certeza que deseja ${action} o funcionário ${emp.nome}?`)) {
+      await updateEmployee(emp.id, { ativo: !emp.ativo });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 pb-12 animate-in fade-in duration-500">
@@ -47,21 +68,35 @@ export function Employees() {
       {/* Grid de Funcionários */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEmployees.map((emp) => (
-          <div key={emp.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <SecureImage 
-                  src={emp.foto_url} 
-                  alt={emp.nome} 
-                  className="w-16 h-16 rounded-2xl border-2 border-slate-50 shadow-sm" 
-                  fallbackInitial={emp.nome.charAt(0).toUpperCase()}
-                />
+          <div key={emp.id} className={`bg-white rounded-[40px] p-8 border border-slate-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden ${!emp.ativo ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+            {/* Status Inativo Overlay */}
+            {!emp.ativo && (
+              <div className="absolute top-4 right-4 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-slate-200">
+                Inativo
+              </div>
+            )}
+
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex items-center gap-5">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-[28px] overflow-hidden shadow-inner bg-slate-50 border-2 border-white ring-1 ring-slate-100">
+                    <SecureImage 
+                      src={emp.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.nome)}&background=random`} 
+                      alt={emp.nome} 
+                      className="w-full h-full object-cover" 
+                      fallbackInitial={emp.nome.charAt(0).toUpperCase()}
+                    />
+                  </div>
+                  {emp.ativo && (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>
+                  )}
+                </div>
                 <div>
                   <h3 className="font-bold text-slate-800 text-lg leading-tight mb-1">{emp.nome}</h3>
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
                     emp.role === 'admin' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                    emp.role === 'tecnico' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                    'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                    emp.role === 'tecnico' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                    'bg-blue-50 text-blue-600 border border-blue-100'
                   }`}>
                     {emp.role === 'admin' ? 'Administrador' : emp.role === 'tecnico' ? 'Técnico' : 'Assistente'}
                   </span>
@@ -80,7 +115,7 @@ export function Employees() {
                 <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
                   <Phone size={14} className="text-slate-400" />
                 </div>
-                <span>{emp.telefone || '(00) 0000-0000'}</span>
+                <span>{emp.telefone || '(00) 00000-0000'}</span>
               </div>
               {emp.crea && (
                 <div className="flex items-center gap-3 text-sm text-slate-500 font-medium">
@@ -99,8 +134,14 @@ export function Employees() {
               >
                 <FileText size={14} /> Perfil
               </button>
-              <button className="px-3 bg-slate-50 hover:bg-slate-100 text-slate-600 py-2.5 rounded-xl transition-all">
-                <Plus size={14} className="rotate-45" />
+              <button 
+                onClick={() => handleToggleStatus(emp)}
+                title={emp.ativo ? 'Inativar Funcionário' : 'Ativar Funcionário'}
+                className={`px-3 py-2.5 rounded-xl transition-all flex items-center justify-center ${
+                  emp.ativo ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white'
+                }`}
+              >
+                {emp.ativo ? <Plus size={14} className="rotate-45" /> : <Plus size={14} />}
               </button>
             </div>
           </div>

@@ -220,13 +220,15 @@ interface AppState {
   weatherCity: { name: string, lat: number, lon: number }
   setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
 
-  // Gestão de Funcionários
   fetchEmployees: () => Promise<void>
   createEmployee: (data: any) => Promise<void>
+  updateEmployee: (id: string, data: any) => Promise<void>
   uploadFile: (bucket: string, file: File) => Promise<string>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
+  // ... (existing state)
+  // (Note: I will only replace the implementation of updateEmployee and relevant parts)
   clients: [],
   trees: [],
   services: [],
@@ -554,6 +556,25 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ employees });
     } catch (error) {
       console.error('Erro ao buscar funcionários:', error);
+    }
+  },
+  updateEmployee: async (id, data) => {
+    try {
+      const { data: updatedProfile, error } = await supabase
+        .from('profiles')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      set(state => ({
+        employees: state.employees.map(emp => emp.id === id ? updatedProfile : emp)
+      }));
+    } catch (error: any) {
+      console.error('Erro ao atualizar funcionário:', error);
+      alert(`Erro ao atualizar: ${error.message}`);
     }
   },
   uploadFile: async (bucket, file) => {
