@@ -1,73 +1,10 @@
 import { useRef, useState, useEffect } from 'react';
-import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown, Pencil, Trash2 } from 'lucide-react';
+import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown, Pencil, Trash2, Download } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 import { ActionModal } from '../common/ActionModal';
+import { AttachmentViewer } from '../common/AttachmentViewer';
 
-// ── Visualizador de Anexos ──────────────────────────────────────────────────
-function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachment; onClose: () => void }) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadSecureUrl() {
-      if (attachment.storagePath) {
-        // Se temos um caminho no storage, geramos uma URL assinada
-        const bucket = attachment.type === 'image' ? 'Gallery' : 'Documents';
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(attachment.storagePath, 3600); // 1 hora de validade
-        
-        if (error) {
-          console.error('Erro ao gerar URL assinada para anexo:', error);
-          setPdfUrl(attachment.dataUrl || null);
-        } else {
-          setPdfUrl(data.signedUrl);
-        }
-      } else if (attachment.type === 'pdf' && attachment.dataUrl?.startsWith('data:')) {
-        try {
-          const base64 = attachment.dataUrl.split(',')[1];
-          const byteCharacters = atob(base64);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          return () => URL.revokeObjectURL(url);
-        } catch (e) {
-          console.error('Erro ao converter PDF para Blob:', e);
-          setPdfUrl(attachment.dataUrl);
-        }
-      } else {
-        setPdfUrl(attachment.dataUrl || null);
-      }
-    }
-
-    loadSecureUrl();
-  }, [attachment]);
-
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center px-5 py-3.5 border-b border-slate-100">
-          <span className="text-sm font-bold text-slate-700 truncate">{attachment.name}</span>
-          <button onClick={onClose} className="p-1.5 bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100 transition-colors">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-50">
-          {attachment.type === 'image' ? (
-            <img src={pdfUrl || attachment.dataUrl} alt={attachment.name} className="max-w-full max-h-full rounded-xl object-contain" />
-          ) : (
-            <iframe src={pdfUrl || ''} title={attachment.name} className="w-full h-[60vh] rounded-xl border border-slate-200" />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Botões de Anexo por Serviço ──────────────────────────────────────────────
 function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; treeId: string; attachments: ServiceAttachment[] }) {
@@ -208,6 +145,25 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                   <span className="text-[9px] text-slate-400 shrink-0">{formatSize(att.size)}</span>
                 </button>
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
+                      const { data } = await supabase.storage.from(bucket).createSignedUrl(att.storagePath!, 3600);
+                      if (data?.signedUrl) {
+                        const a = document.createElement('a');
+                        a.href = data.signedUrl;
+                        a.download = att.name;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
+                    title="Baixar"
+                  >
+                    <Download size={11} />
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

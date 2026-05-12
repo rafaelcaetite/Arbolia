@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History, Loader2, FileText } from 'lucide-react';
 
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
+import { AttachmentViewer } from '../common/AttachmentViewer';
 
 export function TreeDetailsModal() {
   const { isTreeDetailsModalOpen, viewingTreeDetailsId, trees, clients, services, closeTreeDetailsModal, openHistoryModal } = useAppStore();
 
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [signedPhotos, setSignedPhotos] = useState<{url: string, name: string}[]>([]);
+  const [signedPhotos, setSignedPhotos] = useState<{url: string, name: string, path: string, type: string}[]>([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [viewingAttachment, setViewingAttachment] = useState<ServiceAttachment | null>(null);
   
   const tree = trees.find(t => t.id === viewingTreeDetailsId);
 
@@ -42,7 +44,7 @@ export function TreeDetailsModal() {
             });
           });
 
-        const signedResults: {url: string, name: string}[] = [];
+        const signedResults: {url: string, name: string, path: string, type: string}[] = [];
 
         // Sign Gallery Files
         if (galleryFiles.length > 0) {
@@ -52,7 +54,14 @@ export function TreeDetailsModal() {
           const { data, error } = await supabase.storage.from('Gallery').createSignedUrls(paths, 3600);
           if (!error && data) {
             data.forEach((item, idx) => {
-              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueGallery[idx].name });
+              if (item.signedUrl) {
+                signedResults.push({ 
+                  url: item.signedUrl, 
+                  name: uniqueGallery[idx].name,
+                  path: uniqueGallery[idx].path,
+                  type: 'image'
+                });
+              }
             });
           }
         }
@@ -64,7 +73,14 @@ export function TreeDetailsModal() {
           const { data, error } = await supabase.storage.from('Documents').createSignedUrls(paths, 3600);
           if (!error && data) {
             data.forEach((item, idx) => {
-              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueDocs[idx].name });
+              if (item.signedUrl) {
+                signedResults.push({ 
+                  url: item.signedUrl, 
+                  name: uniqueDocs[idx].name,
+                  path: uniqueDocs[idx].path,
+                  type: 'pdf'
+                });
+              }
             });
           }
         }
@@ -81,8 +97,6 @@ export function TreeDetailsModal() {
     loadPhotos();
     setPhotoIdx(0);
   }, [tree, isTreeDetailsModalOpen, services]);
-
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   if (!isTreeDetailsModalOpen || !viewingTreeDetailsId || !tree) return null;
 
@@ -179,12 +193,15 @@ export function TreeDetailsModal() {
                 onClick={() => {
                   const current = signedPhotos[photoIdx];
                   if (!current) return;
-                  const isImage = current.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)/);
-                  if (isImage) {
-                    setIsLightboxOpen(true);
-                  } else {
-                    window.open(current.url, '_blank');
-                  }
+                  setViewingAttachment({
+                    id: current.path,
+                    name: current.name,
+                    storagePath: current.path,
+                    type: current.type as 'image' | 'pdf',
+                    size: 0,
+                    serviceId: '',
+                    treeId: viewingTreeDetailsId || ''
+                  });
                 }}
               >
                 {loadingPhotos ? (
@@ -260,50 +277,11 @@ export function TreeDetailsModal() {
         </div>
       </div>
 
-      {/* Lightbox / Imagem Aumentada */}
-      {isLightboxOpen && signedPhotos[photoIdx] && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-200">
-          <button 
-            onClick={() => setIsLightboxOpen(false)}
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-20"
-          >
-            <X size={24} />
-          </button>
-          
-          <div className="relative w-full h-full flex items-center justify-center">
-            <img
-              src={signedPhotos[photoIdx].url}
-              alt={signedPhotos[photoIdx].name}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
-            />
-            
-            {signedPhotos.length > 1 && (
-              <>
-                <button
-                  onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
-                  disabled={photoIdx === 0}
-                  className="absolute left-4 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all disabled:opacity-10"
-                >
-                  <ChevronLeft size={32} />
-                </button>
-                <button
-                  onClick={() => setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1))}
-                  disabled={photoIdx === signedPhotos.length - 1}
-                  className="absolute right-4 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all disabled:opacity-10"
-                >
-                  <ChevronRight size={32} />
-                </button>
-              </>
-            )}
-          </div>
-
-          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-2">
-            <span className="text-white/60 text-xs font-medium uppercase tracking-widest">
-              {photoIdx + 1} de {signedPhotos.length}
-            </span>
-            <p className="text-white font-bold text-sm">{signedPhotos[photoIdx].name}</p>
-          </div>
-        </div>
+      {viewingAttachment && (
+        <AttachmentViewer 
+          attachment={viewingAttachment} 
+          onClose={() => setViewingAttachment(null)} 
+        />
       )}
     </div>
   );
