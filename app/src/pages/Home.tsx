@@ -31,20 +31,20 @@ export function Home() {
 
   // Busca de Sugestões (Nominatim) com Debounce
   useEffect(() => {
-    if (searchQuery.length < 3) {
+    if (searchQuery.length < 2) {
       setSuggestions([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=5&countrycodes=br`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=5&countrycodes=br&featuretype=city`);
         const data = await res.json();
         setSuggestions(data);
       } catch (e) {
         console.error('Erro na busca de cidades:', e);
       }
-    }, 500);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
