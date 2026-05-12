@@ -16,6 +16,18 @@ export function Home() {
   const [currentWeather, setCurrentWeather] = useState<{ temp: any, humidity: any, wind: any, rain: any } | null>(null);
   const [dailyStats, setDailyStats] = useState<{ min: number, max: number, rain: number } | null>(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Relógio em tempo real
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Atualiza a cada minuto
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = currentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const formattedDate = currentTime.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 
   // Busca de Sugestões (Nominatim) com Debounce
   useEffect(() => {
@@ -277,7 +289,9 @@ export function Home() {
             
             {/* Grouped 'Agora' Stats */}
             <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Monitoramento Agora</span>
+              <div className="flex justify-between items-end ml-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Monitoramento Agora {formattedTime}</span>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-3 px-4 py-3 bg-blue-50/50 border border-blue-100 rounded-2xl shadow-sm">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
@@ -380,6 +394,9 @@ export function Home() {
 
         {/* Upcoming Services Table */}
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col">
+          <div className="mb-4">
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] ml-1">{formattedDate}</span>
+          </div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               <Clock className="text-emerald-500" size={20} />
