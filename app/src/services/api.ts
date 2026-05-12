@@ -22,6 +22,17 @@ export const api = {
     return data as Client;
   },
 
+  async updateClient(id: string, updates: Partial<Client>) {
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Client;
+  },
+
   // --- Profiles & Employees
   async getProfile(userId: string) {
     const { data, error } = await supabase

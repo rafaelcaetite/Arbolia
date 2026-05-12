@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Search, ArrowDownWideNarrow, ListFilter, Trees, Building2, Phone, Mail, FileText, Info, X, Calendar, Leaf, Download, Pencil, Users, Plus } from 'lucide-react';
 import { useAppStore, type Tree, type Service, type ServiceAttachment } from '../store/useAppStore';
 import { ClientDetailsModal } from '../components/clients/ClientDetailsModal';
+import { ClientFormModal } from '../components/clients/ClientFormModal';
 
 
 
@@ -135,6 +136,7 @@ function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDet
             {client.status}
           </span>
           <button
+            onClick={() => openClientModal(client.id)}
             title="Editar dados"
             className="p-1 rounded-lg text-slate-300 hover:text-primary hover:bg-primary/8 transition-colors"
           >
@@ -187,6 +189,15 @@ function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDet
             </button>
           )}
 
+          {/* Badge Editar */}
+          <button
+            onClick={() => openClientModal(client.id)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-100 bg-white text-slate-500 hover:bg-slate-50 transition-all"
+          >
+            <Pencil size={13} />
+            Editar
+          </button>
+
           {/* Badge Documentos */}
           {clientDocs.length > 0 && (
             <button
@@ -218,7 +229,7 @@ function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDet
 
 
 export function Clients() {
-  const { clients, trees, services, openClientDetailsModal } = useAppStore();
+  const { clients, trees, services, openClientDetailsModal, openClientModal } = useAppStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recentes');
@@ -254,6 +265,7 @@ export function Clients() {
   return (
     <div className="h-full flex flex-col gap-6 relative">
       <ClientDetailsModal />
+      <ClientFormModal />
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
@@ -261,8 +273,12 @@ export function Clients() {
           </h1>
           <p className="text-slate-500 text-sm mt-1">Gerencie os proprietários e contratantes do inventário.</p>
         </div>
-        <button className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-primary/30 transition-all transform hover:scale-[1.02] active:scale-95">
-          + Novo Cliente
+        <button 
+          id="new-client-btn"
+          onClick={() => openClientModal()}
+          className="bg-primary text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+        >
+          <Plus size={20} /> Novo Cliente
         </button>
       </div>
 
@@ -356,15 +372,6 @@ export function Clients() {
                     <h3 className="text-xl font-bold text-slate-800">Nenhum cliente cadastrado</h3>
                     <p className="text-slate-500 max-w-xs mx-auto">Sua carteira de clientes está vazia. Comece cadastrando um proprietário para gerenciar o inventário.</p>
                   </div>
-                  <button 
-                    onClick={() => {
-                      // O botão de Novo Cliente já está no topo, mas esse facilita o fluxo
-                      document.getElementById('new-client-btn')?.click();
-                    }}
-                    className="mt-2 flex items-center gap-2 text-primary font-bold hover:underline"
-                  >
-                    <Plus size={18} /> Cadastrar agora
-                  </button>
                 </div>
               )}
             </div>

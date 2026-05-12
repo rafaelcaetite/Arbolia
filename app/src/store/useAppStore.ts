@@ -140,6 +140,9 @@ interface AppState {
   isPostServiceModalOpen: boolean
   activePostServiceId: string | null
 
+  isClientModalOpen: boolean
+  editingClientId: string | null
+
   // Modal de Laudo ISA
   isLaudoModalOpen: boolean
   activeLaudoServiceId: string | null
@@ -199,6 +202,11 @@ interface AppState {
   openReminderModal: (serviceId: string) => void
   closeReminderModal: () => void
 
+  openClientModal: (id?: string) => void
+  closeClientModal: () => void
+  createClient: (data: Omit<Client, 'id' | 'data_cadastro'>) => Promise<void>
+  updateClient: (id: string, data: Partial<Client>) => Promise<void>
+
   // Clima
   weatherCity: { name: string, lat: number, lon: number }
   setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
@@ -243,6 +251,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   isPostServiceModalOpen: false,
   activePostServiceId: null,
+
+  isClientModalOpen: false,
+  editingClientId: null,
 
   isLaudoModalOpen: false,
   activeLaudoServiceId: null,
@@ -465,6 +476,29 @@ export const useAppStore = create<AppState>((set) => ({
 
   openReminderModal: (serviceId) => set({ isReminderModalOpen: true, activeReminderServiceId: serviceId }),
   closeReminderModal: () => set({ isReminderModalOpen: false, activeReminderServiceId: null }),
+
+  openClientModal: (id) => set({ isClientModalOpen: true, editingClientId: id || null }),
+  closeClientModal: () => set({ isClientModalOpen: false, editingClientId: null }),
+  createClient: async (data) => {
+    try {
+      const newClient = await api.createClient(data);
+      set(state => ({ clients: [newClient, ...state.clients] }));
+    } catch (error) {
+      console.error('Erro ao criar cliente:', error);
+      throw error;
+    }
+  },
+  updateClient: async (id, updates) => {
+    try {
+      const updated = await api.updateClient(id, updates);
+      set(state => ({
+        clients: state.clients.map(c => c.id === id ? updated : c)
+      }));
+    } catch (error) {
+      console.error('Erro ao atualizar cliente:', error);
+      throw error;
+    }
+  },
 
   // Clima
   weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 },
