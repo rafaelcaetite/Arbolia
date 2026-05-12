@@ -36,6 +36,8 @@ export interface MapBounds {
   west: number
   north: number
   east: number
+}
+
 export interface Tree {
   id: string
   cliente_id?: string
