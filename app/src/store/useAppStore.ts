@@ -23,12 +23,13 @@ export interface UserProfile {
   id: string
   nome: string
   email: string
-  role: 'admin' | 'tecnico' | 'assistente'
+  role: 'admin' | 'tecnico' | 'campo'
   crea?: string
   telefone?: string
   foto_url?: string
   data_nascimento?: string
-  data_cadastro: string
+  ativo: boolean
+  data_cadastro?: string
 }
 
 export interface MapBounds {
