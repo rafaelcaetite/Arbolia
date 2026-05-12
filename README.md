@@ -1,4 +1,5 @@
-# 🌳 Arbolia
+# Arbolia - Gestão de Arborização 🌳
+> **Status de Deploy:** Integração Supabase + Vercel (Compilação TS Fix)
 
 **Sistema de Gestão de Arborização Urbana**
 
