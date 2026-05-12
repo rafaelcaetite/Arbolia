@@ -136,6 +136,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     foto_url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,13 +144,30 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     setIsSubmitting(true);
     try {
       await onSave(formData);
-      onClose();
+      setIsSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } catch (error) {
       console.error('Erro ao salvar funcionário:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div className="bg-emerald-500 w-full max-w-sm rounded-[40px] aspect-square flex flex-col items-center justify-center shadow-2xl animate-in zoom-in duration-500">
+          <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <CheckCircle2 size={48} className="text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white text-center">Cadastro Concluído!</h2>
+          <p className="text-white/80 font-medium mt-2">Equipe Arbolia atualizada.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -169,7 +187,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-1 cursor-pointer hover:border-primary hover:text-primary transition-all group overflow-hidden relative">
               {formData.foto_url ? (
-                <img src={formData.foto_url} className="w-full h-full object-cover" />
+                <img src={formData.foto_url} className="w-full h-full object-cover" alt="Preview" />
               ) : (
                 <>
                   <Camera size={24} />
@@ -236,6 +254,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
         <div className="p-8 bg-slate-50 flex gap-4">
           <button onClick={onClose} className="flex-1 py-4 text-slate-500 font-bold hover:text-slate-800 transition-colors">Cancelar</button>
           <button 
+            type="submit"
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="flex-[2] bg-primary hover:bg-primary-dark text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
