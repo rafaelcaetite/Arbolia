@@ -440,7 +440,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
 
             <div className="pt-4 border-t border-slate-50">
               <p className="text-[10px] font-medium text-slate-400 text-center italic">
-                Colaborador ativo desde {new Date(employee.data_cadastro).toLocaleDateString('pt-BR')}
+                Colaborador desde {employee.data_cadastro ? new Date(employee.data_cadastro).toLocaleDateString('pt-BR') : 'sempre'}
               </p>
             </div>
           </div>

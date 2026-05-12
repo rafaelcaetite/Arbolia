@@ -219,7 +219,7 @@ export function UserProfileModal() {
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-primary/30 decoration-4 underline-offset-8">Meu Perfil</h2>
                 <div className="flex items-center gap-2 mt-6 text-xs font-bold text-slate-400 uppercase tracking-widest">
                   <Briefcase size={14} className="text-primary" /> 
-                  Na equipe Arbolia desde {new Date(userProfile.data_cadastro).toLocaleDateString()}
+                  Na equipe Arbolia desde {userProfile.data_cadastro ? new Date(userProfile.data_cadastro).toLocaleDateString() : 'Início'}
                 </div>
               </div>
 
