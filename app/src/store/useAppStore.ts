@@ -28,7 +28,7 @@ export interface UserProfile {
   telefone?: string
   foto_url?: string
   data_nascimento?: string
-  ativo: boolean
+  status: 'ativo' | 'inativo'
   data_cadastro?: string
 }
 
@@ -646,6 +646,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           id: authData.user.id,
           email,
           ...profileData,
+          status: 'ativo',
           data_cadastro: new Date().toISOString()
         })
         .select()

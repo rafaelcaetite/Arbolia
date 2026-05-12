@@ -23,7 +23,7 @@ export function Employees() {
       )
       .sort((a, b) => {
         // Primeiro por status (ativos primeiro)
-        if (a.ativo !== b.ativo) return a.ativo ? -1 : 1;
+        if (a.status !== b.status) return a.status === 'ativo' ? -1 : 1;
         // Depois por hierarquia
         return (rolePriority[a.role as keyof typeof rolePriority] || 99) - 
                (rolePriority[b.role as keyof typeof rolePriority] || 99);
@@ -31,9 +31,10 @@ export function Employees() {
   }, [employees, searchTerm]);
 
   const handleToggleStatus = async (emp: UserProfile) => {
-    const action = emp.ativo ? 'inativar' : 'ativar';
+    const isAtivo = emp.status === 'ativo';
+    const action = isAtivo ? 'inativar' : 'ativar';
     if (confirm(`Tem certeza que deseja ${action} o funcionário ${emp.nome}?`)) {
-      await updateEmployee(emp.id, { ativo: !emp.ativo });
+      await updateEmployee(emp.id, { status: isAtivo ? 'inativo' : 'ativo' });
     }
   };
 
@@ -68,9 +69,9 @@ export function Employees() {
       {/* Grid de Funcionários */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredEmployees.map((emp) => (
-          <div key={emp.id} className={`bg-white rounded-[40px] p-8 border border-slate-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden ${!emp.ativo ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+          <div key={emp.id} className={`bg-white rounded-[40px] p-8 border border-slate-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden ${emp.status === 'inativo' ? 'opacity-60 grayscale-[0.5]' : ''}`}>
             {/* Status Inativo Overlay */}
-            {!emp.ativo && (
+            {emp.status === 'inativo' && (
               <div className="absolute top-4 right-4 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-slate-200">
                 Inativo
               </div>
@@ -87,7 +88,7 @@ export function Employees() {
                       fallbackInitial={emp.nome.charAt(0).toUpperCase()}
                     />
                   </div>
-                  {emp.ativo && (
+                  {emp.status === 'ativo' && (
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-sm"></div>
                   )}
                 </div>
@@ -136,12 +137,12 @@ export function Employees() {
               </button>
               <button 
                 onClick={() => handleToggleStatus(emp)}
-                title={emp.ativo ? 'Inativar Funcionário' : 'Ativar Funcionário'}
+                title={emp.status === 'ativo' ? 'Inativar Funcionário' : 'Ativar Funcionário'}
                 className={`px-3 py-2.5 rounded-xl transition-all flex items-center justify-center ${
-                  emp.ativo ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white'
+                  emp.status === 'ativo' ? 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white'
                 }`}
               >
-                {emp.ativo ? <Plus size={14} className="rotate-45" /> : <Plus size={14} />}
+                {emp.status === 'ativo' ? <Plus size={14} className="rotate-45" /> : <Plus size={14} />}
               </button>
             </div>
           </div>
