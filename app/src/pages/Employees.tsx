@@ -159,6 +159,19 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     }
   };
 
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length === 0) return '';
+    if (numbers.length <= 2) return `(${numbers}`;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({ ...formData, telefone: formatted });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -169,8 +182,12 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
         onClose();
       }, 2000);
     } catch (error: any) {
-      console.error('Erro ao salvar funcionário:', error);
-      alert(`Erro ao salvar funcionário: ${error.message}`);
+      console.error('Erro detalhado ao salvar funcionário:', error);
+      // Se for o erro Database error saving new user, damos uma dica sobre Triggers
+      const msg = error.message === 'Database error saving new user' 
+        ? 'Erro no Trigger do Banco: Verifique se a função handle_new_user() no Supabase está correta.'
+        : error.message;
+      alert(`Erro ao criar funcionário: ${msg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -283,7 +300,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase ml-1">Telefone</label>
-              <input value={formData.telefone} onChange={e => setFormData({...formData, telefone: e.target.value})} placeholder="(00) 00000-0000" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
+              <input value={formData.telefone} onChange={handlePhoneChange} placeholder="(00) 00000-0000" className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
             </div>
 
             <div className="space-y-1.5">
