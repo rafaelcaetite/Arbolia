@@ -192,6 +192,19 @@ export function TreeDetailsModal() {
                         alt={signedPhotos[photoIdx].name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+                    ) : signedPhotos[photoIdx].name.toLowerCase().endsWith('.pdf') ? (
+                      <div className="w-full h-full relative group/pdf">
+                        <iframe
+                          src={`${signedPhotos[photoIdx].url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full border-0 pointer-events-none"
+                          title="PDF Preview"
+                        />
+                        <div className="absolute inset-0 bg-transparent group-hover/pdf:bg-black/5 transition-colors" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-white/90 p-2 border-t border-slate-100 flex items-center gap-2">
+                          <FileText size={12} className="text-blue-500" />
+                          <span className="text-[10px] font-bold text-slate-600 truncate flex-1">{signedPhotos[photoIdx].name}</span>
+                        </div>
+                      </div>
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-2">
                         <FileText size={32} className="text-slate-300" />

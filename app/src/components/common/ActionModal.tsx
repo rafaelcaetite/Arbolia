@@ -22,24 +22,38 @@ export function ActionModal({
   initialValue = '', 
   confirmLabel 
 }: ActionModalProps) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState('');
+  const [extension, setExtension] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setValue(initialValue);
+      if (type === 'rename') {
+        const lastDot = initialValue.lastIndexOf('.');
+        if (lastDot !== -1) {
+          setValue(initialValue.slice(0, lastDot));
+          setExtension(initialValue.slice(lastDot));
+        } else {
+          setValue(initialValue);
+          setExtension('');
+        }
+      } else {
+        setValue(initialValue);
+        setExtension('');
+      }
       setIsSuccess(false);
       setIsSubmitting(false);
     }
-  }, [isOpen, initialValue]);
+  }, [isOpen, initialValue, type]);
 
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
     try {
-      await onConfirm(type === 'rename' ? value : undefined);
+      const finalValue = type === 'rename' ? `${value}${extension}` : undefined;
+      await onConfirm(finalValue);
       setIsSuccess(true);
       setTimeout(() => {
         onClose();
@@ -82,15 +96,22 @@ export function ActionModal({
 
               {type === 'rename' && (
                 <div className="w-full px-2">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    placeholder="Novo nome..."
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-slate-700"
-                    onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
-                  />
+                  <div className="flex items-center bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-primary transition-all">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      placeholder="Novo nome..."
+                      className="flex-1 px-5 py-4 bg-transparent text-sm font-bold focus:outline-none text-slate-700"
+                      onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
+                    />
+                    {extension && (
+                      <span className="bg-slate-100 px-4 py-4 text-xs font-black text-slate-400 border-l border-slate-100 uppercase tracking-widest">
+                        {extension}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
