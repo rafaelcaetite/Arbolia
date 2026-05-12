@@ -116,13 +116,17 @@ export function TreeModal() {
             
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cliente Proprietário</label>
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                <span>Cliente Proprietário</span>
+                <span className="text-red-500">* obrigatório</span>
+              </label>
               <select 
+                required
                 value={formData.cliente_id || ''}
                 onChange={(e) => setFormData({...formData, cliente_id: e.target.value})}
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
               >
-                <option value="">Selecione um cliente (opcional)</option>
+                <option value="">Selecione o proprietário</option>
                 {clients.map(c => (
                   <option key={c.id} value={c.id}>{c.nome}</option>
                 ))}

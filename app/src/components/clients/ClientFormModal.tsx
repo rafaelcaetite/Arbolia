@@ -141,9 +141,29 @@ export function ClientFormModal() {
                 <input 
                   required
                   type="text"
-                  placeholder="00.000.000/0001-00"
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   value={formData.documento}
-                  onChange={e => setFormData({ ...formData, documento: e.target.value })}
+                  onChange={e => {
+                    let val = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                    if (val.length > 14) val = val.slice(0, 14); // Limite máximo do CNPJ
+
+                    let masked = val;
+                    if (val.length <= 11) {
+                      // CPF: 000.000.000-00
+                      masked = val
+                        .replace(/(\d{3})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d)/, '$1.$2')
+                        .replace(/(\d{3})(\d{1,2})/, '$1-$2');
+                    } else {
+                      // CNPJ: 00.000.000/0000-00
+                      masked = val
+                        .replace(/^(\d{2})(\d)/, '$1.$2')
+                        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+                        .replace(/(\d{4})(\d)/, '$1-$2');
+                    }
+                    setFormData({ ...formData, documento: masked });
+                  }}
                   className="bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 font-mono text-sm placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                 />
               </div>
