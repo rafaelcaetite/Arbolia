@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 
