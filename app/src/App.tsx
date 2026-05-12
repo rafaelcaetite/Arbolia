@@ -10,7 +10,6 @@ import { Login } from './pages/Login';
 
 import { PostServiceModal } from './components/inventory/PostServiceModal';
 import { LaudoAvaliacaoModal } from './components/inventory/LaudoAvaliacaoModal';
-import { TemplateGallery } from './components/inventory/TemplateGallery';
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from './store/useAppStore';
@@ -64,7 +63,6 @@ function App() {
           <Route path="/acervo" element={<Acervo />} />
           <Route path="/historico" element={<ServiceLog />} />
 
-          <Route path="/templates" element={<TemplateGallery />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <PostServiceModal />
