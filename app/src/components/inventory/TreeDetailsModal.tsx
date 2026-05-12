@@ -19,12 +19,14 @@ export function TreeDetailsModal() {
       
       setLoadingPhotos(true);
       try {
-        const galleryFiles: string[] = [];
-        const documentFiles: string[] = [];
+        const galleryFiles: {path: string, name: string}[] = [];
+        const documentFiles: {path: string, name: string}[] = [];
         
         // 1. Fotos/Arquivos diretas da árvore (sempre Gallery)
         if (tree.fotos && Array.isArray(tree.fotos)) {
-          galleryFiles.push(...tree.fotos.filter(f => !!f));
+          tree.fotos.forEach(f => {
+            if (f) galleryFiles.push({ path: f, name: f.split('/').pop() || 'Foto' });
+          });
         }
 
         // 2. Fotos/Arquivos de serviços (anexos)
@@ -34,8 +36,8 @@ export function TreeDetailsModal() {
             const treeAttachments = s.attachmentsByTree?.[tree.id] || [];
             treeAttachments.forEach(a => {
               if (a.storagePath) {
-                if (a.type === 'image') galleryFiles.push(a.storagePath);
-                else documentFiles.push(a.storagePath);
+                if (a.type === 'image') galleryFiles.push({ path: a.storagePath, name: a.name });
+                else documentFiles.push({ path: a.storagePath, name: a.name });
               }
             });
           });
@@ -44,22 +46,25 @@ export function TreeDetailsModal() {
 
         // Sign Gallery Files
         if (galleryFiles.length > 0) {
-          const uniqueGallery = Array.from(new Set(galleryFiles));
-          const { data, error } = await supabase.storage.from('Gallery').createSignedUrls(uniqueGallery, 3600);
+          // Remove duplicates based on path, keeping the name
+          const uniqueGallery = galleryFiles.filter((v, i, a) => a.findIndex(t => t.path === v.path) === i);
+          const paths = uniqueGallery.map(g => g.path);
+          const { data, error } = await supabase.storage.from('Gallery').createSignedUrls(paths, 3600);
           if (!error && data) {
             data.forEach((item, idx) => {
-              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueGallery[idx].split('/').pop() || 'Foto' });
+              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueGallery[idx].name });
             });
           }
         }
 
         // Sign Document Files
         if (documentFiles.length > 0) {
-          const uniqueDocs = Array.from(new Set(documentFiles));
-          const { data, error } = await supabase.storage.from('Documents').createSignedUrls(uniqueDocs, 3600);
+          const uniqueDocs = documentFiles.filter((v, i, a) => a.findIndex(t => t.path === v.path) === i);
+          const paths = uniqueDocs.map(d => d.path);
+          const { data, error } = await supabase.storage.from('Documents').createSignedUrls(paths, 3600);
           if (!error && data) {
             data.forEach((item, idx) => {
-              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueDocs[idx].split('/').pop() || 'Documento' });
+              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueDocs[idx].name });
             });
           }
         }
@@ -172,11 +177,13 @@ export function TreeDetailsModal() {
               <div 
                 className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group cursor-pointer" 
                 onClick={() => {
-                  const isImage = signedPhotos[photoIdx]?.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)/);
+                  const current = signedPhotos[photoIdx];
+                  if (!current) return;
+                  const isImage = current.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)/);
                   if (isImage) {
                     setIsLightboxOpen(true);
                   } else {
-                    window.open(signedPhotos[photoIdx].url, '_blank');
+                    window.open(current.url, '_blank');
                   }
                 }}
               >
@@ -199,10 +206,11 @@ export function TreeDetailsModal() {
                           className="w-full h-full border-0 pointer-events-none"
                           title="PDF Preview"
                         />
-                        <div className="absolute inset-0 bg-transparent group-hover/pdf:bg-black/5 transition-colors" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-white/90 p-2 border-t border-slate-100 flex items-center gap-2">
+                        <div className="absolute inset-0 bg-transparent group-hover/pdf:bg-black/10 transition-colors" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-white/95 p-2 border-t border-slate-100 flex items-center gap-2">
                           <FileText size={12} className="text-blue-500" />
                           <span className="text-[10px] font-bold text-slate-600 truncate flex-1">{signedPhotos[photoIdx].name}</span>
+                          <span className="text-[8px] font-black text-primary uppercase tracking-widest">Abrir</span>
                         </div>
                       </div>
                     ) : (
