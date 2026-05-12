@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Search, UserPlus, Mail, Phone, ShieldCheck, Briefcase, Plus, FileText, X, Camera } from 'lucide-react';
-import { useAppStore, type UserProfile } from '../store/useAppStore';
+import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera } from 'lucide-react';
+import { useAppStore } from '../store/useAppStore';
 
 export function Employees() {
   const { employees, createEmployee } = useAppStore();

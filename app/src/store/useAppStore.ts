@@ -105,12 +105,6 @@ export interface Service {
   laudoData?: ISALaudoData
 }
 
-// Perfil do técnico ativo (em produção virá do contexto de autenticação)
-// Por ora usamos um mock que pode ser editado nas configurações
-export const TECNICO_ATIVO: TecnicoInfo = {
-  nome: 'Técnico Responsável',
-  registro_crea: 'CREA-XX 000000',
-}
 
 interface AppState {
   clients: Client[]
