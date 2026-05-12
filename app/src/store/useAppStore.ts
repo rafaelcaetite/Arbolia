@@ -559,8 +559,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const { email, password, ...profileData } = data;
       
-      // 1. Criar Usuário no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 1. Criar instância temporária para evitar deslogar o Admin
+      const { createClient } = await import('@supabase/supabase-js');
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        }
+      );
+
+      // 2. Criar Usuário no Supabase Auth
+      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
         email,
         password,
       });
@@ -568,7 +582,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (authError) throw authError;
       if (!authData.user) throw new Error('Falha ao criar usuário na autenticação.');
 
-      // 2. Criar Perfil no Banco de Dados vinculado ao ID do Auth
+      // 3. Criar Perfil no Banco de Dados (usando o cliente principal para manter RLS se necessário)
       const newEmployee = await api.createEmployee({
         id: authData.user.id,
         email,
@@ -576,7 +590,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
 
       set(state => ({ employees: [newEmployee, ...state.employees] }));
-      alert('Funcionário criado com sucesso! Ele já pode fazer login (após confirmar o e-mail, se necessário).');
+      alert('Funcionário criado com sucesso! Ele já pode fazer login (após confirmar o e-mail se o Supabase exigir).');
     } catch (error: any) {
       console.error('Erro ao criar funcionário:', error);
       alert(`Erro ao criar funcionário: ${error.message}`);
