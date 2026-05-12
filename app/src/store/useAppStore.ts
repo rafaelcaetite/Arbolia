@@ -599,10 +599,16 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       );
 
-      // 2. Criar Usuário no Supabase Auth
+      // 2. Criar Usuário no Supabase Auth com metadados para satisfazer triggers do banco
       const { data: authData, error: authError } = await tempSupabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            nome: profileData.nome,
+            role: profileData.role
+          }
+        }
       });
 
       if (authError) throw authError;
