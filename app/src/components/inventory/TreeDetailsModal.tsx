@@ -60,6 +60,8 @@ export function TreeDetailsModal() {
     setPhotoIdx(0);
   }, [tree, isTreeDetailsModalOpen, services]);
 
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
   if (!isTreeDetailsModalOpen || !viewingTreeDetailsId || !tree) return null;
 
   const client = clients.find(c => c.id === tree.cliente_id);
@@ -68,57 +70,56 @@ export function TreeDetailsModal() {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
       <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={closeTreeDetailsModal}></div>
       
-      <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/10 w-full max-w-md relative z-10 overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/10 w-full max-w-md relative z-10 overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in-95 duration-200 max-h-[95vh]">
         
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
+        <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            <div className="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
-              <Trees size={20} />
+            <div className="bg-emerald-100 text-emerald-700 p-1.5 rounded-xl">
+              <Trees size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">{tree.especie}</h2>
-              <span className="text-[10px] text-slate-400 font-mono">
+              <h2 className="text-base font-bold text-slate-800 tracking-tight leading-tight">{tree.especie}</h2>
+              <span className="text-[9px] text-slate-400 font-mono">
                 {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `ID: ${tree.id.slice(0, 8).toUpperCase()}`}
               </span>
-
             </div>
           </div>
-          <button onClick={closeTreeDetailsModal} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+          <button onClick={closeTreeDetailsModal} className="p-1.5 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
             <X size={18} />
           </button>
         </div>
 
-        <div className="p-6 bg-slate-50/30 overflow-y-auto flex flex-col gap-4">
+        <div className="p-5 bg-slate-50/30 overflow-y-auto flex flex-col gap-3">
           {client && (
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Building2 size={12} /> Cliente Proprietário</span>
-              <span className="font-bold text-slate-700 text-sm">{client.nome}</span>
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Building2 size={10} /> Cliente Proprietário</span>
+              <span className="font-bold text-slate-700 text-xs">{client.nome}</span>
             </div>
           )}
           
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Ruler size={12} /> Altura</span>
-              <span className="font-bold text-slate-700 text-sm">{tree.altura}m</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Ruler size={10} /> Altura</span>
+              <span className="font-bold text-slate-700 text-xs">{tree.altura}m</span>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Ruler size={12} /> Copa</span>
-              <span className="font-bold text-slate-700 text-sm">{tree.tamanho_copa}m</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-2 shadow-sm">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><MapPin size={12} /> Localização GPS</span>
-            <div className="grid grid-cols-2 gap-2 text-sm font-mono text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100/50">
-              <div className="flex flex-col"><span className="text-slate-400 text-[10px] font-sans">Lat:</span> {tree.latitude}</div>
-              <div className="flex flex-col"><span className="text-slate-400 text-[10px] font-sans">Lng:</span> {tree.longitude}</div>
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Ruler size={10} /> Copa</span>
+              <span className="font-bold text-slate-700 text-xs">{tree.tamanho_copa}m</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Activity size={12} /> Nível de Risco</span>
-              <span className={`uppercase font-bold text-[10px] px-2 py-1 rounded-lg w-max mt-1 ${
+          <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-1.5 shadow-sm">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><MapPin size={10} /> Localização GPS</span>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100/50">
+              <div className="flex flex-col"><span className="text-slate-400 text-[9px] font-sans">Lat:</span> {tree.latitude}</div>
+              <div className="flex flex-col"><span className="text-slate-400 text-[9px] font-sans">Lng:</span> {tree.longitude}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Activity size={10} /> Nível de Risco</span>
+              <span className={`uppercase font-bold text-[9px] px-1.5 py-0.5 rounded-lg w-max mt-0.5 ${
                 tree.status_risco === 'baixo' ? 'bg-emerald-100 text-emerald-700' :
                 tree.status_risco === 'medio' ? 'bg-yellow-100 text-yellow-700' :
                 tree.status_risco === 'alto' ? 'bg-orange-100 text-orange-700' :
@@ -127,9 +128,9 @@ export function TreeDetailsModal() {
                 {tree.status_risco}
               </span>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> Registro</span>
-              <span className="font-bold text-slate-700 text-sm mt-1">{new Date(tree.data_cadastro).toLocaleDateString()}</span>
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar size={10} /> Registro</span>
+              <span className="font-bold text-slate-700 text-xs mt-0.5">{new Date(tree.data_cadastro).toLocaleDateString()}</span>
             </div>
           </div>
           
@@ -138,66 +139,114 @@ export function TreeDetailsModal() {
               closeTreeDetailsModal();
               openHistoryModal(tree.id);
             }}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all text-sm"
           >
-            <History size={18} />
-            Ver Histórico de Atendimentos
+            <History size={16} />
+            Ver Histórico
           </button>
 
-
-          {/* Galeria de fotos assinada */}
+          {/* Galeria de fotos assinada (Preview Pequeno) */}
           {(signedPhotos.length > 0 || loadingPhotos) && (
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-                <ImageIcon size={12} /> Galeria de Campo
+            <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm mt-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <ImageIcon size={10} /> Galeria de Campo
               </span>
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
+              <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group cursor-zoom-in" onClick={() => setIsLightboxOpen(true)}>
                 {loadingPhotos ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Loader2 size={24} className="text-primary animate-spin" />
+                    <Loader2 size={20} className="text-primary animate-spin" />
                   </div>
                 ) : signedPhotos.length > 0 ? (
                   <>
                     <img
                       src={signedPhotos[photoIdx].url}
                       alt={signedPhotos[photoIdx].name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <ImageIcon className="text-white opacity-0 group-hover:opacity-100 drop-shadow-lg" size={24} />
+                    </div>
                     {signedPhotos.length > 1 && (
-                      <div className="absolute inset-0 flex items-center justify-between px-2">
+                      <div className="absolute inset-0 flex items-center justify-between px-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
                           disabled={photoIdx === 0}
-                          className="p-1.5 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-30 hover:bg-white transition-all transform active:scale-90"
+                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90"
                         >
-                          <ChevronLeft size={16} />
+                          <ChevronLeft size={14} />
                         </button>
                         <button
                           onClick={() => setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1))}
                           disabled={photoIdx === signedPhotos.length - 1}
-                          className="p-1.5 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-30 hover:bg-white transition-all transform active:scale-90"
+                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90"
                         >
-                          <ChevronRight size={16} />
+                          <ChevronRight size={14} />
                         </button>
-                      </div>
-                    )}
-                    {signedPhotos.length > 1 && (
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                        {signedPhotos.map((_, i) => (
-                          <button key={i} onClick={() => setPhotoIdx(i)}
-                            className={`w-1.5 h-1.5 rounded-full transition-all ${
-                              i === photoIdx ? 'bg-primary w-4' : 'bg-white/60'
-                            }`} />
-                        ))}
                       </div>
                     )}
                   </>
                 ) : null}
               </div>
+              {signedPhotos.length > 1 && (
+                <div className="flex justify-center gap-1 mt-2">
+                  {signedPhotos.map((_, i) => (
+                    <button key={i} onClick={() => setPhotoIdx(i)}
+                      className={`w-1 h-1 rounded-full transition-all ${
+                        i === photoIdx ? 'bg-primary w-3' : 'bg-slate-200'
+                      }`} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Lightbox / Imagem Aumentada */}
+      {isLightboxOpen && signedPhotos[photoIdx] && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-200">
+          <button 
+            onClick={() => setIsLightboxOpen(false)}
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-20"
+          >
+            <X size={24} />
+          </button>
+          
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={signedPhotos[photoIdx].url}
+              alt={signedPhotos[photoIdx].name}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+            />
+            
+            {signedPhotos.length > 1 && (
+              <>
+                <button
+                  onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
+                  disabled={photoIdx === 0}
+                  className="absolute left-4 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all disabled:opacity-10"
+                >
+                  <ChevronLeft size={32} />
+                </button>
+                <button
+                  onClick={() => setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1))}
+                  disabled={photoIdx === signedPhotos.length - 1}
+                  className="absolute right-4 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all disabled:opacity-10"
+                >
+                  <ChevronRight size={32} />
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center gap-2">
+            <span className="text-white/60 text-xs font-medium uppercase tracking-widest">
+              {photoIdx + 1} de {signedPhotos.length}
+            </span>
+            <p className="text-white font-bold text-sm">{signedPhotos[photoIdx].name}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
