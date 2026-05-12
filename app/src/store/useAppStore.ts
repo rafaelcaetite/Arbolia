@@ -607,7 +607,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           data: {
             nome: profileData.nome,
             full_name: profileData.nome,
-            role: profileData.role
+            role: profileData.role,
+            data_nascimento: profileData.data_nascimento
           }
         }
       });

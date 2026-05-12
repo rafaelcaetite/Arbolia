@@ -134,7 +134,8 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     role: 'tecnico',
     crea: '',
     telefone: '',
-    foto_url: ''
+    foto_url: '',
+    data_nascimento: '2000-01-01'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -273,6 +274,11 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
                 <option value="admin">Administrador</option>
                 <option value="campo">Assistente de Campo</option>
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase ml-1">Data de Nascimento</label>
+              <input required type="date" value={formData.data_nascimento} onChange={e => setFormData({...formData, data_nascimento: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium" />
             </div>
 
             <div className="space-y-1.5">
