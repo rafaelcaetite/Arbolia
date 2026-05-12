@@ -130,15 +130,17 @@ export function Home() {
       return Math.max(0, Math.min(100, offset));
     };
 
-    // Escala iOS - Transições Suaves
+    // Calibração Absoluta Arbolia
     return [
-      { offset: 0, color: max > 35 ? '#8B0000' : max > 30 ? '#FF0000' : '#FFA500' }, // Cor do topo
-      { offset: getOffset(35), color: '#FF0000' }, // Calor Extremo
-      { offset: getOffset(30), color: '#FFA500' }, // Calor Forte
-      { offset: getOffset(25), color: '#FFD700' }, // Confortável/Transição
-      { offset: getOffset(20), color: '#32CD32' }, // Ameno
-      { offset: getOffset(11), color: '#87CEFA' }, // Frio
-      { offset: 100, color: min < 11 ? '#1e3a8a' : min < 20 ? '#87CEFA' : '#32CD32' } // Cor da base
+      { offset: 0, color: max > 35 ? '#8B0000' : max > 30 ? '#FF0000' : '#FF8C00' }, 
+      { offset: getOffset(35), color: '#FF0000' }, // Calor Extremo (Vermelho)
+      { offset: getOffset(30), color: '#FF8C00' }, // Calor Forte (Laranja Escuro)
+      { offset: getOffset(26), color: '#FFB800' }, // Início Calor (Amarelo Alaranjado)
+      { offset: getOffset(25), color: '#FFB800' }, // Transição (Amarelo Alaranjado)
+      { offset: getOffset(21), color: '#32CD32' }, // Confortável (Verde)
+      { offset: getOffset(20), color: '#32CD32' }, // Ameno (Verde)
+      { offset: getOffset(11), color: '#87CEFA' }, // Frio (Azul Claro)
+      { offset: 100, color: min < 11 ? '#1e3a8a' : min < 20 ? '#87CEFA' : '#32CD32' }
     ].sort((a, b) => a.offset - b.offset);
   }, [weatherData]);
 
@@ -382,7 +384,11 @@ export function Home() {
                 {/* Eixo Esquerdo: Temperatura */}
                 <YAxis 
                   yAxisId="left"
-                  domain={['dataMin - 2', 'dataMax + 2']} 
+                  domain={[
+                    (dataMin: number) => Math.floor(dataMin - 1),
+                    (dataMax: number) => Math.ceil(dataMax + 1)
+                  ]} 
+                  allowDecimals={false}
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fill: '#94a3b8', fontSize: 11 }} 
