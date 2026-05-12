@@ -11,6 +11,7 @@ import { Login } from './pages/Login';
 
 import { PostServiceModal } from './components/inventory/PostServiceModal';
 import { LaudoAvaliacaoModal } from './components/inventory/LaudoAvaliacaoModal';
+import { UserProfileModal } from './components/layout/UserProfileModal';
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from './store/useAppStore';
@@ -69,6 +70,7 @@ function App() {
         </Routes>
         <PostServiceModal />
         <LaudoAvaliacaoModal />
+        <UserProfileModal />
       </MainLayout>
     </Router>
   );

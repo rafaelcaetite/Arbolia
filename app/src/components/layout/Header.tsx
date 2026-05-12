@@ -1,6 +1,5 @@
 import { Bell, Search, CloudRain, Navigation } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { UserProfileModal } from './UserProfileModal';
 import { useState, useEffect } from 'react';
 
 export function Header() {
@@ -89,7 +88,6 @@ export function Header() {
           </div>
         </div>
       </div>
-      <UserProfileModal />
     </header>
   );
 }
