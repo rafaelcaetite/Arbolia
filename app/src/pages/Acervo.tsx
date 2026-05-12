@@ -2,9 +2,11 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Search, Image as ImageIcon, FileText, Download, Eye,
   X, ChevronLeft, ChevronRight, AlertTriangle, ArrowLeftRight,
-  SplitSquareHorizontal, List, LayoutGrid
+  SplitSquareHorizontal, List, LayoutGrid, Loader2
 } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
+import { SecureImage } from '../components/common/SecureImage';
+import { supabase } from '../lib/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -27,9 +29,19 @@ function daysUntil(dateStr: string) {
   return Math.ceil((d.getTime() - today.getTime()) / (1000*60*60*24));
 }
 
-function downloadAttachment(att: RichAttachment) {
+async function downloadAttachment(att: RichAttachment) {
+  let url = att.dataUrl;
+  
+  if (!url && att.storagePath) {
+    const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(att.storagePath, 60);
+    if (data) url = data.signedUrl;
+  }
+
+  if (!url) return;
+
   const a = document.createElement('a');
-  a.href = att.dataUrl || '';
+  a.href = url;
   a.download = att.name;
   a.click();
 }
@@ -42,7 +54,21 @@ function Lightbox({ items, index, onClose }: {
   onClose: () => void;
 }) {
   const [current, setCurrent] = useState(index);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const item = items[current];
+
+  useEffect(() => {
+    const resolveUrl = async () => {
+      if (item.dataUrl) {
+        setCurrentUrl(item.dataUrl);
+      } else if (item.storagePath) {
+        const { data } = await supabase.storage.from('Gallery').createSignedUrl(item.storagePath, 3600);
+        if (data) setCurrentUrl(data.signedUrl);
+      }
+    };
+    resolveUrl();
+  }, [item]);
+
   if (!item) return null;
 
   return (
@@ -50,7 +76,14 @@ function Lightbox({ items, index, onClose }: {
       <div className="flex items-stretch max-w-5xl w-full mx-4 gap-0 rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Imagem */}
         <div className="flex-1 bg-black flex items-center justify-center relative min-h-[400px]">
-          <img src={item.dataUrl || ''} alt={item.name} className="max-h-[85vh] max-w-full object-contain" />
+          {currentUrl ? (
+            <img src={currentUrl} alt={item.name} className="max-h-[85vh] max-w-full object-contain" />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-slate-500">
+              <Loader2 className="animate-spin" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Carregando imagem segura...</span>
+            </div>
+          )}
           {items.length > 1 && (
             <>
               <button onClick={() => setCurrent(p => Math.max(0, p-1))} disabled={current === 0}
@@ -139,6 +172,12 @@ function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => 
         console.error('Erro ao converter PDF para Blob:', e);
         setPdfUrl(item.dataUrl || null);
       }
+    } else if (item.storagePath) {
+      const resolveStoragePdf = async () => {
+        const { data } = await supabase.storage.from('Documents').createSignedUrl(item.storagePath!, 3600);
+        if (data) setPdfUrl(data.signedUrl);
+      };
+      resolveStoragePdf();
     } else {
       setPdfUrl(item.dataUrl || null);
     }
@@ -359,7 +398,12 @@ export function Acervo() {
                   {images.map((photo, i) => (
                     <div key={photo.id} className="group relative cursor-pointer rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all"
                       onClick={() => setLightbox({ items: images, index: i })}>
-                      <img src={photo.dataUrl} alt={photo.name} className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <SecureImage 
+                        src={photo.dataUrl || photo.storagePath} 
+                        alt={photo.name} 
+                        bucket="Gallery"
+                        className="w-full h-32 group-hover:scale-105 transition-transform duration-300" 
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
                         <p className="text-white text-[10px] font-bold truncate">{photo.treeEspecie}</p>

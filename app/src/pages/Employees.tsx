@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore';
+import { useAppStore, type UserProfile } from '../store/useAppStore';
+import { SecureImage } from '../components/common/SecureImage';
 
 export function Employees() {
   const { employees, createEmployee } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<UserProfile | null>(null);
 
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => 
@@ -48,13 +50,12 @@ export function Employees() {
           <div key={emp.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 group">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                {emp.foto_url ? (
-                  <img src={emp.foto_url} alt={emp.nome} className="w-16 h-16 rounded-2xl object-cover border-2 border-slate-50 shadow-sm" />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black border border-primary/20">
-                    {emp.nome.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <SecureImage 
+                  src={emp.foto_url} 
+                  alt={emp.nome} 
+                  className="w-16 h-16 rounded-2xl border-2 border-slate-50 shadow-sm" 
+                  fallbackInitial={emp.nome.charAt(0).toUpperCase()}
+                />
                 <div>
                   <h3 className="font-bold text-slate-800 text-lg leading-tight mb-1">{emp.nome}</h3>
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
@@ -92,7 +93,10 @@ export function Employees() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-50 flex gap-2">
-              <button className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+              <button 
+                onClick={() => setSelectedEmployee(emp)}
+                className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+              >
                 <FileText size={14} /> Perfil
               </button>
               <button className="px-3 bg-slate-50 hover:bg-slate-100 text-slate-600 py-2.5 rounded-xl transition-all">
@@ -110,6 +114,13 @@ export function Employees() {
       </div>
 
       {isModalOpen && <EmployeeModal onClose={() => setIsModalOpen(false)} onSave={createEmployee} />}
+      
+      {selectedEmployee && (
+        <EmployeeDetailModal 
+          employee={selectedEmployee} 
+          onClose={() => setSelectedEmployee(null)} 
+        />
+      )}
     </div>
   );
 }
@@ -215,6 +226,86 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
           >
             {isSubmitting ? 'Salvando...' : 'Confirmar Cadastro'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-2xl rounded-[40px] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-500 flex flex-col md:flex-row">
+        {/* Banner Lateral / Foto */}
+        <div className="md:w-56 bg-slate-900 p-8 flex flex-col items-center justify-center gap-4 relative overflow-hidden shrink-0">
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-primary rounded-full blur-[60px]"></div>
+          </div>
+          
+          <SecureImage 
+            src={employee.foto_url}
+            alt={employee.nome}
+            className="w-32 h-32 rounded-[40px] border-2 border-white/20 shadow-xl z-10"
+            fallbackInitial={employee.nome.charAt(0).toUpperCase()}
+          />
+          
+          <div className="text-center z-10">
+            <h3 className="text-white font-bold text-lg">{employee.nome.split(' ')[0]}</h3>
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 block">
+              {employee.role === 'admin' ? 'Administrador' : employee.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
+            </span>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 p-10 md:p-12 relative bg-white">
+          <button onClick={onClose} className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-all">
+            <X size={20} />
+          </button>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight underline decoration-primary/30 decoration-4 underline-offset-8">Perfil do Funcionário</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-6">Dados de Cadastro</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                  <Mail size={12} className="text-primary" /> Email
+                </label>
+                <p className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">{employee.email}</p>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                  <Phone size={12} className="text-primary" /> Telefone
+                </label>
+                <p className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">{employee.telefone || 'Não informado'}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                  <ShieldCheck size={12} className="text-primary" /> Registro (CREA)
+                </label>
+                <p className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">{employee.crea || 'Não informado'}</p>
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5">
+                  <Camera size={12} className="text-primary" /> Nascimento
+                </label>
+                <p className="text-sm font-bold text-slate-700 bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100">
+                  {employee.data_nascimento ? new Date(employee.data_nascimento + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não informado'}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-50">
+              <p className="text-[10px] font-medium text-slate-400 text-center italic">
+                Colaborador ativo desde {new Date(employee.data_cadastro).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

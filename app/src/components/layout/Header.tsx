@@ -1,6 +1,7 @@
 import { Bell, Search, CloudRain, Navigation } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect } from 'react';
+import { SecureImage } from '../common/SecureImage';
 
 export function Header() {
   const { weatherCity, userProfile, openProfileModal } = useAppStore();
@@ -73,17 +74,12 @@ export function Header() {
           </div>
           
           <div className="relative">
-            {userProfile?.foto_url ? (
-              <img 
-                src={userProfile.foto_url} 
-                alt={userProfile.nome} 
-                className="w-11 h-11 rounded-[14px] object-cover border-2 border-white shadow-md ring-1 ring-slate-100 group-hover:ring-primary/30 transition-all"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-[14px] bg-primary text-white flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform">
-                {displayInitial}
-              </div>
-            )}
+            <SecureImage 
+              src={userProfile?.foto_url}
+              alt={userProfile?.nome || ''}
+              className="w-11 h-11 rounded-[14px] border-2 border-white shadow-md ring-1 ring-slate-100 group-hover:ring-primary/30 transition-all"
+              fallbackInitial={displayInitial}
+            />
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></div>
           </div>
         </div>
