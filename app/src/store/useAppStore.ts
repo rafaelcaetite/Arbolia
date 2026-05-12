@@ -562,8 +562,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Tenta usar o bucket fornecido ou fallback para profiles
+      const targetBucket = bucket || 'profiles';
+      
       const { error: uploadError } = await supabase.storage
-        .from(bucket)
+        .from(targetBucket)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
@@ -605,15 +608,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (authError) throw authError;
       if (!authData.user) throw new Error('Falha ao criar usuário na autenticação.');
 
-      // 3. Criar Perfil no Banco de Dados (usando o cliente principal para manter RLS se necessário)
-      const newEmployee = await api.createEmployee({
-        id: authData.user.id,
-        email,
-        ...profileData
-      });
+      // 3. Criar ou Atualizar Perfil no Banco de Dados
+      // Usamos upsert caso um trigger no banco já tenha criado o perfil básico
+      const { data: profileResult, error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authData.user.id,
+          email,
+          ...profileData,
+          data_cadastro: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-      set(state => ({ employees: [newEmployee, ...state.employees] }));
-      alert('Funcionário criado com sucesso! Ele já pode fazer login (após confirmar o e-mail se o Supabase exigir).');
+      if (profileError) {
+        console.error('Erro ao salvar perfil no banco:', profileError);
+        throw new Error(`Usuário criado no Auth, mas erro no Perfil: ${profileError.message}`);
+      }
+
+      set(state => ({ employees: [profileResult, ...state.employees] }));
+      alert('Funcionário criado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao criar funcionário:', error);
       alert(`Erro ao criar funcionário: ${error.message}`);

@@ -147,8 +147,8 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
 
     setIsUploading(true);
     try {
-      // Usar o bucket 'avatars' para fotos de funcionários
-      const url = await uploadFile('avatars', file);
+      // Usar o bucket 'profiles' para fotos de funcionários
+      const url = await uploadFile('profiles', file);
       setFormData(prev => ({ ...prev, foto_url: url }));
     } catch (error) {
       console.error('Erro no upload:', error);
