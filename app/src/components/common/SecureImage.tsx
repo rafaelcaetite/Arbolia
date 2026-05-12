@@ -41,7 +41,7 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
           : src;
 
         if (path) {
-          const { data, error } = await supabase.storage
+          const { data } = await supabase.storage
             .from(bucket)
             .createSignedUrl(path, 3600);
 
