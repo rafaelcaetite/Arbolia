@@ -32,6 +32,8 @@ export function PostServiceModal() {
   const [supressaoStep, setSupressaoStep] = useState<'confirm' | 'motivo' | 'done'>('confirm');
   const [motivoSelecionado, setMotivoSelecionado] = useState('');
   const [motivoCustom, setMotivoCustom] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const service = services.find(s => s.id === activePostServiceId);
   const isSupressao = service?.tipo === 'Supressão';
@@ -53,31 +55,48 @@ export function PostServiceModal() {
   const serviceTreeNames = trees.filter(t => serviceTreeIds.includes(t.id)).map(t => t.especie);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleNormalFinish = () => {
-    // Para avaliações, a frequência de inspeção já foi calculada pelo ISA e o serviço principal concluído
-    const finalReavaliacao = needsReavaliacao && reavaliacaoData
-      ? `${reavaliacaoData}${reavaliacaoHora ? `T${reavaliacaoHora}` : ''}`
-      : undefined;
+  const handleNormalFinish = async () => {
+    setIsSubmitting(true);
+    try {
+      // Para avaliações, a frequência de inspeção já foi calculada pelo ISA e o serviço principal concluído
+      const finalReavaliacao = needsReavaliacao && reavaliacaoData
+        ? `${reavaliacaoData}${reavaliacaoHora ? `T${reavaliacaoHora}` : ''}`
+        : undefined;
+        
+      // Se for avaliação e tiver um laudo, usar a data de reavaliação sugerida pelo laudo como validade
+      let finalValidade = validadeDateStr;
+      if (isAvaliacao && service?.laudoData) {
+        const dataLaudo = new Date(service.laudoData.dataLaudo);
+        dataLaudo.setMonth(dataLaudo.getMonth() + service.laudoData.resultado.metadataGeral.frequenciaMeses);
+        finalValidade = dataLaudo.toISOString().split('T')[0];
+      }
       
-    // Se for avaliação e tiver um laudo, usar a data de reavaliação sugerida pelo laudo como validade
-    let finalValidade = validadeDateStr;
-    if (isAvaliacao && service?.laudoData) {
-      const dataLaudo = new Date(service.laudoData.dataLaudo);
-      dataLaudo.setMonth(dataLaudo.getMonth() + service.laudoData.resultado.metadataGeral.frequenciaMeses);
-      finalValidade = dataLaudo.toISOString().split('T')[0];
+      await completeService(service.id, finalReavaliacao, finalValidade || undefined);
+      handleClose();
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao concluir serviço. Verifique sua conexão.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    completeService(service.id, finalReavaliacao, finalValidade || undefined);
-    handleClose();
   };
 
-  const handleSupressaoConfirm = () => {
+  const handleSupressaoConfirm = async () => {
     const motivo = motivoSelecionado === 'Outro' ? motivoCustom.trim() : motivoSelecionado;
     if (!motivo) return;
-    completeService(service.id);
-    deactivateTrees(serviceTreeIds, motivo);
-    setSupressaoStep('done');
+    setIsSubmitting(true);
+    try {
+      await completeService(service.id);
+      await deactivateTrees(serviceTreeIds, motivo);
+      setSupressaoStep('done');
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar supressão. Verifique sua conexão.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const handleClose = () => {
     closePostServiceModal();
@@ -217,16 +236,21 @@ export function PostServiceModal() {
               <div className="p-6 border-t border-slate-100 bg-white flex flex-col gap-2">
                 <button
                   onClick={handleSupressaoConfirm}
-                  disabled={!canConfirmSupressao}
+                  disabled={!canConfirmSupressao || isSubmitting}
                   className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${
-                    canConfirmSupressao
+                    canConfirmSupressao && !isSubmitting
                       ? 'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20 active:scale-[0.98]'
                       : 'bg-slate-100 text-slate-300 cursor-not-allowed'
                   }`}
                 >
-                  <AlertTriangle size={16} />
-                  Confirmar Supressão
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <AlertTriangle size={16} />
+                  )}
+                  {isSubmitting ? 'Processando...' : 'Confirmar Supressão'}
                 </button>
+
                 <button
                   onClick={handleClose}
                   className="w-full bg-white hover:bg-slate-50 text-slate-500 font-bold py-2.5 px-4 rounded-xl transition-colors text-xs"
@@ -346,14 +370,20 @@ export function PostServiceModal() {
                 </button>
               )}
               <button onClick={handleNormalFinish}
-                disabled={isAvaliacao && !laudoGerado}
+                disabled={(isAvaliacao && !laudoGerado) || isSubmitting}
                 className={`flex-1 font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 ${
-                  isAvaliacao && !laudoGerado
+                  (isAvaliacao && !laudoGerado) || isSubmitting
                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                     : 'bg-emerald-500 hover:bg-emerald-600 text-white active:scale-[0.98] shadow-md shadow-emerald-500/20'
                 }`}>
-                <CheckCircle2 size={18} /> Finalizar e Agendar Retorno
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <CheckCircle2 size={18} />
+                )}
+                {isSubmitting ? 'Salvando...' : 'Finalizar e Agendar Retorno'}
               </button>
+
             </div>
             
             {(!isAvaliacao || laudoGerado) && (

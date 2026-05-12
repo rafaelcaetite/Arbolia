@@ -347,10 +347,13 @@ export const useAppStore = create<AppState>((set) => ({
       }
 
       set({ services: newServices });
+      return updatedService;
     } catch (error) {
       console.error('Erro ao concluir serviço:', error);
+      throw error;
     }
   },
+
 
 
   addServiceAttachment: async (serviceId, treeId, attachment) => {
@@ -387,8 +390,10 @@ export const useAppStore = create<AppState>((set) => ({
       }));
     } catch (error) {
       console.error('Erro ao inativar árvores:', error);
+      throw error;
     }
   },
+
 
 
   openPostServiceModal: (id) => set({ isPostServiceModalOpen: true, activePostServiceId: id }),
