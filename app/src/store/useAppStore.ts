@@ -223,7 +223,7 @@ interface AppState {
   createEmployee: (data: any) => Promise<void>
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   clients: [],
   trees: [],
   services: [],

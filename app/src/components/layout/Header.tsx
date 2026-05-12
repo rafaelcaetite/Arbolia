@@ -10,7 +10,6 @@ export function Header() {
 
   // Fallbacks para quando o perfil ainda não carregou
   const displayName = userProfile?.nome || 'Técnico';
-  const displayRole = userProfile?.role === 'admin' ? 'Administrador' : userProfile?.role === 'tecnico' ? 'Engenheiro Técnico' : 'Agente de Campo';
   const displayInitial = displayName.charAt(0).toUpperCase();
 
   useEffect(() => {

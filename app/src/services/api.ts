@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Tree, Client, Service } from '../store/useAppStore';
+import type { Tree, Client, Service, UserProfile } from '../store/useAppStore';
 
 export const api = {
   // --- Clientes ---

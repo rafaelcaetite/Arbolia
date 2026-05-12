@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase } from 'lucide-react';
+import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../../store/useAppStore';
 
 export function UserProfileModal() {
