@@ -38,13 +38,21 @@ export function Home() {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=5&countrycodes=br&featuretype=city`);
+        // Usando city= em vez de q= para focar em municípios
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${searchQuery}&countrycodes=br&limit=10&addressdetails=1`);
         const data = await res.json();
-        setSuggestions(data);
+        
+        // Filtro rigoroso para aceitar apenas cidades/vilas/municípios
+        const filtered = data.filter((item: any) => 
+          ['city', 'town', 'village', 'municipality'].includes(item.addresstype) ||
+          ['city', 'town', 'village', 'municipality'].includes(item.type)
+        );
+        
+        setSuggestions(filtered);
       } catch (e) {
         console.error('Erro na busca de cidades:', e);
       }
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
