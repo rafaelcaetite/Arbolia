@@ -106,7 +106,6 @@ export interface Service {
   // Laudo ISA — presente apenas em serviços do tipo 'Avaliação'
   laudoGerado?: boolean
   laudoData?: ISALaudoData
-  documentos_url?: string[] // Caminhos no bucket 'Documents'
 }
 
 
@@ -454,10 +453,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         laudoData,
         attachmentsByTree
       };
-
-      if (storagePath) {
-        updates.documentos_url = [...(service.documentos_url || []), storagePath];
-      }
 
       console.log('Atualizando serviço no banco...', updates);
       const updated = await api.updateService(serviceId, updates);
