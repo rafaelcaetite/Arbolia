@@ -7,6 +7,7 @@ import {
 import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 import { supabase } from '../lib/supabase';
+import { ActionModal } from '../components/common/ActionModal';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -217,6 +218,12 @@ export function Acervo() {
   const [beforeAfter, setBeforeAfter] = useState(false);
   const [lightbox, setLightbox] = useState<{ items: RichAttachment[]; index: number } | null>(null);
   const [pdfPanel, setPdfPanel] = useState<RichAttachment | null>(null);
+  const [actionData, setActionData] = useState<{ 
+    type: 'rename' | 'delete', 
+    attachment: RichAttachment 
+  } | null>(null);
+
+  const { renameAttachment, deleteAttachment } = useAppStore();
 
   // Montar lista rica de todos os anexos de todos os serviços
   const allAttachments = useMemo<RichAttachment[]>(() => {
@@ -385,10 +392,7 @@ export function Acervo() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const newName = prompt('Novo nome da foto:', photo.name);
-                                  if (newName && newName !== photo.name) {
-                                    useAppStore.getState().renameAttachment(photo.serviceId, photo.treeId, photo.id, newName);
-                                  }
+                                  setActionData({ type: 'rename', attachment: photo });
                                 }}
                                 className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-primary transition-all"
                               >
@@ -397,9 +401,7 @@ export function Acervo() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (confirm('Deseja excluir esta foto?')) {
-                                    useAppStore.getState().deleteAttachment(photo.serviceId, photo.treeId, photo.id);
-                                  }
+                                  setActionData({ type: 'delete', attachment: photo });
                                 }}
                                 className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-all"
                               >
@@ -434,10 +436,7 @@ export function Acervo() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const newName = prompt('Novo nome da foto:', photo.name);
-                            if (newName && newName !== photo.name) {
-                              useAppStore.getState().renameAttachment(photo.serviceId, photo.treeId, photo.id, newName);
-                            }
+                            setActionData({ type: 'rename', attachment: photo });
                           }}
                           className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-primary transition-all"
                         >
@@ -446,9 +445,7 @@ export function Acervo() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm('Deseja excluir esta foto?')) {
-                              useAppStore.getState().deleteAttachment(photo.serviceId, photo.treeId, photo.id);
-                            }
+                            setActionData({ type: 'delete', attachment: photo });
                           }}
                           className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-all"
                         >
@@ -525,23 +522,14 @@ export function Acervo() {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1.5 justify-end">
                                 <button
-                                  onClick={() => {
-                                    const newName = prompt('Novo nome do documento:', doc.name);
-                                    if (newName && newName !== doc.name) {
-                                      useAppStore.getState().renameAttachment(doc.serviceId, doc.treeId, doc.id, newName);
-                                    }
-                                  }}
+                                  onClick={() => setActionData({ type: 'rename', attachment: doc })}
                                   className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                                   title="Renomear"
                                 >
                                   <Pencil size={13} />
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (confirm(`Tem certeza que deseja excluir "${doc.name}"?`)) {
-                                      useAppStore.getState().deleteAttachment(doc.serviceId, doc.treeId, doc.id);
-                                    }
-                                  }}
+                                  onClick={() => setActionData({ type: 'delete', attachment: doc })}
                                   className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                   title="Excluir"
                                 >
@@ -571,8 +559,28 @@ export function Acervo() {
               )}
             </>
           )}
-        </div>
       </div>
+
+      <ActionModal
+        isOpen={!!actionData}
+        onClose={() => setActionData(null)}
+        type={actionData?.type || 'delete'}
+        title={actionData?.type === 'rename' ? 'Renomear Arquivo' : 'Confirmar Exclusão'}
+        description={actionData?.type === 'rename' 
+          ? `Altere o nome do anexo '${actionData.attachment.name}'.` 
+          : `Tem certeza que deseja excluir '${actionData?.attachment.name}'? Esta ação é irreversível.`
+        }
+        initialValue={actionData?.attachment.name}
+        confirmLabel={actionData?.type === 'rename' ? 'Salvar Nome' : 'Sim, excluir'}
+        onConfirm={async (val) => {
+          if (!actionData) return;
+          if (actionData.type === 'rename' && val) {
+            await renameAttachment(actionData.attachment.serviceId, actionData.attachment.treeId, actionData.attachment.id, val);
+          } else if (actionData.type === 'delete') {
+            await deleteAttachment(actionData.attachment.serviceId, actionData.attachment.treeId, actionData.attachment.id);
+          }
+        }}
+      />
     </>
   );
 }

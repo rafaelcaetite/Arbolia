@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown, Pencil, Trash2 } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
+import { ActionModal } from '../common/ActionModal';
 
 // ── Visualizador de Anexos ──────────────────────────────────────────────────
 function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachment; onClose: () => void }) {
@@ -70,11 +71,15 @@ function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachme
 
 // ── Botões de Anexo por Serviço ──────────────────────────────────────────────
 function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; treeId: string; attachments: ServiceAttachment[] }) {
-  const { addServiceAttachment } = useAppStore();
+  const { addServiceAttachment, renameAttachment, deleteAttachment } = useAppStore();
   const docInputRef = useRef<HTMLInputElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const [viewingAttachment, setViewingAttachment] = useState<ServiceAttachment | null>(null);
   const [showList, setShowList] = useState(false);
+  const [actionData, setActionData] = useState<{ 
+    type: 'rename' | 'delete', 
+    attachment: ServiceAttachment 
+  } | null>(null);
 
   const hasDocs   = attachments.some(a => a.type === 'pdf');
   const hasImages = attachments.some(a => a.type === 'image');
@@ -206,10 +211,7 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const newName = prompt('Novo nome do anexo:', att.name);
-                      if (newName && newName !== att.name) {
-                        useAppStore.getState().renameAttachment(serviceId, treeId, att.id, newName);
-                      }
+                      setActionData({ type: 'rename', attachment: att });
                     }}
                     className="p-1.5 text-slate-400 hover:text-primary transition-colors"
                     title="Renomear"
@@ -219,9 +221,7 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`Deseja excluir "${att.name}"?`)) {
-                        useAppStore.getState().deleteAttachment(serviceId, treeId, att.id);
-                      }
+                      setActionData({ type: 'delete', attachment: att });
                     }}
                     className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
                     title="Excluir"
@@ -234,6 +234,27 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
           </div>
         )}
       </div>
+
+      <ActionModal
+        isOpen={!!actionData}
+        onClose={() => setActionData(null)}
+        type={actionData?.type || 'delete'}
+        title={actionData?.type === 'rename' ? 'Renomear Anexo' : 'Confirmar Exclusão'}
+        description={actionData?.type === 'rename' 
+          ? `Altere o nome do anexo '${actionData.attachment.name}'.` 
+          : `Tem certeza que deseja excluir '${actionData?.attachment.name}'?`
+        }
+        initialValue={actionData?.attachment.name}
+        confirmLabel={actionData?.type === 'rename' ? 'Salvar Nome' : 'Sim, excluir'}
+        onConfirm={async (val) => {
+          if (!actionData) return;
+          if (actionData.type === 'rename' && val) {
+            await renameAttachment(serviceId, treeId, actionData.attachment.id, val);
+          } else if (actionData.type === 'delete') {
+            await deleteAttachment(serviceId, treeId, actionData.attachment.id);
+          }
+        }}
+      />
     </>
   );
 }
