@@ -1,18 +1,17 @@
-import { useEffect } from 'react';
 import { InteractiveMap } from '../components/inventory/InteractiveMap';
 import { TreeList } from '../components/inventory/TreeList';
 import { TreeModal } from '../components/inventory/TreeModal';
 import { ServiceModal } from '../components/inventory/ServiceModal';
 import { TreeHistoryModal } from '../components/inventory/TreeHistoryModal';
 import { TreeDetailsModal } from '../components/inventory/TreeDetailsModal';
-import { useAppStore, type Tree, type Service } from '../store/useAppStore';
+import { useAppStore } from '../store/useAppStore';
 import { Plus } from 'lucide-react';
 
 
 
 
 export function Inventory() {
-  const { trees, setTrees, setServices, openEditModal, openServiceModal, selectedTreeIds } = useAppStore();
+  const { openEditModal, openServiceModal, selectedTreeIds } = useAppStore();
 
 
 

@@ -347,7 +347,6 @@ export const useAppStore = create<AppState>((set) => ({
       }
 
       set({ services: newServices });
-      return updatedService;
     } catch (error) {
       console.error('Erro ao concluir serviço:', error);
       throw error;

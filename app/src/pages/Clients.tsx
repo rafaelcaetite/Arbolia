@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, ArrowDownWideNarrow, ListFilter, Trees, Building2, Phone, Mail, FileText, Info, X, Calendar, Leaf, Download, Pencil } from 'lucide-react';
 import { useAppStore, type Tree, type Service, type ServiceAttachment } from '../store/useAppStore';
 import { ClientDetailsModal } from '../components/clients/ClientDetailsModal';
@@ -218,7 +218,7 @@ function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDet
 
 
 export function Clients() {
-  const { clients, setClients, trees, services, openClientDetailsModal } = useAppStore();
+  const { clients, trees, services, openClientDetailsModal } = useAppStore();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('recentes');
