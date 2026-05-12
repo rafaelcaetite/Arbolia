@@ -223,6 +223,7 @@ interface AppState {
   // Gestão de Funcionários
   fetchEmployees: () => Promise<void>
   createEmployee: (data: any) => Promise<void>
+  uploadFile: (bucket: string, file: File) => Promise<string>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -553,6 +554,28 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ employees });
     } catch (error) {
       console.error('Erro ao buscar funcionários:', error);
+    }
+  },
+  uploadFile: async (bucket, file) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Erro no upload de arquivo:', error);
+      throw error;
     }
   },
   createEmployee: async (data) => {

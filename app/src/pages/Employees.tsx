@@ -59,7 +59,7 @@ export function Employees() {
                 <div>
                   <h3 className="font-bold text-slate-800 text-lg leading-tight mb-1">{emp.nome}</h3>
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
-                    emp.role === 'admin' ? 'bg-red-50 text-red-600 border border-red-100' :
+                    emp.role === 'admin' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                     emp.role === 'tecnico' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                     'bg-emerald-50 text-emerald-600 border border-emerald-100'
                   }`}>
@@ -126,6 +126,7 @@ export function Employees() {
 }
 
 function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data: any) => Promise<void> }) {
+  const { uploadFile } = useAppStore();
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -136,8 +137,26 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
     foto_url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // Usar o bucket 'avatars' para fotos de funcionários
+      const url = await uploadFile('avatars', file);
+      setFormData(prev => ({ ...prev, foto_url: url }));
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro ao fazer upload da foto. Verifique as permissões de Storage.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,8 +167,9 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar funcionário:', error);
+      alert(`Erro ao salvar funcionário: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,25 +203,36 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 overflow-y-auto flex-1 space-y-6">
-          {/* Foto Placeholder */}
+          {/* Upload de Foto */}
           <div className="flex flex-col items-center gap-4 py-4">
-            <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-1 cursor-pointer hover:border-primary hover:text-primary transition-all group overflow-hidden relative">
-              {formData.foto_url ? (
-                <img src={formData.foto_url} className="w-full h-full object-cover" alt="Preview" />
-              ) : (
-                <>
-                  <Camera size={24} />
-                  <span className="text-[10px] font-bold uppercase">Foto</span>
-                </>
-              )}
-            </div>
-            <input 
-              type="text" 
-              placeholder="Link da foto (URL)" 
-              value={formData.foto_url}
-              onChange={(e) => setFormData({...formData, foto_url: e.target.value})}
-              className="text-[10px] font-medium text-slate-400 outline-none hover:text-primary transition-colors text-center w-full"
-            />
+            <label className="relative group cursor-pointer">
+              <div className="w-28 h-28 rounded-[36px] bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 gap-1 group-hover:border-primary group-hover:text-primary transition-all overflow-hidden">
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-bold uppercase">Enviando...</span>
+                  </div>
+                ) : formData.foto_url ? (
+                  <img src={formData.foto_url} className="w-full h-full object-cover" alt="Avatar" />
+                ) : (
+                  <>
+                    <Camera size={24} />
+                    <span className="text-[10px] font-bold uppercase">Foto do Perfil</span>
+                  </>
+                )}
+              </div>
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+              />
+              <div className="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-xl shadow-lg shadow-primary/20 scale-0 group-hover:scale-100 transition-transform">
+                <Plus size={16} />
+              </div>
+            </label>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clique para fazer upload</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
