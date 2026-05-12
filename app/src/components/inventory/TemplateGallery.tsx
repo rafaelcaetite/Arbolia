@@ -7,7 +7,9 @@ const MOCK_LAUDO: ISALaudoData = {
     { alvo: 'Rede Elétrica de Alta Tensão', parte: 'copa', probFalha: 'provavel', probImpacto: 'alto', consequencia: 'severa' },
     { alvo: 'Calçada e Pedestres', parte: 'tronco', probFalha: 'possivel', probImpacto: 'baixo', consequencia: 'minima' }
   ],
+  descricaoLocal: 'Local de teste Arbolia',
   defeitos: ['Cavidade basal extensa', 'Inclinação acentuada', 'Presença de fungos'],
+
   limitantes: ['acesso', 'visibilidade'],
   mitigacoesSelecionadas: ['poda_seguranca'],
   parecer: 'final',

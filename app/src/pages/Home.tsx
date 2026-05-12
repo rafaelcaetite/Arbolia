@@ -334,11 +334,12 @@ export function Home() {
                 <Tooltip
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                   cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
-                  formatter={(value: any, name: string) => {
+                  formatter={(value: any, name: any) => {
                     if (name === 'temp') return [`${value}°C`, 'Temperatura'];
                     if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
                     return [value, name];
                   }}
+
 
                 />
                 <Area type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />

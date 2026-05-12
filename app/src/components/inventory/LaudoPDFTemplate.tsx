@@ -177,7 +177,8 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
         </div>
 
         {/* ── DETALHAMENTO DE ALVOS ────────────────────────────────────────── */}
-        <Section title={templateId === 'tecnico' ? "Análise Técnica de Alvos e Matrizes" : "Áreas e Objetos Protegidos"} theme={theme}>
+        <Section title={templateId === 'tecnico' ? "Análise Técnica de Alvos e Matrizes" : "Áreas e Objetos Protegidos"}>
+
           <div style={{ border: '1.5px solid #f1f5f9', borderRadius: '12px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
               <thead>
@@ -220,7 +221,8 @@ export const LaudoPDFTemplate = forwardRef<HTMLDivElement, Props>(
         </Section>
 
         {/* ── RECOMENDAÇÕES (UX MODERNA) ────────────────────────────────────── */}
-        <Section title="Plano de Ação e Mitigação" theme={theme}>
+        <Section title="Plano de Ação e Mitigação">
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             {laudo.mitigacoesSelecionadas.length > 0 ? (
               resultado.riscos[0].riscoResidualPorMitigacao
