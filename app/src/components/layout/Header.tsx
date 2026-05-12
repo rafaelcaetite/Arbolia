@@ -3,9 +3,14 @@ import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect } from 'react';
 
 export function Header() {
-  const { weatherCity } = useAppStore();
+  const { weatherCity, userProfile } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fallbacks para quando o perfil ainda não carregou
+  const displayName = userProfile?.nome || 'Técnico';
+  const displayRole = userProfile?.role === 'admin' ? 'Administrador' : userProfile?.role === 'tecnico' ? 'Engenheiro Técnico' : 'Agente de Campo';
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   useEffect(() => {
     const fetchCurrentWeather = async () => {
@@ -27,7 +32,7 @@ export function Header() {
   return (
     <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-20">
       <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold text-slate-800">Bom dia, Técnico 👋</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Bom dia, {displayName.split(' ')[0]} 👋</h1>
         <div className="h-8 w-px bg-slate-200 mx-2"></div>
         <div className="flex items-center gap-3 text-xs font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm transition-all hover:bg-slate-100/80">
           <div className="flex items-center gap-1.5 text-blue-500">
@@ -58,12 +63,16 @@ export function Header() {
         </button>
 
         <div className="flex items-center gap-3 pl-6 border-l border-slate-100 cursor-pointer hover:opacity-80 transition-opacity">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 shadow-sm">
-            T
-          </div>
+          {userProfile?.foto_url ? (
+            <img src={userProfile.foto_url} alt={displayName} className="w-10 h-10 rounded-full border border-primary/20 shadow-sm object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 shadow-sm">
+              {displayInitial}
+            </div>
+          )}
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-slate-800">Técnico Admin</span>
-            <span className="text-xs text-slate-500">Engenharia</span>
+            <span className="text-sm font-semibold text-slate-800">{displayName}</span>
+            <span className="text-xs text-slate-500">{displayRole}</span>
           </div>
         </div>
       </div>

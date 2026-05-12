@@ -6,6 +6,7 @@ import { Clients } from './pages/Clients';
 import { Alerts } from './pages/Alerts';
 import { Acervo } from './pages/Acervo';
 import { ServiceLog } from './pages/ServiceLog';
+import { Employees } from './pages/Employees';
 import { Login } from './pages/Login';
 
 import { PostServiceModal } from './components/inventory/PostServiceModal';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/alertas" element={<Alerts />} />
           <Route path="/acervo" element={<Acervo />} />
           <Route path="/historico" element={<ServiceLog />} />
+          <Route path="/funcionarios" element={<Employees />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

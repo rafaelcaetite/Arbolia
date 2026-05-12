@@ -19,9 +19,15 @@ export interface Client {
 }
 
 // Dados do técnico responsável (usados no rodapé do PDF com peso legal)
-export interface TecnicoInfo {
+export interface UserProfile {
+  id: string
   nome: string
-  registro_crea: string  // Ex: 'MG-123456'
+  email: string
+  role: 'admin' | 'tecnico' | 'campo'
+  crea?: string
+  telefone?: string
+  foto_url?: string
+  data_cadastro: string
 }
 
 export interface MapBounds {
@@ -110,7 +116,9 @@ interface AppState {
   clients: Client[]
   trees: Tree[]
   services: Service[]
+  employees: UserProfile[]
   user: User | null
+  userProfile: UserProfile | null
   setUser: (user: User | null) => void
   signOut: () => Promise<void>
   
@@ -200,17 +208,23 @@ interface AppState {
   // Clima
   weatherCity: { name: string, lat: number, lon: number }
   setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
+
+  // Gestão de Funcionários
+  fetchEmployees: () => Promise<void>
+  createEmployee: (data: any) => Promise<void>
 }
 
 export const useAppStore = create<AppState>((set) => ({
   clients: [],
   trees: [],
   services: [],
+  employees: [],
   user: null,
+  userProfile: null,
   setUser: (user) => set({ user }),
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ user: null, clients: [], trees: [], services: [] });
+    set({ user: null, userProfile: null, clients: [], trees: [], services: [], employees: [] });
   },
 
   hoveredTreeId: null,
@@ -251,12 +265,26 @@ export const useAppStore = create<AppState>((set) => ({
 
   initializeData: async () => {
     try {
+      const { user } = useAppStore.getState();
+      if (!user) return;
+
+      // Buscar perfil do usuário logado
+      const profile = await api.getProfile(user.id);
+      set({ userProfile: profile });
+
       const [clients, trees, services] = await Promise.all([
         api.getClients(),
         api.getTrees(),
         api.getServices()
       ]);
+      
       set({ clients, trees, services });
+
+      // Se for admin, carregar funcionários
+      if (profile?.role === 'admin') {
+        const employees = await api.getEmployees();
+        set({ employees });
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do Supabase:', error);
     }
@@ -426,5 +454,26 @@ export const useAppStore = create<AppState>((set) => ({
 
   // Clima
   weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 },
-  setWeatherCity: (city) => set({ weatherCity: city })
+  setWeatherCity: (city) => set({ weatherCity: city }),
+
+  // Gestão de Funcionários
+  fetchEmployees: async () => {
+    try {
+      const employees = await api.getEmployees();
+      set({ employees });
+    } catch (error) {
+      console.error('Erro ao buscar funcionários:', error);
+    }
+  },
+  createEmployee: async (data) => {
+    try {
+      // 1. Criar no Auth via API customizada ou Edge Function (em produção)
+      // Por simplicidade no dev, criamos no banco profiles (o Auth exigiria admin key)
+      const newEmployee = await api.createEmployee(data);
+      set(state => ({ employees: [newEmployee, ...state.employees] }));
+    } catch (error) {
+      console.error('Erro ao criar funcionário:', error);
+      throw error;
+    }
+  }
 }))
