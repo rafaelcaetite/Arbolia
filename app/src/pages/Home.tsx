@@ -177,6 +177,18 @@ export function Home() {
 
   return (
     <div className="flex flex-col gap-8 pb-12">
+      <style>{`
+        .recharts-wrapper, .recharts-surface, .recharts-layer {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        path, rect, .recharts-rectangle {
+          outline: none !important;
+        }
+        *:focus {
+          outline: none !important;
+        }
+      `}</style>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -341,6 +353,7 @@ export function Home() {
                 data={weatherData} 
                 margin={{ top: 10, right: -20, left: -20, bottom: 30 }}
                 style={{ outline: 'none' }}
+                tabIndex={-1}
               >
                 <defs>
                   <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
