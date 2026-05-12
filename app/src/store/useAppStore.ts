@@ -40,7 +40,7 @@ export interface MapBounds {
 
 export interface Tree {
   id: string
-  cliente_id?: string
+  cliente_id?: string | null
   especie: string
   altura: number
   tamanho_copa: number
@@ -48,10 +48,10 @@ export interface Tree {
   longitude: number
   status_risco: 'baixo' | 'medio' | 'alto' | 'critico'
   data_cadastro: string
-  codigo_v6?: number         // Código sequencial gerado pelo banco
-  ativo?: boolean            // false = suprimida
-  fotos?: string[]           // Caminhos no bucket 'Gallery'
-  motivo_supressao?: string  // Motivo registrado na conclusão do serviço
+  codigo_v6?: number | null
+  ativo?: boolean | null
+  fotos?: string[] | null
+  motivo_supressao?: string | null
 }
 
 export interface ServiceAttachment {
