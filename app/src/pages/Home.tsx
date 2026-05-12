@@ -38,17 +38,35 @@ export function Home() {
 
     const timer = setTimeout(async () => {
       try {
-        // Usando city= em vez de q= para focar em municípios
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${searchQuery}&countrycodes=br&limit=10&addressdetails=1`);
+        // q= com featuretype=settlement para pegar locais habitados
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&countrycodes=br&limit=15&addressdetails=1&featuretype=settlement`);
         const data = await res.json();
         
-        // Filtro rigoroso para aceitar apenas cidades/vilas/municípios
-        const filtered = data.filter((item: any) => 
-          ['city', 'town', 'village', 'municipality'].includes(item.addresstype) ||
-          ['city', 'town', 'village', 'municipality'].includes(item.type)
-        );
+        // Filtro agressivo para garantir apenas cidades
+        const filtered = data.filter((item: any) => {
+          const type = item.addresstype || item.type;
+          const isCityType = ['city', 'town', 'municipality', 'administrative'].includes(type);
+          
+          // Bloquear termos de ruas e prédios mesmo que o tipo venha estranho
+          const name = item.display_name.toLowerCase();
+          const isNotStreet = !name.includes('rua ') && 
+                             !name.includes('avenida') && 
+                             !name.includes('av. ') && 
+                             !name.includes('travessa') && 
+                             !name.includes('alameda') &&
+                             !name.includes('praça') &&
+                             !name.includes('pç. ') &&
+                             !name.includes('edifício');
+
+          return isCityType && isNotStreet;
+        });
         
-        setSuggestions(filtered);
+        // Remover duplicatas por nome (as vezes vem cidade e município repetidos)
+        const unique = filtered.filter((v: any, i: number, a: any[]) => 
+          a.findIndex(t => t.display_name === v.display_name) === i
+        );
+
+        setSuggestions(unique.slice(0, 5));
       } catch (e) {
         console.error('Erro na busca de cidades:', e);
       }
