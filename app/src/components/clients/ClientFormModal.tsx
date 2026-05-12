@@ -178,7 +178,7 @@ export function ClientFormModal() {
                     type="email"
                     placeholder="contato@cliente.com"
                     value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase().trim() })}
                     className="bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 text-sm placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
@@ -189,9 +189,24 @@ export function ClientFormModal() {
                   <input 
                     required
                     type="text"
-                    placeholder="(11) 99999-9999"
+                    placeholder="(00) 00000-0000"
                     value={formData.telefone}
-                    onChange={e => setFormData({ ...formData, telefone: e.target.value })}
+                    onChange={e => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      if (val.length > 11) val = val.slice(0, 11);
+                      
+                      let masked = val;
+                      if (val.length > 0) {
+                        masked = '(' + val;
+                        if (val.length > 2) {
+                          masked = '(' + val.slice(0, 2) + ') ' + val.slice(2);
+                        }
+                        if (val.length > 7) {
+                          masked = '(' + val.slice(0, 2) + ') ' + val.slice(2, 7) + '-' + val.slice(7);
+                        }
+                      }
+                      setFormData({ ...formData, telefone: masked });
+                    }}
                     className="bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 text-sm placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
