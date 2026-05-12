@@ -48,13 +48,13 @@ export function UserProfileModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center p-4 sm:p-6">
       <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300" 
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300" 
         onClick={closeProfileModal}
       ></div>
       
-      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row max-h-[90vh]">
+      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row max-h-[90vh] my-auto">
         
         {/* Banner Lateral / Topo */}
         <div className="md:w-40 bg-slate-900 p-8 flex flex-col items-center justify-center gap-6 relative overflow-hidden">
