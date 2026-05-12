@@ -344,18 +344,22 @@ export function Home() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   
-                  {/* Gradiente da Linha de Temperatura (Estilo Apple Weather) */}
-                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#ef4444" /> {/* Vermelho (Quente) */}
-                    <stop offset="25%" stopColor="#f97316" /> {/* Laranja */}
-                    <stop offset="50%" stopColor="#eab308" /> {/* Amarelo */}
-                    <stop offset="75%" stopColor="#22c55e" /> {/* Verde */}
-                    <stop offset="100%" stopColor="#60a5fa" /> {/* Azul (Frio) */}
+                  {/* Gradiente Térmico Calibrado (0°C a 45°C) */}
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#7c2d12" />    {/* 45°C+ - Vinho/Marrom */}
+                    <stop offset="22%" stopColor="#ef4444" />   {/* 35°C - Vermelho */}
+                    <stop offset="33%" stopColor="#f97316" />   {/* 30°C - Laranja */}
+                    <stop offset="44%" stopColor="#eab308" />   {/* 25°C - Amarelo */}
+                    <stop offset="53%" stopColor="#84cc16" />   {/* 21°C - Verde Limão/Amarelo */}
+                    <stop offset="66%" stopColor="#22c55e" />   {/* 15°C - Verde */}
+                    <stop offset="75%" stopColor="#2dd4bf" />   {/* 11°C - Verde Água/Ciano */}
+                    <stop offset="85%" stopColor="#60a5fa" />   {/* 7°C - Azul Claro */}
+                    <stop offset="100%" stopColor="#1e3a8a" />  {/* 0°C - Azul Escuro */}
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                <YAxis domain={[0, 45]} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
                 <Tooltip
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                   cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
