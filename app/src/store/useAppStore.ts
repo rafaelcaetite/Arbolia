@@ -354,6 +354,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Erro ao atualizar árvore:', error);
+      throw error;
     }
   },
   createTree: async (data) => {
@@ -364,6 +365,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Erro ao criar árvore:', error);
+      throw error;
     }
   },
 

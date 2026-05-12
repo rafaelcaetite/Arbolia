@@ -90,7 +90,11 @@ export const api = {
       .insert([tree])
       .select()
       .single();
-    if (error) throw error;
+    
+    if (error) {
+      console.error('Erro Supabase (createTree):', error);
+      throw error;
+    }
     return data as Tree;
   },
 
@@ -101,7 +105,11 @@ export const api = {
       .eq('id', id)
       .select()
       .single();
-    if (error) throw error;
+    
+    if (error) {
+      console.error('Erro Supabase (updateTree):', error);
+      throw error;
+    }
     return data as Tree;
   },
 

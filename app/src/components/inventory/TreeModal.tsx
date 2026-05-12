@@ -122,9 +122,11 @@ export function TreeModal() {
         await createTree(treeData as Omit<Tree, 'id'>);
       }
       closeEditModal();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar árvore:', err);
-      alert('Erro ao salvar árvore. Verifique os dados e tente novamente.');
+      const msg = err.message || 'Erro desconhecido';
+      const code = err.code || '';
+      alert(`Erro ao salvar árvore: ${msg} [${code}]. Verifique as políticas de RLS no Supabase.`);
     }
   };
 
