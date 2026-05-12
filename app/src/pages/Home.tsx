@@ -343,6 +343,15 @@ export function Home() {
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
+                  
+                  {/* Gradiente da Linha de Temperatura (Estilo Apple Weather) */}
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ef4444" /> {/* Vermelho (Quente) */}
+                    <stop offset="25%" stopColor="#f97316" /> {/* Laranja */}
+                    <stop offset="50%" stopColor="#eab308" /> {/* Amarelo */}
+                    <stop offset="75%" stopColor="#22c55e" /> {/* Verde */}
+                    <stop offset="100%" stopColor="#60a5fa" /> {/* Azul (Frio) */}
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
@@ -361,10 +370,10 @@ export function Home() {
                 <Line
                   type="monotone"
                   dataKey="temp"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
+                  stroke="url(#lineGradient)"
+                  strokeWidth={4}
                   dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
                 />
               </ComposedChart>
             </ResponsiveContainer>
