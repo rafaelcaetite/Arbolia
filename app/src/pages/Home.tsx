@@ -116,34 +116,6 @@ export function Home() {
     fetchWeather();
   }, [weatherCity]);
 
-  // Cálculo de offsets dinâmicos para o gradiente de temperatura absoluto
-  const gradientStops = useMemo(() => {
-    if (weatherData.length === 0) return [];
-    const temps = weatherData.map(d => d.temp);
-    const min = Math.min(...temps, 10);
-    const max = Math.max(...temps, 35);
-    const range = max - min;
-
-    const getOffset = (temp: number) => {
-      if (range <= 0) return 0;
-      const offset = ((max - temp) / range) * 100;
-      return Math.max(0, Math.min(100, offset));
-    };
-
-    // Calibração Absoluta Arbolia
-    return [
-      { offset: 0, color: max > 35 ? '#8B0000' : max > 30 ? '#FF0000' : '#FF8C00' }, 
-      { offset: getOffset(35), color: '#FF0000' }, // Calor Extremo (Vermelho)
-      { offset: getOffset(30), color: '#FF8C00' }, // Calor Forte (Laranja Escuro)
-      { offset: getOffset(26), color: '#FFB800' }, // Início Calor (Amarelo Alaranjado)
-      { offset: getOffset(25), color: '#FFB800' }, // Transição (Amarelo Alaranjado)
-      { offset: getOffset(21), color: '#32CD32' }, // Confortável (Verde)
-      { offset: getOffset(20), color: '#32CD32' }, // Ameno (Verde)
-      { offset: getOffset(11), color: '#87CEFA' }, // Frio (Azul Claro)
-      { offset: 100, color: min < 11 ? '#1e3a8a' : min < 20 ? '#87CEFA' : '#32CD32' }
-    ].sort((a, b) => a.offset - b.offset);
-  }, [weatherData]);
-
   const currentStats = currentWeather || { temp: '--', humidity: '--', wind: '--', rain: '--' };
 
   const getRecommendation = () => {
@@ -372,22 +344,30 @@ export function Home() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   
-                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                    {gradientStops.map((stop, i) => (
-                      <stop key={i} offset={`${stop.offset}%`} stopColor={stop.color} />
-                    ))}
+                <defs>
+                  <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                  
+                  {/* Mapa Térmico Absoluto (Fixado entre 5°C e 40°C) */}
+                  <linearGradient id="lineGradient" x1="0" y1="10" x2="0" y2="290" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#8B0000" />    {/* 40°C - Vinho */}
+                    <stop offset="14%" stopColor="#FF0000" />   {/* 35°C - Vermelho */}
+                    <stop offset="28%" stopColor="#FF8C00" />   {/* 30°C - Laranja Escuro */}
+                    <stop offset="42%" stopColor="#FFB800" />   {/* 25°C - Amarelo Alaranjado */}
+                    <stop offset="57%" stopColor="#32CD32" />   {/* 20°C - Verde */}
+                    <stop offset="82%" stopColor="#87CEFA" />   {/* 11°C - Azul Claro */}
+                    <stop offset="100%" stopColor="#1e3a8a" />  {/* 5°C - Azul Escuro */}
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
                 
-                {/* Eixo Esquerdo: Temperatura */}
+                {/* Eixo Esquerdo: Temperatura Fixa (5-40) */}
                 <YAxis 
                   yAxisId="left"
-                  domain={[
-                    (dataMin: number) => Math.floor(dataMin - 1),
-                    (dataMax: number) => Math.ceil(dataMax + 1)
-                  ]} 
+                  domain={[5, 40]} 
                   allowDecimals={false}
                   axisLine={false} 
                   tickLine={false} 
