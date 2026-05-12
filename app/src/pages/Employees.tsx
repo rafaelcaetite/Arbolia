@@ -8,6 +8,7 @@ export function Employees() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<UserProfile | null>(null);
+  const [confirmationData, setConfirmationData] = useState<{ emp: UserProfile; action: 'ativar' | 'inativar' } | null>(null);
 
   const rolePriority = {
     admin: 1,
@@ -30,12 +31,17 @@ export function Employees() {
       });
   }, [employees, searchTerm]);
 
-  const handleToggleStatus = async (emp: UserProfile) => {
+  const handleToggleStatus = (emp: UserProfile) => {
     const isAtivo = emp.status === 'ativo';
     const action = isAtivo ? 'inativar' : 'ativar';
-    if (confirm(`Tem certeza que deseja ${action} o funcionário ${emp.nome}?`)) {
-      await updateEmployee(emp.id, { status: isAtivo ? 'inativo' : 'ativo' });
-    }
+    setConfirmationData({ emp, action });
+  };
+
+  const confirmToggleStatus = async () => {
+    if (!confirmationData) return;
+    const { emp, action } = confirmationData;
+    await updateEmployee(emp.id, { status: action === 'inativar' ? 'inativo' : 'ativo' });
+    setConfirmationData(null);
   };
 
   return (
@@ -161,6 +167,15 @@ export function Employees() {
         <EmployeeDetailModal 
           employee={selectedEmployee} 
           onClose={() => setSelectedEmployee(null)} 
+        />
+      )}
+
+      {confirmationData && (
+        <ConfirmationModal 
+          employeeName={confirmationData.emp.nome}
+          action={confirmationData.action}
+          onConfirm={confirmToggleStatus}
+          onCancel={() => setConfirmationData(null)}
         />
       )}
     </div>
@@ -449,3 +464,52 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
     </div>
   );
 }
+
+function ConfirmationModal({ employeeName, action, onConfirm, onCancel }: { 
+  employeeName: string, 
+  action: 'ativar' | 'inativar', 
+  onConfirm: () => void, 
+  onCancel: () => void 
+}) {
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 border border-slate-100">
+        <div className="p-10 flex flex-col items-center text-center">
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+            action === 'inativar' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
+          }`}>
+            <Plus size={32} className={action === 'inativar' ? 'rotate-45' : ''} />
+          </div>
+          
+          <h3 className="text-xl font-black text-slate-800 leading-tight mb-3">
+            {action === 'inativar' ? 'Confirmar Inativação' : 'Confirmar Ativação'}
+          </h3>
+          
+          <p className="text-slate-500 font-medium text-sm px-2">
+            Tem certeza que deseja {action} o funcionário <strong className="text-slate-700">'{employeeName}'</strong>?
+          </p>
+        </div>
+        
+        <div className="p-8 bg-slate-50 flex gap-3">
+          <button 
+            onClick={onCancel}
+            className="flex-1 py-4 text-slate-500 font-bold hover:text-slate-800 transition-colors"
+          >
+            Não, cancelar
+          </button>
+          <button 
+            onClick={onConfirm}
+            className={`flex-[1.5] py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center justify-center text-white ${
+              action === 'inativar' 
+                ? 'bg-red-500 hover:bg-red-600 shadow-red-200' 
+                : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
+            }`}
+          >
+            Sim, confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
