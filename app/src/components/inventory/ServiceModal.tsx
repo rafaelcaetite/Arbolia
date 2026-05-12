@@ -112,15 +112,9 @@ export function ServiceModal() {
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
               >
                 <option value="" disabled>Selecione um responsável</option>
-                <optgroup label="Técnicos e Admins">
-                  {technicians.map(tech => (
-                    <option key={tech.id} value={tech.nome}>{tech.nome}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="Outros">
-                  <option value="Equipe Terceirizada">Equipe Terceirizada</option>
-                  <option value="Equipe Alfa">Equipe Alfa</option>
-                </optgroup>
+                {technicians.map(tech => (
+                  <option key={tech.id} value={tech.nome}>{tech.nome}</option>
+                ))}
               </select>
             </div>
           </form>
