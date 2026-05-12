@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   Search, Image as ImageIcon, FileText, Download, Eye,
   X, ChevronLeft, ChevronRight, AlertTriangle, ArrowLeftRight,
-  SplitSquareHorizontal, List, LayoutGrid, Loader2
+  SplitSquareHorizontal, List, LayoutGrid, Loader2, Pencil, Trash2
 } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
@@ -374,12 +374,38 @@ export function Acervo() {
                       <div className="grid grid-cols-2 gap-3">
                         {photos.slice(0, 2).map((photo, i) => (
                           <div key={photo.id} className="relative group">
-                            <img
-                              src={photo.dataUrl}
+                            <SecureImage
+                              src={photo.dataUrl || photo.storagePath}
                               alt={photo.name}
+                              bucket="Gallery"
                               className="w-full h-40 object-cover rounded-xl cursor-pointer border border-slate-100 hover:border-primary/30 transition-all"
                               onClick={() => setLightbox({ items: photos, index: i })}
                             />
+                            <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newName = prompt('Novo nome da foto:', photo.name);
+                                  if (newName && newName !== photo.name) {
+                                    useAppStore.getState().renameAttachment(photo.serviceId, photo.treeId, photo.id, newName);
+                                  }
+                                }}
+                                className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-primary transition-all"
+                              >
+                                <Pencil size={11} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('Deseja excluir esta foto?')) {
+                                    useAppStore.getState().deleteAttachment(photo.serviceId, photo.treeId, photo.id);
+                                  }
+                                }}
+                                className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-all"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
                             <span className="absolute top-2 left-2 text-[10px] font-bold bg-slate-900/70 text-white px-2 py-0.5 rounded-md">
                               {i === 0 ? 'Antes' : 'Depois'}
                             </span>
@@ -404,6 +430,31 @@ export function Acervo() {
                         bucket="Gallery"
                         className="w-full h-32 group-hover:scale-105 transition-transform duration-300" 
                       />
+                      <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newName = prompt('Novo nome da foto:', photo.name);
+                            if (newName && newName !== photo.name) {
+                              useAppStore.getState().renameAttachment(photo.serviceId, photo.treeId, photo.id, newName);
+                            }
+                          }}
+                          className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-primary transition-all"
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Deseja excluir esta foto?')) {
+                              useAppStore.getState().deleteAttachment(photo.serviceId, photo.treeId, photo.id);
+                            }
+                          }}
+                          className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-all"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
                         <p className="text-white text-[10px] font-bold truncate">{photo.treeEspecie}</p>
@@ -473,6 +524,30 @@ export function Acervo() {
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1.5 justify-end">
+                                <button
+                                  onClick={() => {
+                                    const newName = prompt('Novo nome do documento:', doc.name);
+                                    if (newName && newName !== doc.name) {
+                                      useAppStore.getState().renameAttachment(doc.serviceId, doc.treeId, doc.id, newName);
+                                    }
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
+                                  title="Renomear"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Tem certeza que deseja excluir "${doc.name}"?`)) {
+                                      useAppStore.getState().deleteAttachment(doc.serviceId, doc.treeId, doc.id);
+                                    }
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                                <div className="w-px h-4 bg-slate-100 mx-0.5" />
                                 <button
                                   onClick={() => setPdfPanel(doc)}
                                   className="flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-primary bg-slate-50 hover:bg-primary/10 border border-slate-200 hover:border-primary/20 px-2.5 py-1.5 rounded-lg transition-all"

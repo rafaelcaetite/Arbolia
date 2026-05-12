@@ -184,6 +184,8 @@ interface AppState {
   deactivateTrees: (treeIds: string[], motivo: string) => Promise<void>
   
   addServiceAttachment: (serviceId: string, treeId: string, attachment: ServiceAttachment) => Promise<void>
+  renameAttachment: (serviceId: string, treeId: string, attachmentId: string, newName: string) => Promise<void>
+  deleteAttachment: (serviceId: string, treeId: string, attachmentId: string) => Promise<void>
 
 
   openPostServiceModal: (id: string) => void
@@ -705,4 +707,65 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw error;
     }
   }
-}))
+  renameAttachment: async (serviceId, treeId, attachmentId, newName) => {
+    try {
+      const state = get();
+      const service = state.services.find(s => s.id === serviceId);
+      if (!service || !service.attachmentsByTree) return;
+
+      const treeAttachments = service.attachmentsByTree[treeId] || [];
+      const updatedAttachments = treeAttachments.map(att => 
+        att.id === attachmentId ? { ...att, name: newName } : att
+      );
+
+      const nextAttachmentsByTree = {
+        ...service.attachmentsByTree,
+        [treeId]: updatedAttachments
+      };
+
+      const updated = await api.updateService(serviceId, { attachmentsByTree: nextAttachmentsByTree } as any);
+      
+      set(state => ({
+        services: state.services.map(s => s.id === serviceId ? updated : s)
+      }));
+    } catch (error) {
+      console.error('Erro ao renomear anexo:', error);
+      throw error;
+    }
+  },
+
+  deleteAttachment: async (serviceId, treeId, attachmentId) => {
+    try {
+      const state = get();
+      const service = state.services.find(s => s.id === serviceId);
+      if (!service || !service.attachmentsByTree) return;
+
+      const treeAttachments = service.attachmentsByTree[treeId] || [];
+      const attachmentToDelete = treeAttachments.find(att => att.id === attachmentId);
+      if (!attachmentToDelete) return;
+
+      const updatedAttachments = treeAttachments.filter(att => att.id !== attachmentId);
+
+      const nextAttachmentsByTree = {
+        ...service.attachmentsByTree,
+        [treeId]: updatedAttachments
+      };
+
+      // 1. Remover do Storage se tiver storagePath
+      if (attachmentToDelete.storagePath) {
+        const bucket = attachmentToDelete.type === 'image' ? 'Gallery' : 'Documents';
+        await supabase.storage.from(bucket).remove([attachmentToDelete.storagePath]);
+      }
+
+      // 2. Atualizar no banco
+      const updated = await api.updateService(serviceId, { attachmentsByTree: nextAttachmentsByTree } as any);
+      
+      set(state => ({
+        services: state.services.map(s => s.id === serviceId ? updated : s)
+      }));
+    } catch (error) {
+      console.error('Erro ao excluir anexo:', error);
+      throw error;
+    }
+  },
+}));

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown } from 'lucide-react';
+import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown, Pencil, Trash2 } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 
@@ -188,20 +188,48 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
         {showList && attachments.length > 0 && (
           <div className="flex flex-col gap-1 animate-in slide-in-from-top-1 duration-150">
             {attachments.map(att => (
-              <button
-                key={att.id}
-                onClick={() => setViewingAttachment(att)}
-                className="flex items-center gap-2 bg-slate-50 border border-slate-100 hover:border-slate-300 px-2.5 py-1.5 rounded-lg text-left transition-colors group"
-              >
-                {att.type === 'pdf'
-                  ? <FileText size={12} className="text-blue-500 shrink-0" />
-                  : <Image size={12} className="text-emerald-500 shrink-0" />
-                }
-                <span className="text-[10px] font-medium text-slate-600 truncate flex-1 group-hover:text-slate-800">
-                  {att.name}
-                </span>
-                <span className="text-[9px] text-slate-400 shrink-0">{formatSize(att.size)}</span>
-              </button>
+              <div key={att.id} className="flex items-center gap-1 group">
+                <button
+                  onClick={() => setViewingAttachment(att)}
+                  className="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-100 hover:border-slate-300 px-2.5 py-1.5 rounded-lg text-left transition-colors"
+                >
+                  {att.type === 'pdf'
+                    ? <FileText size={12} className="text-blue-500 shrink-0" />
+                    : <Image size={12} className="text-emerald-500 shrink-0" />
+                  }
+                  <span className="text-[10px] font-medium text-slate-600 truncate flex-1">
+                    {att.name}
+                  </span>
+                  <span className="text-[9px] text-slate-400 shrink-0">{formatSize(att.size)}</span>
+                </button>
+                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newName = prompt('Novo nome do anexo:', att.name);
+                      if (newName && newName !== att.name) {
+                        useAppStore.getState().renameAttachment(serviceId, treeId, att.id, newName);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-primary transition-colors"
+                    title="Renomear"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Deseja excluir "${att.name}"?`)) {
+                        useAppStore.getState().deleteAttachment(serviceId, treeId, att.id);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Excluir"
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}
