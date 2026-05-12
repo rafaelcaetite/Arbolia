@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
+import { Pencil, Trash2, CheckCircle2 } from 'lucide-react';
 
 interface ActionModalProps {
   isOpen: boolean;
