@@ -559,6 +559,7 @@ export function Acervo() {
               )}
             </>
           )}
+        </div>
       </div>
 
       <ActionModal
