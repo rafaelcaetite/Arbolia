@@ -606,6 +606,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         options: {
           data: {
             nome: profileData.nome,
+            full_name: profileData.nome,
             role: profileData.role
           }
         }

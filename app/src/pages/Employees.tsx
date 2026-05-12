@@ -271,7 +271,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
               <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as any})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-slate-700">
                 <option value="tecnico">Técnico</option>
                 <option value="admin">Administrador</option>
-                <option value="assistente">Assistente</option>
+                <option value="campo">Assistente de Campo</option>
               </select>
             </div>
 
