@@ -344,15 +344,15 @@ export function Home() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   
-                  {/* Gradiente Térmico Calibrado (0°C a 45°C) */}
-                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7c2d12" />    {/* 45°C+ - Vinho/Marrom */}
+                  {/* Gradiente Térmico Absoluto (Ancorado na altura do gráfico: 320px) */}
+                  <linearGradient id="lineGradient" x1="0" y1="10" x2="0" y2="290" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#7c2d12" />    {/* 45°C - Vinho */}
                     <stop offset="22%" stopColor="#ef4444" />   {/* 35°C - Vermelho */}
                     <stop offset="33%" stopColor="#f97316" />   {/* 30°C - Laranja */}
                     <stop offset="44%" stopColor="#eab308" />   {/* 25°C - Amarelo */}
-                    <stop offset="53%" stopColor="#84cc16" />   {/* 21°C - Verde Limão/Amarelo */}
+                    <stop offset="53%" stopColor="#84cc16" />   {/* 21°C - Verde Limão */}
                     <stop offset="66%" stopColor="#22c55e" />   {/* 15°C - Verde */}
-                    <stop offset="75%" stopColor="#2dd4bf" />   {/* 11°C - Verde Água/Ciano */}
+                    <stop offset="75%" stopColor="#2dd4bf" />   {/* 11°C - Verde Água */}
                     <stop offset="85%" stopColor="#60a5fa" />   {/* 7°C - Azul Claro */}
                     <stop offset="100%" stopColor="#1e3a8a" />  {/* 0°C - Azul Escuro */}
                   </linearGradient>
