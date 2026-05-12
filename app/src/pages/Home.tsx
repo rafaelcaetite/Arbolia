@@ -120,28 +120,25 @@ export function Home() {
   const gradientStops = useMemo(() => {
     if (weatherData.length === 0) return [];
     const temps = weatherData.map(d => d.temp);
-    const min = Math.min(...temps);
-    const max = Math.max(...temps);
+    const min = Math.min(...temps, 10);
+    const max = Math.max(...temps, 35);
     const range = max - min;
 
     const getOffset = (temp: number) => {
       if (range <= 0) return 0;
-      // Recharts y-axis is inverted (0 is top, max is top)
-      // So offset 0% should be the highest temp in the line
       const offset = ((max - temp) / range) * 100;
       return Math.max(0, Math.min(100, offset));
     };
 
+    // Escala iOS - Transições Suaves
     return [
-      { offset: getOffset(45), color: '#7c2d12' }, // Vinho
-      { offset: getOffset(35), color: '#ef4444' }, // Vermelho
-      { offset: getOffset(30), color: '#f97316' }, // Laranja
-      { offset: getOffset(26), color: '#fb923c' }, // Amarelo Alaranjado
-      { offset: getOffset(25), color: '#eab308' }, // Amarelo
-      { offset: getOffset(21), color: '#84cc16' }, // Verde Limão
-      { offset: getOffset(15), color: '#22c55e' }, // Verde
-      { offset: getOffset(11), color: '#2dd4bf' }, // Verde Água
-      { offset: getOffset(0), color: '#1e3a8a' }   // Azul Escuro
+      { offset: 0, color: max > 35 ? '#8B0000' : max > 30 ? '#FF0000' : '#FFA500' }, // Cor do topo
+      { offset: getOffset(35), color: '#FF0000' }, // Calor Extremo
+      { offset: getOffset(30), color: '#FFA500' }, // Calor Forte
+      { offset: getOffset(25), color: '#FFD700' }, // Confortável/Transição
+      { offset: getOffset(20), color: '#32CD32' }, // Ameno
+      { offset: getOffset(11), color: '#87CEFA' }, // Frio
+      { offset: 100, color: min < 11 ? '#1e3a8a' : min < 20 ? '#87CEFA' : '#32CD32' } // Cor da base
     ].sort((a, b) => a.offset - b.offset);
   }, [weatherData]);
 
@@ -366,14 +363,13 @@ export function Home() {
 
           <div className="w-full h-[320px] relative z-10 mt-6">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={weatherData} margin={{ top: 10, right: 10, left: -20, bottom: 30 }}>
+              <ComposedChart data={weatherData} margin={{ top: 10, right: -20, left: -20, bottom: 30 }}>
                 <defs>
                   <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   
-                  {/* Gradiente Térmico Dinâmico com Escala Absoluta */}
                   <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
                     {gradientStops.map((stop, i) => (
                       <stop key={i} offset={`${stop.offset}%`} stopColor={stop.color} />
@@ -382,7 +378,25 @@ export function Home() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
-                <YAxis domain={['dataMin - 2', 'dataMax + 2']} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                
+                {/* Eixo Esquerdo: Temperatura */}
+                <YAxis 
+                  yAxisId="left"
+                  domain={['dataMin - 2', 'dataMax + 2']} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 11 }} 
+                  unit="°"
+                />
+                
+                {/* Eixo Direito: Chuva (Escondido mas presente para escala) */}
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  domain={[0, 100]} 
+                  hide
+                />
+
                 <Tooltip
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                   cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
@@ -392,13 +406,14 @@ export function Home() {
                     return null;
                   }}
                 />
-                <Area type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
-                <Bar dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
+                <Area yAxisId="left" type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
+                <Bar yAxisId="right" dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
                 <Line
+                  yAxisId="left"
                   type="monotone"
                   dataKey="temp"
                   stroke="url(#lineGradient)"
-                  strokeWidth={4}
+                  strokeWidth={5}
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
                 />
