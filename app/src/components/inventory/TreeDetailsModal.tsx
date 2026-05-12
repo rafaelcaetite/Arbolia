@@ -35,7 +35,10 @@ export function TreeDetailsModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">{tree.especie}</h2>
-              <span className="text-[10px] text-slate-400 font-mono">ID: {tree.id}</span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `ID: ${tree.id.slice(0, 8).toUpperCase()}`}
+              </span>
+
             </div>
           </div>
           <button onClick={closeTreeDetailsModal} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">

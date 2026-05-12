@@ -41,7 +41,9 @@ export interface Tree {
   longitude: number
   status_risco: 'baixo' | 'medio' | 'alto' | 'critico'
   data_cadastro: string
+  codigo_v6?: number         // Código sequencial gerado pelo banco
   ativo?: boolean            // false = suprimida
+
   motivo_supressao?: string  // Motivo registrado na conclusão do serviço
 }
 

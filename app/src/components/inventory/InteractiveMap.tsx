@@ -145,14 +145,20 @@ export function InteractiveMap() {
             >
               <Popup autoPan={false} className="rounded-xl custom-popup">
                 <div className="font-sans min-w-[170px] pb-0.5">
-                  <div className="flex items-center justify-between mb-2 border-b border-slate-100 pb-1.5">
-                    <h3 className="font-bold text-slate-800 text-sm leading-tight">{tree.especie}</h3>
-                    {isInactive && (
-                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 tracking-wide ml-2">
-                        Suprimida
-                      </span>
-                    )}
+                  <div className="flex flex-col mb-2 border-b border-slate-100 pb-1.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-slate-800 text-sm leading-tight">{tree.especie}</h3>
+                      {isInactive && (
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 tracking-wide ml-2">
+                          Suprimida
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[9px] font-mono text-slate-400 mt-0.5 tracking-wider">
+                      {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `# ${tree.id.slice(0, 8).toUpperCase()}`}
+                    </span>
                   </div>
+
                   
                   <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 mb-3 text-[11px]">
                     <span className="text-slate-400 font-medium text-right">Altura:</span>

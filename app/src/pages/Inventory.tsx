@@ -8,27 +8,13 @@ import { TreeDetailsModal } from '../components/inventory/TreeDetailsModal';
 import { useAppStore, type Tree, type Service } from '../store/useAppStore';
 import { Plus } from 'lucide-react';
 
-const MOCK_TREES: Tree[] = [
-  { id: 'mock-1', cliente_id: 'client-1', especie: 'Ipê Amarelo', altura: 8.5, tamanho_copa: 4.2, latitude: -20.7546, longitude: -42.8825, status_risco: 'baixo', data_cadastro: new Date().toISOString() },
-  { id: 'mock-2', cliente_id: 'client-2', especie: 'Ficus Benjamina', altura: 12.0, tamanho_copa: 8.0, latitude: -20.7586, longitude: -42.8800, status_risco: 'alto', data_cadastro: new Date().toISOString() },
-  { id: 'mock-3', cliente_id: 'client-1', especie: 'Pau-Brasil', altura: 6.0, tamanho_copa: 3.5, latitude: -20.7526, longitude: -42.8850, status_risco: 'medio', data_cadastro: new Date().toISOString() }
-];
 
-const MOCK_SERVICES: Service[] = [
-  { id: 'svc-1', treeIds: ['mock-1', 'mock-2'], tipo: 'Avaliação', data: '2026-05-01', responsavel: 'Rafael', status: 'concluido' },
-  { id: 'svc-2', treeIds: ['mock-2'], tipo: 'Poda', data: '2026-05-15', horario: '08:30', responsavel: 'Equipe Alpha', status: 'agendado' },
-  { id: 'svc-3', treeIds: ['mock-3'], tipo: 'Supressão', data: new Date().toISOString().split('T')[0], horario: '14:00', responsavel: 'Equipe Beta', status: 'agendado' }
-];
+
 
 export function Inventory() {
   const { trees, setTrees, setServices, openEditModal, openServiceModal, selectedTreeIds } = useAppStore();
 
-  useEffect(() => {
-    if (trees.length === 0) {
-      setTrees(MOCK_TREES);
-      setServices(MOCK_SERVICES);
-    }
-  }, []);
+
 
   const hasSelection = selectedTreeIds.length > 0;
 

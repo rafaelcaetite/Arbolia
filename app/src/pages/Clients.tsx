@@ -3,11 +3,8 @@ import { Search, ArrowDownWideNarrow, ListFilter, Trees, Building2, Phone, Mail,
 import { useAppStore, type Tree, type Service, type ServiceAttachment } from '../store/useAppStore';
 import { ClientDetailsModal } from '../components/clients/ClientDetailsModal';
 
-const MOCK_CLIENTS = [
-  { id: 'client-1', nome: 'Prefeitura de São Paulo', documento: '46.395.000/0001-39', email: 'contato@prefeitura.sp.gov.br', telefone: '(11) 156', data_cadastro: '2025-01-15T10:00:00.000Z', status: 'ativo' },
-  { id: 'client-2', nome: 'Condomínio Reserva da Mata', documento: '12.345.678/0001-99', email: 'sindico@reservadamata.com', telefone: '(11) 98765-4321', data_cadastro: '2025-11-20T14:30:00.000Z', status: 'ativo' },
-  { id: 'client-3', nome: 'Empresa GreenTech', documento: '98.765.432/0001-11', email: 'facilities@greentech.br', telefone: '(11) 3333-4444', data_cadastro: '2026-02-10T09:15:00.000Z', status: 'inativo' }
-];
+
+
 
 type SortOption = 'recentes' | 'nome';
 type GroupOption = 'nenhum' | 'status';
@@ -227,9 +224,7 @@ export function Clients() {
   const [sortBy, setSortBy] = useState<SortOption>('recentes');
   const [groupBy, setGroupBy] = useState<GroupOption>('nenhum');
 
-  useEffect(() => {
-    if (clients.length === 0) setClients(MOCK_CLIENTS as any);
-  }, []);
+
 
   const processedClients = useMemo(() => {
     let filtered = clients.filter(c => 

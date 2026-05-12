@@ -167,12 +167,12 @@ export function TreeList() {
                     <span>Copa: <strong className="text-slate-700">{tree.tamanho_copa}m</strong></span>
                   </div>
 
-                  {/* Badge de ID */}
                   <div className="mt-2">
                     <span className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 text-slate-400 text-[9px] font-mono px-2 py-0.5 rounded tracking-wider">
-                      # {tree.id.slice(0, 8).toUpperCase()}
+                      {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `# ${tree.id.slice(0, 8).toUpperCase()}`}
                     </span>
                   </div>
+
 
                   {isSelected && (
                     <div className="mt-3 animate-in fade-in duration-200">
