@@ -19,38 +19,45 @@ export function TreeDetailsModal() {
       
       setLoadingPhotos(true);
       try {
-        const photosToSign: string[] = [];
+        const filesToSign: string[] = [];
         
-        // 1. Fotos diretas da árvore
-        if (tree.fotos && tree.fotos.length > 0) {
-          photosToSign.push(...tree.fotos);
+        // 1. Fotos/Arquivos diretas da árvore
+        if (tree.fotos && Array.isArray(tree.fotos)) {
+          filesToSign.push(...tree.fotos.filter(f => !!f));
         }
 
-        // 2. Fotos de serviços (anexos)
-        const servicePhotos = services
+        // 2. Fotos/Arquivos de serviços (anexos)
+        const serviceFiles = services
           .filter(s => s.treeIds.includes(tree.id))
-          .flatMap(s => (s.attachmentsByTree?.[tree.id] || []).filter(a => a.type === 'image'))
-          .map(a => a.storagePath)
-          .filter((p): p is string => !!p);
+          .flatMap(s => {
+            const treeAttachments = s.attachmentsByTree?.[tree.id] || [];
+            return treeAttachments.map(a => a.storagePath).filter((p): p is string => !!p);
+          });
 
-        photosToSign.push(...servicePhotos);
+        filesToSign.push(...serviceFiles);
 
-        if (photosToSign.length > 0) {
-          const { data } = await supabase.storage
+        if (filesToSign.length > 0) {
+          // Remover duplicatas e nulos
+          const uniqueFiles = Array.from(new Set(filesToSign));
+
+          const { data, error } = await supabase.storage
             .from('Gallery')
-            .createSignedUrls(photosToSign, 3600);
+            .createSignedUrls(uniqueFiles, 3600);
+
+          if (error) throw error;
 
           if (data) {
             setSignedPhotos(data.map((item, idx) => ({
               url: item.signedUrl || '',
-              name: `Foto ${idx + 1}`
+              name: uniqueFiles[idx].split('/').pop() || `Arquivo ${idx + 1}`
             })).filter(p => p.url !== ''));
           }
         } else {
           setSignedPhotos([]);
         }
       } catch (err) {
-        console.error('Erro ao carregar fotos assinadas:', err);
+        console.error('Erro ao carregar arquivos assinados:', err);
+        setSignedPhotos([]);
       } finally {
         setLoadingPhotos(false);
       }
@@ -145,27 +152,46 @@ export function TreeDetailsModal() {
             Ver Histórico
           </button>
 
-          {/* Galeria de fotos assinada (Preview Pequeno) */}
+          {/* Galeria de Fotos e Arquivos */}
           {(signedPhotos.length > 0 || loadingPhotos) && (
             <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm mt-1">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                <ImageIcon size={10} /> Galeria de Campo
+                <ImageIcon size={10} /> Arquivos e Fotos
               </span>
-              <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group cursor-zoom-in" onClick={() => setIsLightboxOpen(true)}>
+              <div 
+                className="relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group cursor-pointer" 
+                onClick={() => {
+                  const isImage = signedPhotos[photoIdx]?.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)/);
+                  if (isImage) {
+                    setIsLightboxOpen(true);
+                  } else {
+                    window.open(signedPhotos[photoIdx].url, '_blank');
+                  }
+                }}
+              >
                 {loadingPhotos ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <Loader2 size={20} className="text-primary animate-spin" />
                   </div>
                 ) : signedPhotos.length > 0 ? (
                   <>
-                    <img
-                      src={signedPhotos[photoIdx].url}
-                      alt={signedPhotos[photoIdx].name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                      <ImageIcon className="text-white opacity-0 group-hover:opacity-100 drop-shadow-lg" size={24} />
-                    </div>
+                    {signedPhotos[photoIdx].name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)/) ? (
+                      <img
+                        src={signedPhotos[photoIdx].url}
+                        alt={signedPhotos[photoIdx].name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-2">
+                        <Save size={32} className="text-slate-300" />
+                        <span className="text-[10px] font-bold text-slate-500 px-4 text-center truncate w-full">
+                          {signedPhotos[photoIdx].name}
+                        </span>
+                        <span className="text-[9px] text-primary bg-primary/5 px-2 py-1 rounded-full">Clique para abrir</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                    
                     {signedPhotos.length > 1 && (
                       <div className="absolute inset-0 flex items-center justify-between px-2" onClick={(e) => e.stopPropagation()}>
                         <button

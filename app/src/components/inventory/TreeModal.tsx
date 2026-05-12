@@ -178,18 +178,27 @@ export function TreeModal() {
             {/* Galeria de Fotos */}
             <div className="flex flex-col gap-3">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
-                Galeria de Campo
-                <span className="text-[9px] font-medium text-slate-300">Máx 2MB por foto</span>
+                Arquivos e Documentos
+                <span className="text-[9px] font-medium text-slate-300">Máx 10MB por arquivo</span>
               </label>
               
               <div className="grid grid-cols-4 gap-3">
                 {formData.fotos?.map((foto, idx) => (
                   <div key={idx} className="aspect-square rounded-2xl bg-slate-200 relative group overflow-hidden border border-slate-100">
-                    <img 
-                      src={foto.startsWith('http') || foto.startsWith('data:') || foto.startsWith('blob:') ? foto : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Gallery/${foto}`} 
-                      alt="Tree" 
-                      className="w-full h-full object-cover"
-                    />
+                    {foto.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|blob|data)/) || foto.startsWith('blob:') || foto.startsWith('data:') ? (
+                      <img 
+                        src={foto.startsWith('http') || foto.startsWith('data:') || foto.startsWith('blob:') ? foto : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Gallery/${foto}`} 
+                        alt="Tree" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2 bg-slate-100 text-slate-400">
+                        <Save size={20} />
+                        <span className="text-[8px] font-bold truncate w-full text-center mt-1">
+                          {foto.split('/').pop()?.slice(-15)}
+                        </span>
+                      </div>
+                    )}
                     <button 
                       type="button"
                       onClick={() => removePhoto(foto)}
@@ -207,14 +216,14 @@ export function TreeModal() {
                   className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-all disabled:opacity-50"
                 >
                   {uploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
-                  <span className="text-[10px] font-bold">Adicionar</span>
+                  <span className="text-[10px] font-bold">Anexar</span>
                 </button>
               </div>
               <input 
                 type="file" 
                 ref={fileInputRef} 
                 multiple 
-                accept="image/*" 
+                accept="*" 
                 className="hidden" 
                 onChange={handleFileUpload} 
               />
