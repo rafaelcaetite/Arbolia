@@ -47,7 +47,7 @@ export interface Tree {
   tamanho_copa: number
   latitude: number
   longitude: number
-  status_risco: 'baixo' | 'medio' | 'alto' | 'critico'
+  status_risco?: 'baixo' | 'medio' | 'alto' | 'critico' | null
   data_cadastro: string
   codigo_v6?: number | null
   ativo?: boolean | null

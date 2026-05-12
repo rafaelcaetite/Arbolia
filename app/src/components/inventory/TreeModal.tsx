@@ -23,7 +23,7 @@ export function TreeModal() {
         tamanho_copa: 0, 
         latitude: -20.7546, 
         longitude: -42.8825, 
-        status_risco: 'baixo', 
+        status_risco: null, 
         cliente_id: '',
         fotos: [],
         ativo: true 

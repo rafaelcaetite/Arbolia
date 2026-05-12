@@ -140,9 +140,10 @@ export function TreeDetailsModal() {
                 tree.status_risco === 'baixo' ? 'bg-emerald-100 text-emerald-700' :
                 tree.status_risco === 'medio' ? 'bg-yellow-100 text-yellow-700' :
                 tree.status_risco === 'alto' ? 'bg-orange-100 text-orange-700' :
-                'bg-red-100 text-red-700'
+                tree.status_risco === 'critico' ? 'bg-red-100 text-red-700' :
+                'bg-slate-100 text-slate-500'
               }`}>
-                {tree.status_risco}
+                {tree.status_risco || 'Pendente'}
               </span>
             </div>
             <div className="bg-white p-3 rounded-2xl border border-slate-100 flex flex-col gap-0.5 shadow-sm">
