@@ -399,6 +399,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Erro ao criar serviço:', error);
+      throw error;
     }
   },
 

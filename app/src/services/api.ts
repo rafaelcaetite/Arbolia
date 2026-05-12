@@ -120,27 +120,54 @@ export const api = {
       .select('*')
       .order('data', { ascending: false });
     if (error) throw error;
-    return data as Service[];
+    
+    return (data || []).map(s => ({
+      ...s,
+      treeIds: s.tree_ids || []
+    })) as Service[];
   },
 
   async createService(service: Omit<Service, 'id'>) {
+    const { treeIds, ...rest } = service as any;
+    const dbPayload = {
+      ...rest,
+      tree_ids: treeIds || []
+    };
+
     const { data, error } = await supabase
       .from('services')
-      .insert([service])
+      .insert([dbPayload])
       .select()
       .single();
-    if (error) throw error;
-    return data as Service;
+    
+    if (error) {
+      console.error('Erro ao criar serviço no Supabase:', error);
+      throw error;
+    }
+
+    return {
+      ...data,
+      treeIds: data.tree_ids || []
+    } as Service;
   },
 
   async updateService(id: string, updates: Partial<Service>) {
+    const { treeIds, ...rest } = updates as any;
+    const dbPayload = { ...rest };
+    if (treeIds) dbPayload.tree_ids = treeIds;
+
     const { data, error } = await supabase
       .from('services')
-      .update(updates)
+      .update(dbPayload)
       .eq('id', id)
       .select()
       .single();
+    
     if (error) throw error;
-    return data as Service;
+
+    return {
+      ...data,
+      treeIds: data.tree_ids || []
+    } as Service;
   }
 };

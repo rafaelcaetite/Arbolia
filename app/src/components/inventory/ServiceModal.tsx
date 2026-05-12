@@ -13,6 +13,8 @@ export function ServiceModal() {
     status: 'agendado'
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const technicians = useMemo(() => {
     return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
   }, [employees]);
@@ -26,10 +28,20 @@ export function ServiceModal() {
 
   if (!isServiceModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    createService(formData as Omit<Service, 'id' | 'treeIds'>);
-    closeServiceModal();
+    if (!formData.responsavel || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await createService(formData as Omit<Service, 'id' | 'treeIds'>);
+      closeServiceModal();
+    } catch (error) {
+      console.error('Erro ao criar serviço:', error);
+      alert('Erro ao agendar serviço. Verifique sua conexão.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const serviceTypes = [
@@ -65,12 +77,13 @@ export function ServiceModal() {
                   <button
                     key={srv.id}
                     type="button"
+                    disabled={isSubmitting}
                     onClick={() => setFormData({...formData, tipo: srv.id})}
                     className={`flex items-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all border ${
                       formData.tipo === srv.id 
                         ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
                         : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                    }`}
+                    } disabled:opacity-50`}
                   >
                     {srv.icon}
                     {srv.id}
@@ -85,9 +98,10 @@ export function ServiceModal() {
                 <input 
                   type="date" 
                   required
+                  disabled={isSubmitting}
                   value={formData.data || ''}
                   onChange={(e) => setFormData({...formData, data: e.target.value})}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50"
                 />
               </div>
 
@@ -96,9 +110,10 @@ export function ServiceModal() {
                 <input 
                   type="time" 
                   required
+                  disabled={isSubmitting}
                   value={formData.horario || ''}
                   onChange={(e) => setFormData({...formData, horario: e.target.value})}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50"
                 />
               </div>
             </div>
@@ -107,9 +122,10 @@ export function ServiceModal() {
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Responsável / Equipe</label>
               <select
                 required
+                disabled={isSubmitting}
                 value={formData.responsavel || ''}
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer disabled:opacity-50"
               >
                 <option value="" disabled>Selecione um responsável</option>
                 {technicians.map(tech => (
@@ -124,10 +140,20 @@ export function ServiceModal() {
           <button 
             type="submit"
             form="service-form"
-            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 transition-all transform hover:scale-[1.01] active:scale-95"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 transition-all transform hover:scale-[1.01] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <Save size={18} />
-            Agendar Serviço
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Agendando...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Agendar Serviço
+              </>
+            )}
           </button>
         </div>
       </div>
