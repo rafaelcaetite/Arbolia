@@ -50,14 +50,31 @@ export function AttachmentViewer({ attachment, onClose }: AttachmentViewerProps)
     loadSecureUrl();
   }, [attachment]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!displayUrl) return;
-    const a = document.createElement('a');
-    a.href = displayUrl;
-    a.download = attachment.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      // Forçamos o download via Blob para evitar que abra em nova guia
+      const response = await fetch(displayUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      // Fallback básico se o fetch falhar (CORS etc)
+      const a = document.createElement('a');
+      a.href = displayUrl;
+      a.download = attachment.name;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   return (

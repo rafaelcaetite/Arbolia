@@ -240,18 +240,24 @@ export function TreeDetailsModal() {
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                     
                     {signedPhotos.length > 1 && (
-                      <div className="absolute inset-0 flex items-center justify-between px-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
                         <button
-                          onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPhotoIdx(p => Math.max(0, p - 1));
+                          }}
                           disabled={photoIdx === 0}
-                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90"
+                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90 pointer-events-auto"
                         >
                           <ChevronLeft size={14} />
                         </button>
                         <button
-                          onClick={() => setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1));
+                          }}
                           disabled={photoIdx === signedPhotos.length - 1}
-                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90"
+                          className="p-1 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-0 hover:bg-white transition-all transform active:scale-90 pointer-events-auto"
                         >
                           <ChevronRight size={14} />
                         </button>

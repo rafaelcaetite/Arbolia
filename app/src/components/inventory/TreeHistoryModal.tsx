@@ -151,12 +151,20 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                       const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
                       const { data } = await supabase.storage.from(bucket).createSignedUrl(att.storagePath!, 3600);
                       if (data?.signedUrl) {
-                        const a = document.createElement('a');
-                        a.href = data.signedUrl;
-                        a.download = att.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
+                        try {
+                          const response = await fetch(data.signedUrl);
+                          const blob = await response.blob();
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = att.name;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        } catch (err) {
+                          window.open(data.signedUrl, '_blank');
+                        }
                       }
                     }}
                     className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
