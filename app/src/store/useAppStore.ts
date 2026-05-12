@@ -36,8 +36,6 @@ export interface MapBounds {
   west: number
   north: number
   east: number
-}
-
 export interface Tree {
   id: string
   cliente_id?: string
@@ -50,7 +48,7 @@ export interface Tree {
   data_cadastro: string
   codigo_v6?: number         // Código sequencial gerado pelo banco
   ativo?: boolean            // false = suprimida
-
+  fotos?: string[]           // Caminhos no bucket 'Gallery'
   motivo_supressao?: string  // Motivo registrado na conclusão do serviço
 }
 
@@ -58,7 +56,8 @@ export interface ServiceAttachment {
   id: string
   name: string
   type: 'pdf' | 'image'
-  dataUrl: string   // Base64 data URL para persistência local
+  dataUrl?: string   // Base64 data URL para persistência local (fallback)
+  storagePath?: string // Caminho no bucket 'Documents' ou 'Gallery'
   size: number      // bytes
 }
 
@@ -104,6 +103,7 @@ export interface Service {
   // Laudo ISA — presente apenas em serviços do tipo 'Avaliação'
   laudoGerado?: boolean
   laudoData?: ISALaudoData
+  documentos_url?: string[] // Caminhos no bucket 'Documents'
 }
 
 

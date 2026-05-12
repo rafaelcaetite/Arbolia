@@ -1,26 +1,68 @@
-import { useState } from 'react';
-import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History, Loader2 } from 'lucide-react';
 
 import { useAppStore } from '../../store/useAppStore';
+import { supabase } from '../../lib/supabase';
 
 export function TreeDetailsModal() {
   const { isTreeDetailsModalOpen, viewingTreeDetailsId, trees, clients, services, closeTreeDetailsModal, openHistoryModal } = useAppStore();
 
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [signedPhotos, setSignedPhotos] = useState<{url: string, name: string}[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
   
-  if (!isTreeDetailsModalOpen || !viewingTreeDetailsId) return null;
-
   const tree = trees.find(t => t.id === viewingTreeDetailsId);
-  if (!tree) return null;
+
+  useEffect(() => {
+    const loadPhotos = async () => {
+      if (!tree || !isTreeDetailsModalOpen) return;
+      
+      setLoadingPhotos(true);
+      try {
+        const photosToSign: string[] = [];
+        
+        // 1. Fotos diretas da árvore
+        if (tree.fotos && tree.fotos.length > 0) {
+          photosToSign.push(...tree.fotos);
+        }
+
+        // 2. Fotos de serviços (anexos)
+        const servicePhotos = services
+          .filter(s => s.treeIds.includes(tree.id))
+          .flatMap(s => (s.attachmentsByTree?.[tree.id] || []).filter(a => a.type === 'image'))
+          .map(a => a.storagePath)
+          .filter((p): p is string => !!p);
+
+        photosToSign.push(...servicePhotos);
+
+        if (photosToSign.length > 0) {
+          const { data, error } = await supabase.storage
+            .from('Gallery')
+            .createSignedUrls(photosToSign, 3600);
+
+          if (data) {
+            setSignedPhotos(data.map((item, idx) => ({
+              url: item.signedUrl,
+              name: `Foto ${idx + 1}`
+            })));
+          }
+        } else {
+          setSignedPhotos([]);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar fotos assinadas:', err);
+      } finally {
+        setLoadingPhotos(false);
+      }
+    };
+
+    loadPhotos();
+    setPhotoIdx(0);
+  }, [tree, isTreeDetailsModalOpen, services]);
+
+  if (!isTreeDetailsModalOpen || !viewingTreeDetailsId || !tree) return null;
 
   const client = clients.find(c => c.id === tree.cliente_id);
-
-  // Fotos desta árvore (apenas os anexos específicos dela via attachmentsByTree)
-  const treePhotos = services
-    .filter(s => s.treeIds.includes(tree.id) && s.attachmentsByTree?.[tree.id]?.length)
-    .flatMap(s => (s.attachmentsByTree![tree.id]).filter(a => a.type === 'image'))
-    .slice(-3)
-    .reverse();
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
@@ -103,46 +145,54 @@ export function TreeDetailsModal() {
           </button>
 
 
-          {/* Carrossel de fotos */}
-          {treePhotos.length > 0 && (
+          {/* Galeria de fotos assinada */}
+          {(signedPhotos.length > 0 || loadingPhotos) && (
             <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-3">
-                <ImageIcon size={12} /> Fotos Recentes
+                <ImageIcon size={12} /> Galeria de Campo
               </span>
-              <div className="relative">
-                <img
-                  src={treePhotos[photoIdx].dataUrl}
-                  alt={treePhotos[photoIdx].name}
-                  className="w-full h-36 object-cover rounded-xl border border-slate-100"
-                />
-                {treePhotos.length > 1 && (
-                  <div className="absolute inset-0 flex items-center justify-between px-2">
-                    <button
-                      onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
-                      disabled={photoIdx === 0}
-                      className="p-1 bg-white/80 rounded-full shadow text-slate-600 disabled:opacity-30 hover:bg-white transition-all"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      onClick={() => setPhotoIdx(p => Math.min(treePhotos.length - 1, p + 1))}
-                      disabled={photoIdx === treePhotos.length - 1}
-                      className="p-1 bg-white/80 rounded-full shadow text-slate-600 disabled:opacity-30 hover:bg-white transition-all"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-50 border border-slate-100">
+                {loadingPhotos ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 size={24} className="text-primary animate-spin" />
                   </div>
-                )}
-                {treePhotos.length > 1 && (
-                  <div className="flex justify-center gap-1 mt-2">
-                    {treePhotos.map((_, i) => (
-                      <button key={i} onClick={() => setPhotoIdx(i)}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${
-                          i === photoIdx ? 'bg-primary' : 'bg-slate-300'
-                        }`} />
-                    ))}
-                  </div>
-                )}
+                ) : signedPhotos.length > 0 ? (
+                  <>
+                    <img
+                      src={signedPhotos[photoIdx].url}
+                      alt={signedPhotos[photoIdx].name}
+                      className="w-full h-full object-cover"
+                    />
+                    {signedPhotos.length > 1 && (
+                      <div className="absolute inset-0 flex items-center justify-between px-2">
+                        <button
+                          onClick={() => setPhotoIdx(p => Math.max(0, p - 1))}
+                          disabled={photoIdx === 0}
+                          className="p-1.5 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-30 hover:bg-white transition-all transform active:scale-90"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <button
+                          onClick={() => setPhotoIdx(p => Math.min(signedPhotos.length - 1, p + 1))}
+                          disabled={photoIdx === signedPhotos.length - 1}
+                          className="p-1.5 bg-white/90 rounded-full shadow-lg text-slate-600 disabled:opacity-30 hover:bg-white transition-all transform active:scale-90"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    )}
+                    {signedPhotos.length > 1 && (
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                        {signedPhotos.map((_, i) => (
+                          <button key={i} onClick={() => setPhotoIdx(i)}
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${
+                              i === photoIdx ? 'bg-primary w-4' : 'bg-white/60'
+                            }`} />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </div>
             </div>
           )}

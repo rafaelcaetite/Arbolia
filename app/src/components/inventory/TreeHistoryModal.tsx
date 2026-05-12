@@ -1,32 +1,50 @@
 import { useRef, useState, useEffect } from 'react';
 import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
+import { supabase } from '../../lib/supabase';
 
 // ── Visualizador de Anexos ──────────────────────────────────────────────────
 function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachment; onClose: () => void }) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (attachment.type === 'pdf' && attachment.dataUrl.startsWith('data:')) {
-      try {
-        const base64 = attachment.dataUrl.split(',')[1];
-        const byteCharacters = atob(base64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+    async function loadSecureUrl() {
+      if (attachment.storagePath) {
+        // Se temos um caminho no storage, geramos uma URL assinada
+        const bucket = attachment.type === 'image' ? 'Gallery' : 'Documents';
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(attachment.storagePath, 3600); // 1 hora de validade
+        
+        if (error) {
+          console.error('Erro ao gerar URL assinada para anexo:', error);
+          setPdfUrl(attachment.dataUrl || null);
+        } else {
+          setPdfUrl(data.signedUrl);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setPdfUrl(url);
-        return () => URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error('Erro ao converter PDF para Blob:', e);
-        setPdfUrl(attachment.dataUrl);
+      } else if (attachment.type === 'pdf' && attachment.dataUrl?.startsWith('data:')) {
+        try {
+          const base64 = attachment.dataUrl.split(',')[1];
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          return () => URL.revokeObjectURL(url);
+        } catch (e) {
+          console.error('Erro ao converter PDF para Blob:', e);
+          setPdfUrl(attachment.dataUrl);
+        }
+      } else {
+        setPdfUrl(attachment.dataUrl || null);
       }
-    } else {
-      setPdfUrl(attachment.dataUrl);
     }
+
+    loadSecureUrl();
   }, [attachment]);
 
   return (
@@ -40,7 +58,7 @@ function AttachmentViewer({ attachment, onClose }: { attachment: ServiceAttachme
         </div>
         <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-50">
           {attachment.type === 'image' ? (
-            <img src={attachment.dataUrl} alt={attachment.name} className="max-w-full max-h-full rounded-xl object-contain" />
+            <img src={pdfUrl || attachment.dataUrl} alt={attachment.name} className="max-w-full max-h-full rounded-xl object-contain" />
           ) : (
             <iframe src={pdfUrl || ''} title={attachment.name} className="w-full h-[60vh] rounded-xl border border-slate-200" />
           )}
@@ -61,20 +79,31 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
   const hasDocs   = attachments.some(a => a.type === 'pdf');
   const hasImages = attachments.some(a => a.type === 'image');
 
-  const readFile = (file: File, type: 'pdf' | 'image') => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
+  const readFile = async (file: File, type: 'pdf' | 'image') => {
+    const bucket = type === 'image' ? 'Gallery' : 'Documents';
+    const folder = type === 'image' ? 'history' : 'attachments';
+    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const storagePath = `${folder}/${fileName}`;
+
+    try {
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(storagePath, file);
+
+      if (error) throw error;
+
       const attachment: ServiceAttachment = {
         id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: file.name,
         type,
-        dataUrl,
+        storagePath,
         size: file.size,
       };
       addServiceAttachment(serviceId, treeId, attachment);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Erro ao subir arquivo:', err);
+      alert('Falha ao enviar arquivo para o Storage.');
+    }
   };
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {

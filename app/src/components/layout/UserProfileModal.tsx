@@ -10,7 +10,6 @@ export function UserProfileModal() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export function UserProfileModal() {
       });
       loadSecurePhoto();
     }
-    if (isProfileModalOpen) setIsEditing(false);
   }, [userProfile, isProfileModalOpen]);
 
   if (!isProfileModalOpen || !userProfile) return null;

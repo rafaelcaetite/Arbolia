@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { X, Save, MapPin } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Save, MapPin, Camera, Loader2, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useAppStore, type Tree } from '../../store/useAppStore';
+import { supabase } from '../../lib/supabase';
 
 export function TreeModal() {
   const { 
@@ -9,6 +10,8 @@ export function TreeModal() {
   } = useAppStore();
   
   const [formData, setFormData] = useState<Partial<Tree>>({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isEditModalOpen && editingTreeId) {
@@ -17,7 +20,16 @@ export function TreeModal() {
         setFormData(tree);
       }
     } else {
-      setFormData({ especie: '', altura: 0, tamanho_copa: 0, latitude: -20.7546, longitude: -42.8825, status_risco: 'baixo', cliente_id: '' });
+      setFormData({ 
+        especie: '', 
+        altura: 0, 
+        tamanho_copa: 0, 
+        latitude: -20.7546, 
+        longitude: -42.8825, 
+        status_risco: 'baixo', 
+        cliente_id: '',
+        fotos: [] 
+      });
     }
   }, [isEditModalOpen, editingTreeId, trees]);
 
@@ -49,6 +61,48 @@ export function TreeModal() {
 
   const isEditing = !!editingTreeId;
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const newFotos = [...(formData.fotos || [])];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Limite de 2MB para fotos de árvore (um pouco mais que perfil)
+        if (file.size > 2 * 1024 * 1024) continue;
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${editingTreeId || 'new'}/${Math.random()}.${fileExt}`;
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage
+          .from('Gallery')
+          .upload(filePath, file);
+
+        if (!uploadError) {
+          newFotos.push(filePath);
+        }
+      }
+
+      setFormData(prev => ({ ...prev, fotos: newFotos }));
+    } catch (err) {
+      console.error('Erro no upload da galeria:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (path: string) => {
+    setFormData(prev => ({
+      ...prev,
+      fotos: prev.fotos?.filter(f => f !== path)
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditing) {
@@ -68,7 +122,7 @@ export function TreeModal() {
       ></div>
       
       {/* Modal Container */}
-      <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/10 w-full max-w-md relative z-10 overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in-95 duration-200 h-[90vh] sm:h-auto sm:max-h-[90vh]">
+      <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/10 w-full max-w-lg relative z-10 overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in-95 duration-200 h-[90vh] sm:h-auto sm:max-h-[95vh]">
         
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
@@ -85,8 +139,53 @@ export function TreeModal() {
 
         {/* Body */}
         <div className="p-6 bg-slate-50/30 overflow-y-auto">
-          <form id="tree-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form id="tree-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
             
+            {/* Galeria de Fotos */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                Galeria de Campo
+                <span className="text-[9px] font-medium text-slate-300">Máx 2MB por foto</span>
+              </label>
+              
+              <div className="grid grid-cols-4 gap-3">
+                {formData.fotos?.map((foto, idx) => (
+                  <div key={idx} className="aspect-square rounded-2xl bg-slate-200 relative group overflow-hidden border border-slate-100">
+                    <img 
+                      src={foto.startsWith('http') || foto.startsWith('data:') ? foto : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/Gallery/${foto}`} 
+                      alt="Tree" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => removePhoto(foto)}
+                      className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+                
+                <button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-all disabled:opacity-50"
+                >
+                  {uploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
+                  <span className="text-[10px] font-bold">Adicionar</span>
+                </button>
+              </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                multiple 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFileUpload} 
+              />
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cliente Proprietário</label>
               <select 
