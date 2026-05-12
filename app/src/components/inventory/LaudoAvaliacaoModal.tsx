@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { X, ChevronRight, ChevronLeft, FileText, CheckCircle2, AlertCircle, Loader2, ClipboardList, TreePine, BarChart3, ShieldCheck, Plus, Trash2 } from 'lucide-react';
-import { useAppStore, TECNICO_ATIVO, type ISALaudoData } from '../../store/useAppStore';
+import { useAppStore, type ISALaudoData } from '../../store/useAppStore';
 import {
   calcularRiscoISA,
   LABELS_PROB_FALHA, LABELS_PROB_IMPACTO, LABELS_CONSEQUENCIA, LABELS_LIMITANTE, LABELS_PARTE_ARVORE,
@@ -29,7 +29,7 @@ const STEP_TITLES = ['Alvos e Ocupação','Defeitos e Condições','Matrizes de 
 const COR_BADGE: Record<string, string> = { Baixo:'bg-green-100 text-green-800 border-green-300', Moderado:'bg-amber-100 text-amber-800 border-amber-300', Alto:'bg-red-100 text-red-800 border-red-300', Extremo:'bg-red-200 text-red-900 border-red-500' };
 
 export function LaudoAvaliacaoModal() {
-  const { isLaudoModalOpen, activeLaudoServiceId, closeLaudoModal, services, trees, clients } = useAppStore();
+  const { isLaudoModalOpen, activeLaudoServiceId, closeLaudoModal, services, trees, clients, userProfile } = useAppStore();
 
   const service = services.find(s => s.id === activeLaudoServiceId);
   const serviceTree = service && service.treeIds.length > 0 ? trees.find(t => t.id === service.treeIds[0]) : null;
@@ -116,8 +116,8 @@ export function LaudoAvaliacaoModal() {
       descricaoLocal, defeitos,
       limitantes, mitigacoesSelecionadas: mitigacoes,
       parecer, avaliacaoAvancada, observacoes, resultado,
-      tecnicoNome: TECNICO_ATIVO.nome,
-      tecnicoCrea: TECNICO_ATIVO.registro_crea,
+      tecnicoNome: userProfile?.nome || 'Técnico Responsável',
+      tecnicoCrea: userProfile?.crea || 'CREA-XX 000000',
       dataLaudo: new Date().toISOString(),
     };
 
@@ -208,11 +208,11 @@ export function LaudoAvaliacaoModal() {
       
       doc.setTextColor(15, 23, 42);
       doc.setFontSize(8);
-      doc.text(TECNICO_ATIVO.nome, badgeX + 4, 20);
+      doc.text(userProfile?.nome || 'Técnico Responsável', badgeX + 4, 20);
       
       doc.setTextColor(theme.primary[0], theme.primary[1], theme.primary[2]);
       doc.setFontSize(7);
-      doc.text(TECNICO_ATIVO.registro_crea, badgeX + 4, 24);
+      doc.text(userProfile?.crea || 'CREA-XX 000000', badgeX + 4, 24);
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
@@ -290,7 +290,7 @@ export function LaudoAvaliacaoModal() {
         margin: { left: margin, right: margin },
         body: [
           ['ESPÉCIE:', especie, 'CLIENTE:', clienteNome],
-          ['TÉCNICO:', TECNICO_ATIVO.nome, 'PARECER:', parecer === 'final' ? 'FINAL' : 'PRELIMINAR']
+          ['TÉCNICO:', userProfile?.nome || 'Técnico', 'PARECER:', parecer === 'final' ? 'FINAL' : 'PRELIMINAR']
         ],
         theme: 'plain',
         styles: { fontSize: 8, cellPadding: 3, fillColor: [248, 250, 252] },
@@ -439,7 +439,7 @@ export function LaudoAvaliacaoModal() {
             probImpacto: (a.probImpacto || 'muito_baixo') as ProbabilidadeImpacto, 
             consequencia: (a.consequencia || 'insignificante') as Consequencia 
           }))),
-          tecnicoNome:TECNICO_ATIVO.nome, tecnicoCrea:TECNICO_ATIVO.registro_crea,
+          tecnicoNome: userProfile?.nome || 'Técnico', tecnicoCrea: userProfile?.crea || 'CREA-XX',
           dataLaudo:new Date().toISOString(),
           aiResumo: aiInterpretation || undefined
         }} especie={especie} cliente={clienteNome} templateId={templateId as any} />
