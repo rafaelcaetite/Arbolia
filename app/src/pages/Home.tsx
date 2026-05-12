@@ -344,12 +344,6 @@ export function Home() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   
-                <defs>
-                  <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  
                   {/* Mapa Térmico Absoluto (Fixado entre 5°C e 40°C) */}
                   <linearGradient id="lineGradient" x1="0" y1="10" x2="0" y2="290" gradientUnits="userSpaceOnUse">
                     <stop offset="0%" stopColor="#8B0000" />    {/* 40°C - Vinho */}
