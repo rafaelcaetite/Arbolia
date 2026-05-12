@@ -82,13 +82,15 @@ export function Home() {
           };
         }); // Removido o filtro i % 2 para mostrar hora a hora
 
-        // Previsão 5 dias
+        // Previsão 5 dias (Excluindo hoje, pegando os próximos 5)
         const daily = data.daily.time.slice(1, 6).map((t: string, i: number) => {
           const dayIndex = i + 1;
-          const date = new Date(t);
+          const date = new Date(t + 'T00:00:00');
           const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+          const dayDate = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
           return {
             day: dayName.charAt(0).toUpperCase() + dayName.slice(1),
+            date: dayDate,
             max: Math.round(data.daily.temperature_2m_max[dayIndex]),
             min: Math.round(data.daily.temperature_2m_min[dayIndex]),
             rain: data.daily.precipitation_probability_max[dayIndex],
@@ -351,10 +353,8 @@ export function Home() {
                   formatter={(value: any, name: any) => {
                     if (name === 'temp') return [`${value}°C`, 'Temperatura'];
                     if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
-                    return [value, name];
+                    return null;
                   }}
-
-
                 />
                 <Area type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
                 <Bar dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
@@ -375,16 +375,22 @@ export function Home() {
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">próximos 5 dias &gt;</h4>
             <div className="grid grid-cols-5 gap-3">
               {fiveDayForecast.map((day, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-50/30 hover:bg-slate-100/50 transition-all duration-300">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day.day}</span>
+                <div key={i} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-50/30 hover:bg-slate-100/50 transition-all duration-300 border border-transparent hover:border-slate-100">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day.day}</span>
+                    <span className="text-[9px] font-bold text-slate-400">{day.date}</span>
+                  </div>
                   <div className="flex items-center gap-1.5 py-1">
                     <CloudRain size={14} className={day.rain > 30 ? 'text-blue-500' : 'text-slate-300'} />
                     <span className="text-sm font-black text-slate-700">{day.max}°</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-slate-300">{day.min}°</span>
                     <div className="w-1 h-1 rounded-full bg-blue-200" />
-                    <span className="text-[10px] font-black text-blue-500">{day.rain}%</span>
+                    <div className="flex items-center gap-1 text-blue-500">
+                      <CloudRain size={10} />
+                      <span className="text-[10px] font-black">{day.rain}%</span>
+                    </div>
                   </div>
                 </div>
               ))}
