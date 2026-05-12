@@ -10,6 +10,9 @@ interface SecureImageProps {
   bucket?: 'Profiles' | 'Gallery' | 'Documents';
 }
 
+// Cache global em memória para URLs assinadas (evita requisições repetidas ao Supabase)
+const signedUrlCache: Record<string, { url: string; expires: number }> = {};
+
 export function SecureImage({ src, alt, className = "", fallbackInitial, bucket = 'Profiles' }: SecureImageProps) {
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,7 +36,17 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
         return;
       }
 
-      // Se for caminho do storage
+      // Verifica Cache primeiro
+      const cacheKey = `${bucket}:${src}`;
+      const cached = signedUrlCache[cacheKey];
+      const now = Date.now();
+
+      if (cached && cached.expires > now) {
+        setDisplayUrl(cached.url);
+        return;
+      }
+
+      // Se for caminho do storage e não estiver em cache válido
       setLoading(true);
       try {
         const path = src.includes(`${bucket}/`) 
@@ -45,9 +58,15 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
             .from(bucket)
             .createSignedUrl(path, 3600);
 
-          if (isMounted) {
-            if (data) setDisplayUrl(data.signedUrl);
-            else setDisplayUrl(src); // Fallback para o src original se falhar
+          if (isMounted && data) {
+            // Salva no cache por 55 minutos (para ter margem de segurança)
+            signedUrlCache[cacheKey] = {
+              url: data.signedUrl,
+              expires: now + (55 * 60 * 1000)
+            };
+            setDisplayUrl(data.signedUrl);
+          } else if (isMounted) {
+            setDisplayUrl(src);
           }
         }
       } catch (err) {
