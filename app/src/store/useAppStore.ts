@@ -359,12 +359,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   createTree: async (data) => {
     try {
+      // Tentativa inicial com todos os campos
       const newTree = await api.createTree({ ...data, ativo: true });
       set((state) => ({
         trees: [newTree, ...state.trees]
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar árvore:', error);
+      // Fallback: se o erro for de coluna faltante (fotos), tentamos sem ela
+      if (error.message?.includes('fotos') || error.code === 'PGRST204') {
+        console.warn('Coluna fotos não encontrada. Tentando inserção simplificada.');
+        const { fotos, ...minimalData } = data as any;
+        try {
+          const recoveryTree = await api.createTree(minimalData);
+          set((state) => ({ trees: [recoveryTree, ...state.trees] }));
+          return;
+        } catch (retryError) {
+          throw retryError;
+        }
+      }
       throw error;
     }
   },
@@ -544,12 +557,29 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   createEmployee: async (data) => {
     try {
-      // 1. Criar no Auth via API customizada ou Edge Function (em produção)
-      // Por simplicidade no dev, criamos no banco profiles (o Auth exigiria admin key)
-      const newEmployee = await api.createEmployee(data);
+      const { email, password, ...profileData } = data;
+      
+      // 1. Criar Usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Falha ao criar usuário na autenticação.');
+
+      // 2. Criar Perfil no Banco de Dados vinculado ao ID do Auth
+      const newEmployee = await api.createEmployee({
+        id: authData.user.id,
+        email,
+        ...profileData
+      });
+
       set(state => ({ employees: [newEmployee, ...state.employees] }));
-    } catch (error) {
+      alert('Funcionário criado com sucesso! Ele já pode fazer login (após confirmar o e-mail, se necessário).');
+    } catch (error: any) {
       console.error('Erro ao criar funcionário:', error);
+      alert(`Erro ao criar funcionário: ${error.message}`);
       throw error;
     }
   }
