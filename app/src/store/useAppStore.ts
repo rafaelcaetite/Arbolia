@@ -27,6 +27,7 @@ export interface UserProfile {
   crea?: string
   telefone?: string
   foto_url?: string
+  data_nascimento?: string
   data_cadastro: string
 }
 
@@ -143,6 +144,8 @@ interface AppState {
   isClientModalOpen: boolean
   editingClientId: string | null
 
+  isProfileModalOpen: boolean
+
   // Modal de Laudo ISA
   isLaudoModalOpen: boolean
   activeLaudoServiceId: string | null
@@ -207,6 +210,10 @@ interface AppState {
   createClient: (data: Omit<Client, 'id' | 'data_cadastro'>) => Promise<void>
   updateClient: (id: string, data: Partial<Client>) => Promise<void>
 
+  openProfileModal: () => void
+  closeProfileModal: () => void
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>
+
   // Clima
   weatherCity: { name: string, lat: number, lon: number }
   setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
@@ -254,6 +261,8 @@ export const useAppStore = create<AppState>((set) => ({
 
   isClientModalOpen: false,
   editingClientId: null,
+
+  isProfileModalOpen: false,
 
   isLaudoModalOpen: false,
   activeLaudoServiceId: null,
@@ -496,6 +505,22 @@ export const useAppStore = create<AppState>((set) => ({
       }));
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
+      throw error;
+    }
+  },
+
+  openProfileModal: () => set({ isProfileModalOpen: true }),
+  closeProfileModal: () => set({ isProfileModalOpen: false }),
+  updateProfile: async (updates) => {
+    try {
+      const { userProfile } = get();
+      if (!userProfile) return;
+      
+      // No api.ts precisamos do updateProfile
+      const updated = await api.updateProfile(userProfile.id, updates);
+      set({ userProfile: updated });
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
       throw error;
     }
   },

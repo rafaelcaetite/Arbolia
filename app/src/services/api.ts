@@ -54,13 +54,20 @@ export const api = {
   },
 
   async createEmployee(employeeData: any) {
-    // Nota: Em um sistema real, aqui chamaríamos uma Edge Function 
-    // ou uma rota de backend que tenha privilégios para criar no Auth.
-    // Para o MVP, assumimos que o registro no Auth é feito por fora ou 
-    // simulamos via tabela profiles se o login não for obrigatório imediato.
     const { data, error } = await supabase
       .from('profiles')
       .insert([employeeData])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateProfile(id: string, updates: Partial<UserProfile>) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id)
       .select()
       .single();
     if (error) throw error;

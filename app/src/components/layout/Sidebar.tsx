@@ -50,24 +50,6 @@ export function Sidebar() {
 
       {/* Footer / User Profile Card */}
       <div className="p-4 border-t border-slate-50 space-y-1">
-        {userProfile && (
-          <div className="flex items-center gap-3 px-3 py-4 mb-2 bg-slate-50/50 rounded-2xl border border-slate-100">
-             {userProfile.foto_url ? (
-              <img src={userProfile.foto_url} alt={userProfile.nome} className="w-10 h-10 rounded-xl object-cover border border-white shadow-sm" />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold shadow-sm">
-                {userProfile.nome.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-slate-800 truncate">{userProfile.nome}</span>
-              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                {userProfile.role === 'admin' ? 'Admin' : userProfile.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
-              </span>
-            </div>
-          </div>
-        )}
-
         <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200">
           <Settings size={20} />
           <span className="font-medium text-sm">Configurações</span>

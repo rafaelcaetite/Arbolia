@@ -1,9 +1,10 @@
 import { Bell, Search, CloudRain, Navigation } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { UserProfileModal } from './UserProfileModal';
 import { useState, useEffect } from 'react';
 
 export function Header() {
-  const { weatherCity, userProfile } = useAppStore();
+  const { weatherCity, userProfile, openProfileModal } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,20 +63,34 @@ export function Header() {
           <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
 
-        <div className="flex items-center gap-3 pl-6 border-l border-slate-100 cursor-pointer hover:opacity-80 transition-opacity">
-          {userProfile?.foto_url ? (
-            <img src={userProfile.foto_url} alt={displayName} className="w-10 h-10 rounded-full border border-primary/20 shadow-sm object-cover" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 shadow-sm">
-              {displayInitial}
-            </div>
-          )}
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-slate-800">{displayName}</span>
-            <span className="text-xs text-slate-500">{displayRole}</span>
+        <div 
+          onClick={openProfileModal}
+          className="flex items-center gap-3 pl-4 border-l border-slate-100 group cursor-pointer hover:bg-slate-50 py-2 px-3 rounded-2xl transition-all active:scale-95"
+        >
+          <div className="flex flex-col items-end mr-1">
+            <span className="text-sm font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors">{userProfile?.nome}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {userProfile?.role === 'admin' ? 'Administrador' : userProfile?.role === 'tecnico' ? 'Engenheiro' : 'Técnico de Campo'}
+            </span>
+          </div>
+          
+          <div className="relative">
+            {userProfile?.foto_url ? (
+              <img 
+                src={userProfile.foto_url} 
+                alt={userProfile.nome} 
+                className="w-11 h-11 rounded-[14px] object-cover border-2 border-white shadow-md ring-1 ring-slate-100 group-hover:ring-primary/30 transition-all"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-[14px] bg-primary text-white flex items-center justify-center font-black text-lg shadow-md group-hover:scale-105 transition-transform">
+                {displayInitial}
+              </div>
+            )}
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></div>
           </div>
         </div>
       </div>
+      <UserProfileModal />
     </header>
   );
 }
