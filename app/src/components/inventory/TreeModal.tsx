@@ -104,18 +104,28 @@ export function TreeModal() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditing) {
-      updateTree(editingTreeId, formData);
-    } else {
-      createTree({
-        ...formData,
-        ativo: true,
-        data_cadastro: new Date().toISOString()
-      } as Omit<Tree, 'id'>);
+    
+    // Preparar dados para o banco (UUID nulo se vazio)
+    const treeData = {
+      ...formData,
+      cliente_id: formData.cliente_id === "" ? null : formData.cliente_id,
+      ativo: true,
+      data_cadastro: new Date().toISOString()
+    };
+
+    try {
+      if (isEditing) {
+        await updateTree(editingTreeId, treeData);
+      } else {
+        await createTree(treeData as Omit<Tree, 'id'>);
+      }
+      closeEditModal();
+    } catch (err) {
+      console.error('Erro ao salvar árvore:', err);
+      alert('Erro ao salvar árvore. Verifique os dados e tente novamente.');
     }
-    closeEditModal();
   };
 
   return (
