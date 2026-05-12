@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Save, MapPin, Camera, Loader2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Save, MapPin } from 'lucide-react';
 import { useAppStore, type Tree } from '../../store/useAppStore';
-import { supabase } from '../../lib/supabase';
 
 export function TreeModal() {
   const { 
