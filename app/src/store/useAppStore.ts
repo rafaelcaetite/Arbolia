@@ -511,16 +511,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   openLaudoModal: (serviceId) => set({ isLaudoModalOpen: true, activeLaudoServiceId: serviceId }),
   closeLaudoModal: () => set({ isLaudoModalOpen: false, activeLaudoServiceId: null }),
-  saveLaudo: async (serviceId, laudo) => {
-    try {
-      const updated = await api.updateService(serviceId, { laudoGerado: true, laudoData: laudo });
-      set(state => ({
-        services: state.services.map(s => s.id === serviceId ? updated : s)
-      }));
-    } catch (error) {
-      console.error('Erro ao salvar laudo:', error);
-    }
-  },
+
 
   
   openHistoryModal: (id) => set({ isHistoryModalOpen: true, viewingHistoryTreeId: id }),
