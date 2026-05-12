@@ -202,28 +202,6 @@ export function TreeModal() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nível de Risco</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
-                {(['baixo', 'medio', 'alto', 'critico'] as const).map((risk) => (
-                  <button
-                    key={risk}
-                    type="button"
-                    onClick={() => setFormData({...formData, status_risco: risk})}
-                    className={`py-2 px-1 rounded-xl text-xs font-bold uppercase transition-all border ${
-                      formData.status_risco === risk 
-                        ? risk === 'baixo' ? 'bg-emerald-100 border-emerald-200 text-emerald-700 shadow-sm' :
-                          risk === 'medio' ? 'bg-yellow-100 border-yellow-200 text-yellow-700 shadow-sm' :
-                          risk === 'alto' ? 'bg-orange-100 border-orange-200 text-orange-700 shadow-sm' :
-                          'bg-red-100 border-red-200 text-red-700 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50'
-                    }`}
-                  >
-                    {risk}
-                  </button>
-                ))}
-              </div>
-            </div>
 
           </form>
         </div>

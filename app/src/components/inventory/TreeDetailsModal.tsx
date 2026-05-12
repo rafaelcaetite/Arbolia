@@ -19,42 +19,52 @@ export function TreeDetailsModal() {
       
       setLoadingPhotos(true);
       try {
-        const filesToSign: string[] = [];
+        const galleryFiles: string[] = [];
+        const documentFiles: string[] = [];
         
-        // 1. Fotos/Arquivos diretas da árvore
+        // 1. Fotos/Arquivos diretas da árvore (sempre Gallery)
         if (tree.fotos && Array.isArray(tree.fotos)) {
-          filesToSign.push(...tree.fotos.filter(f => !!f));
+          galleryFiles.push(...tree.fotos.filter(f => !!f));
         }
 
         // 2. Fotos/Arquivos de serviços (anexos)
-        const serviceFiles = services
+        services
           .filter(s => s.treeIds.includes(tree.id))
-          .flatMap(s => {
+          .forEach(s => {
             const treeAttachments = s.attachmentsByTree?.[tree.id] || [];
-            return treeAttachments.map(a => a.storagePath).filter((p): p is string => !!p);
+            treeAttachments.forEach(a => {
+              if (a.storagePath) {
+                if (a.type === 'image') galleryFiles.push(a.storagePath);
+                else documentFiles.push(a.storagePath);
+              }
+            });
           });
 
-        filesToSign.push(...serviceFiles);
+        const signedResults: {url: string, name: string}[] = [];
 
-        if (filesToSign.length > 0) {
-          // Remover duplicatas e nulos
-          const uniqueFiles = Array.from(new Set(filesToSign));
-
-          const { data, error } = await supabase.storage
-            .from('Gallery')
-            .createSignedUrls(uniqueFiles, 3600);
-
-          if (error) throw error;
-
-          if (data) {
-            setSignedPhotos(data.map((item, idx) => ({
-              url: item.signedUrl || '',
-              name: uniqueFiles[idx].split('/').pop() || `Arquivo ${idx + 1}`
-            })).filter(p => p.url !== ''));
+        // Sign Gallery Files
+        if (galleryFiles.length > 0) {
+          const uniqueGallery = Array.from(new Set(galleryFiles));
+          const { data, error } = await supabase.storage.from('Gallery').createSignedUrls(uniqueGallery, 3600);
+          if (!error && data) {
+            data.forEach((item, idx) => {
+              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueGallery[idx].split('/').pop() || 'Foto' });
+            });
           }
-        } else {
-          setSignedPhotos([]);
         }
+
+        // Sign Document Files
+        if (documentFiles.length > 0) {
+          const uniqueDocs = Array.from(new Set(documentFiles));
+          const { data, error } = await supabase.storage.from('Documents').createSignedUrls(uniqueDocs, 3600);
+          if (!error && data) {
+            data.forEach((item, idx) => {
+              if (item.signedUrl) signedResults.push({ url: item.signedUrl, name: uniqueDocs[idx].split('/').pop() || 'Documento' });
+            });
+          }
+        }
+
+        setSignedPhotos(signedResults);
       } catch (err) {
         console.error('Erro ao carregar arquivos assinados:', err);
         setSignedPhotos([]);

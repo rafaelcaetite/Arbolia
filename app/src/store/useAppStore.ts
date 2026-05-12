@@ -440,10 +440,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
 
   saveLaudo: async (serviceId, laudoData, attachmentsByTree, storagePath) => {
+    console.log('Iniciando persistência do laudo...', { serviceId, storagePath });
     try {
       const state = useAppStore.getState();
       const service = state.services.find(s => s.id === serviceId);
-      if (!service) return;
+      if (!service) {
+        console.error('Serviço não encontrado para salvar laudo:', serviceId);
+        return;
+      }
 
       const updates: any = {
         laudoGerado: true,
@@ -455,13 +459,36 @@ export const useAppStore = create<AppState>((set, get) => ({
         updates.documentos_url = [...(service.documentos_url || []), storagePath];
       }
 
+      console.log('Atualizando serviço no banco...', updates);
       const updated = await api.updateService(serviceId, updates);
       
-      set((state) => ({
-        services: state.services.map(s => s.id === serviceId ? updated : s)
-      }));
+      // Mapear risco ISA para risco do Banco
+      const riskMapping: Record<string, 'baixo' | 'medio' | 'alto' | 'critico'> = {
+        'Extremo': 'critico',
+        'Alto': 'alto',
+        'Moderado': 'medio',
+        'Baixo': 'baixo'
+      };
+      const dbRisk = riskMapping[laudoData.resultado.classificacaoGeral] || 'baixo';
+      console.log('Risco calculado para o banco:', dbRisk);
+
+      // Atualizar todas as árvores associadas no banco e no estado local
+      if (service.treeIds && service.treeIds.length > 0) {
+        console.log('Sincronizando risco com as árvores:', service.treeIds);
+        await Promise.all(service.treeIds.map(tId => api.updateTree(tId, { status_risco: dbRisk })));
+        
+        set((state) => ({
+          services: state.services.map(s => s.id === serviceId ? updated : s),
+          trees: state.trees.map(t => service.treeIds.includes(t.id) ? { ...t, status_risco: dbRisk } : t)
+        }));
+      } else {
+        set((state) => ({
+          services: state.services.map(s => s.id === serviceId ? updated : s)
+        }));
+      }
+      console.log('Persistência concluída com sucesso.');
     } catch (error) {
-      console.error('Erro ao salvar laudo no banco:', error);
+      console.error('Erro crítico ao salvar laudo no banco:', error);
       throw error;
     }
   },
