@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase } from 'lucide-react';
+import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase, Pencil } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../../store/useAppStore';
 
 export function UserProfileModal() {
   const { isProfileModalOpen, userProfile, closeProfileModal, updateProfile } = useAppStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
 
@@ -18,6 +19,8 @@ export function UserProfileModal() {
         foto_url: userProfile.foto_url || ''
       });
     }
+    // Sempre volta para o modo visualização ao abrir
+    if (isProfileModalOpen) setIsEditing(false);
   }, [userProfile, isProfileModalOpen]);
 
   if (!isProfileModalOpen || !userProfile) return null;
@@ -31,8 +34,8 @@ export function UserProfileModal() {
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
-        closeProfileModal();
-      }, 1500);
+        setIsEditing(false);
+      }, 1000);
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
     } finally {
@@ -40,18 +43,10 @@ export function UserProfileModal() {
     }
   };
 
-  const handlePhotoClick = () => {
-    const url = prompt('Cole a URL da sua nova foto de perfil:', formData.foto_url);
-    if (url !== null) {
-      setFormData({ ...formData, foto_url: url });
-    }
-  };
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
     
-    // Aplica a máscara (00) 00000-0000
     if (value.length > 2) {
       value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     }
@@ -62,134 +57,209 @@ export function UserProfileModal() {
     setFormData({ ...formData, telefone: value });
   };
 
+  const handlePhotoClick = () => {
+    const url = prompt('Cole a URL da sua nova foto de perfil:', formData.foto_url || '');
+    if (url !== null) {
+      setFormData({ ...formData, foto_url: url });
+      if (!isEditing) {
+        updateProfile({ foto_url: url });
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center p-4 sm:p-6">
       <div 
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300" 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl transition-opacity animate-in fade-in duration-500" 
         onClick={closeProfileModal}
       ></div>
       
-      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row max-h-[90vh] my-auto">
+      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-300 flex flex-col md:flex-row min-h-[500px] my-auto">
         
-        {/* Banner Lateral / Topo */}
-        <div className="md:w-56 bg-slate-900 p-10 flex flex-col items-center justify-center gap-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-primary rounded-full blur-[60px]"></div>
+        {/* Banner Lateral */}
+        <div className="md:w-64 bg-slate-900 p-10 flex flex-col items-center justify-between gap-8 relative overflow-hidden shrink-0">
+          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+            <div className="absolute top-[-20%] left-[-20%] w-80 h-80 bg-primary rounded-full blur-[80px] animate-pulse"></div>
           </div>
 
-          <div 
-            className="group relative w-32 h-32 rounded-[40px] overflow-hidden border-2 border-white/20 shadow-xl cursor-pointer transition-transform hover:scale-105 active:scale-95"
-            onClick={handlePhotoClick}
-          >
-            {formData.foto_url ? (
-              <img src={formData.foto_url} alt={formData.nome} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-primary text-white flex items-center justify-center text-4xl font-black">
-                {userProfile.nome.charAt(0).toUpperCase()}
+          <div className="flex flex-col items-center gap-6 z-10 w-full">
+            <div 
+              className="group relative w-36 h-36 rounded-[48px] overflow-hidden border-4 border-white/10 shadow-2xl cursor-pointer transition-all hover:scale-105 active:scale-95"
+              onClick={handlePhotoClick}
+            >
+              {userProfile.foto_url ? (
+                <img src={userProfile.foto_url} alt={userProfile.nome} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary text-white flex items-center justify-center text-5xl font-black">
+                  {userProfile.nome.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2">
+                <Camera size={28} />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Alterar</span>
               </div>
-            )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-              <Camera size={24} />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Editar Foto</span>
+            </div>
+
+            <div className="text-center w-full">
+              <h3 className="text-white font-black text-xl truncate leading-tight">{userProfile.nome.split(' ')[0]}</h3>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className="px-3 py-1 bg-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-primary/30">
+                  {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="text-center z-10">
-            <h3 className="text-white font-bold text-lg truncate max-w-full">{userProfile.nome.split(' ')[0]}</h3>
-            <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mt-1 block">
-              {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
-            </span>
+          <div className="w-full z-10">
+            <button 
+              onClick={closeProfileModal}
+              className="w-full py-4 rounded-2xl bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all font-bold text-sm flex items-center justify-center gap-2"
+            >
+              <X size={18} /> Fechar
+            </button>
           </div>
         </div>
 
-        {/* Formulário */}
-        <div className="flex-1 p-10 md:p-14 bg-white relative">
+        {/* Conteúdo Principal */}
+        <div className="flex-1 p-10 md:p-14 bg-white relative overflow-y-auto max-h-[90vh]">
           {showSuccess ? (
-            <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-90 duration-300">
-              <div className="w-20 h-20 bg-emerald-500 rounded-3xl flex items-center justify-center text-white mb-6 shadow-xl shadow-emerald-100">
-                <CheckCircle2 size={40} />
+            <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-90 duration-300 py-20">
+              <div className="w-24 h-24 bg-emerald-500 rounded-[32px] flex items-center justify-center text-white mb-6 shadow-2xl shadow-emerald-100 animate-bounce">
+                <CheckCircle2 size={48} />
               </div>
-              <h2 className="text-2xl font-black text-slate-800">Perfil Atualizado!</h2>
-              <p className="text-slate-500 mt-2 font-medium">Suas alterações foram salvas com sucesso.</p>
+              <h2 className="text-3xl font-black text-slate-800">Dados Atualizados!</h2>
+              <p className="text-slate-500 mt-2 font-bold uppercase tracking-widest text-[10px]">Sincronizando com o servidor...</p>
             </div>
-          ) : (
-            <>
-              <button 
-                onClick={closeProfileModal} 
-                className="absolute top-8 right-8 p-2.5 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="mb-10">
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Meu Perfil Profissional</h2>
-                <div className="flex items-center gap-2 mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  <Briefcase size={14} className="text-primary" /> 
-                  Membro da equipe Arbolia desde {new Date(userProfile.data_cadastro).toLocaleDateString()}
-                </div>
+          ) : isEditing ? (
+            <div className="animate-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Editar Perfil</h2>
+                <button 
+                  onClick={() => setIsEditing(false)}
+                  className="text-primary font-black text-xs uppercase tracking-widest hover:underline"
+                >
+                  Cancelar
+                </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6 overflow-y-auto pr-4 max-h-[50vh] scrollbar-hide">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                    <User size={12} className="text-primary" /> Nome Completo
+              <form onSubmit={handleSubmit} className="flex flex-col gap-8 pr-2">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <User size={14} className="text-primary" /> Nome Completo
                   </label>
                   <input 
                     type="text"
                     value={formData.nome}
                     onChange={e => setFormData({ ...formData, nome: e.target.value })}
-                    className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4.5 text-slate-700 text-base font-bold focus:border-primary/20 focus:bg-white transition-all outline-none shadow-sm"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                      <Calendar size={12} className="text-primary" /> Data de Nascimento
-                    </label>
-                    <input 
-                      type="date"
-                      value={formData.data_nascimento}
-                      onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })}
-                      className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                      <Phone size={12} className="text-primary" /> Telefone de Contato
-                    </label>
-                    <input 
-                      type="text"
-                      placeholder="(00) 00000-0000"
-                      value={formData.telefone}
-                      onChange={handlePhoneChange}
-                      className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                    />
-                  </div>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Calendar size={14} className="text-primary" /> Data de Nascimento
+                  </label>
+                  <input 
+                    type="date"
+                    value={formData.data_nascimento}
+                    onChange={e => setFormData({ ...formData, data_nascimento: e.target.value })}
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4.5 text-slate-700 text-base font-bold focus:border-primary/20 focus:bg-white transition-all outline-none shadow-sm w-full"
+                  />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                    <ShieldCheck size={12} className="text-primary" /> Registro Profissional (CREA)
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <Phone size={14} className="text-primary" /> Telefone de Contato
+                  </label>
+                  <input 
+                    type="text"
+                    placeholder="(00) 00000-0000"
+                    value={formData.telefone}
+                    onChange={handlePhoneChange}
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4.5 text-slate-700 text-base font-bold focus:border-primary/20 focus:bg-white transition-all outline-none shadow-sm"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-primary" /> Registro Profissional (CREA)
                   </label>
                   <input 
                     type="text"
                     placeholder="Ex: CREA-MG 123456"
                     value={formData.crea}
                     onChange={e => setFormData({ ...formData, crea: e.target.value })}
-                    className="bg-slate-50 border-none rounded-2xl px-6 py-4 text-slate-700 text-sm font-bold placeholder:text-slate-200 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className="bg-slate-50 border-2 border-transparent rounded-2xl px-6 py-4.5 text-slate-700 text-base font-bold focus:border-primary/20 focus:bg-white transition-all outline-none shadow-sm"
                   />
                 </div>
 
                 <button 
                   type="submit"
                   disabled={isLoading}
-                  className="mt-6 bg-slate-900 text-white font-black py-5 rounded-3xl shadow-xl shadow-slate-200 hover:bg-primary transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] text-base"
+                  className="bg-slate-900 text-white font-black py-5 rounded-3xl shadow-2xl shadow-slate-200 hover:bg-primary transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] text-lg mt-2"
                 >
-                  {isLoading ? <Loader2 size={24} className="animate-spin" /> : 'Salvar Alterações'}
+                  {isLoading ? <Loader2 size={24} className="animate-spin" /> : 'Confirmar Alterações'}
                 </button>
               </form>
-            </>
+            </div>
+          ) : (
+            <div className="animate-in slide-in-from-left-4 duration-400">
+              <div className="mb-12">
+                <h2 className="text-4xl font-black text-slate-800 tracking-tighter leading-none mb-4">Informações de Perfil</h2>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <Briefcase size={12} className="text-primary" /> Ativo desde {new Date(userProfile.data_cadastro).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-10 mb-12">
+                <div className="group">
+                  <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 ml-1 group-hover:text-primary transition-colors">Nome Completo</div>
+                  <div className="text-2xl font-black text-slate-700 flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+                    {userProfile.nome}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="group">
+                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 ml-1 group-hover:text-primary transition-colors">Data de Nascimento</div>
+                    <div className="text-xl font-bold text-slate-600 flex items-center gap-3">
+                      <Calendar size={20} className="text-slate-300" />
+                      {userProfile.data_nascimento ? new Date(userProfile.data_nascimento).toLocaleDateString('pt-BR') : <span className="text-slate-200 italic font-medium">Não informada</span>}
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 ml-1 group-hover:text-primary transition-colors">Telefone de Contato</div>
+                    <div className="text-xl font-bold text-slate-600 flex items-center gap-3">
+                      <Phone size={20} className="text-slate-300" />
+                      {userProfile.telefone || <span className="text-slate-200 italic font-medium">Não informado</span>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group">
+                  <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 ml-1 group-hover:text-primary transition-colors">Registro Profissional</div>
+                  <div className="text-xl font-bold text-slate-600 flex items-center gap-3">
+                    <ShieldCheck size={20} className="text-slate-300" />
+                    {userProfile.crea || <span className="text-slate-200 italic font-medium">Nenhum registro vinculado</span>}
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="group flex items-center gap-4 bg-slate-50 hover:bg-slate-900 px-8 py-5 rounded-[24px] transition-all"
+              >
+                <div className="p-3 bg-white rounded-xl shadow-sm group-hover:bg-primary group-hover:text-white transition-colors">
+                  <Pencil size={20} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-black text-slate-800 group-hover:text-white transition-colors">Editar Perfil</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest group-hover:text-slate-400 transition-colors">Atualizar seus dados cadastrais</span>
+                </div>
+              </button>
+            </div>
           )}
         </div>
       </div>
