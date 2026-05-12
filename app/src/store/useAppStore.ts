@@ -706,7 +706,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       alert(`Erro ao criar funcionário: ${error.message}`);
       throw error;
     }
-  }
+  },
   renameAttachment: async (serviceId, treeId, attachmentId, newName) => {
     try {
       const state = get();
