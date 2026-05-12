@@ -198,9 +198,7 @@ export function TreeDetailsModal() {
                     name: current.name,
                     storagePath: current.path,
                     type: current.type as 'image' | 'pdf',
-                    size: 0,
-                    serviceId: '',
-                    treeId: viewingTreeDetailsId || ''
+                    size: 0
                   });
                 }}
               >
