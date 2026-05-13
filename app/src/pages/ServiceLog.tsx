@@ -17,6 +17,8 @@ export function ServiceLog() {
   // Tipos de serviço únicos para o filtro
   const serviceTypes = ['Todos', 'Poda', 'Supressão', 'Avaliação', 'Tratamento'];
   const statusOptions = ['Todos', 'concluido', 'agendado', 'atrasado'];
+  
+  const isDataLoading = trees.length === 0 || clients.length === 0;
 
   // Função para pegar o nome do cliente associado ao serviço
   const getClientName = (svc: any) => {
@@ -36,7 +38,12 @@ export function ServiceLog() {
     if (!Array.isArray(treeIds) || treeIds.length === 0) return 'N/A';
     
     const svcTrees = trees.filter(t => treeIds.includes(t.id));
-    if (svcTrees.length === 0) return `ID: ${treeIds[0].slice(0, 8)}...`;
+    if (svcTrees.length === 0) {
+      return treeIds.length === 1 
+        ? `Árvore #${treeIds[0].slice(0, 8)}`
+        : `${treeIds.length} árvores (Carregando...)`;
+    }
+    
     if (svcTrees.length === 1) return `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 4)})`;
     return `${svcTrees[0].especie} + ${svcTrees.length - 1} outras`;
   };
@@ -185,6 +192,15 @@ export function ServiceLog() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (isDataLoading && services.length > 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-sm font-medium">Sincronizando dados do inventário...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col space-y-6">

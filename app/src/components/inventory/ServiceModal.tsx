@@ -18,7 +18,8 @@ export function ServiceModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const technicians = useMemo(() => {
-    return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
+    // Incluímos 'campo' também, pois são funcionários operacionais que podem ser responsáveis
+    return employees.filter(emp => emp.status === 'ativo');
   }, [employees]);
 
   // Carregar dados se estiver editando
@@ -163,7 +164,7 @@ export function ServiceModal() {
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
                 className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer disabled:opacity-50"
               >
-                <option value="" disabled>Selecione um responsável</option>
+                <option value="" disabled>{technicians.length > 0 ? 'Selecione um responsável' : 'Nenhum funcionário ativo encontrado'}</option>
                 {technicians.map(tech => (
                   <option key={tech.id} value={tech.nome}>{tech.nome}</option>
                 ))}
