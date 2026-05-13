@@ -16,6 +16,7 @@ export function ServiceModal() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
 
   const technicians = useMemo(() => {
@@ -56,7 +57,13 @@ export function ServiceModal() {
     e.preventDefault();
     if (isSubmitting) return;
 
-    const responsavelValue = formData.responsavel;
+    setError(null);
+    const responsavelValue = formData.responsavel?.trim();
+
+    if (!responsavelValue) {
+      setError('Por favor, selecione um responsável');
+      return;
+    }
 
     const finalData = { ...formData, responsavel: responsavelValue };
 
@@ -158,19 +165,28 @@ export function ServiceModal() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
-                required
                 ref={selectRef}
                 name="responsavel"
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
-                onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
-                className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer disabled:opacity-50"
+                onChange={(e) => {
+                  setFormData({...formData, responsavel: e.target.value});
+                  setError(null);
+                }}
+                className={`w-full px-5 py-4 bg-white border-2 rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-4 transition-all cursor-pointer disabled:opacity-50 ${
+                  error ? 'border-red-500 focus:ring-red-500/10' : 'border-transparent focus:ring-primary/10'
+                }`}
               >
                 <option value="" disabled>{technicians.length > 0 ? 'Selecione um responsável' : 'Nenhum funcionário ativo encontrado'}</option>
                 {technicians.map(tech => (
                   <option key={tech.id} value={tech.nome}>{tech.nome}</option>
                 ))}
               </select>
+              {error && (
+                <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                  {error}
+                </p>
+              )}
             </div>
           </form>
         </div>
