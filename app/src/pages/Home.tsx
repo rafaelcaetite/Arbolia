@@ -120,9 +120,6 @@ export function Home() {
         };
 
         // Mapear gráfico começando da hora atual
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentIndex = data.hourly.time.findIndex((t: string) => new Date(t).getHours() === currentHour);
 
         const mapped = data.hourly.time.slice(currentIndex, currentIndex + 24).map((t: string, i: number) => {
           const hourIndex = currentIndex + i;
