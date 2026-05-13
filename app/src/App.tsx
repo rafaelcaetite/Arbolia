@@ -11,6 +11,7 @@ import { Login } from './pages/Login';
 
 import { PostServiceModal } from './components/inventory/PostServiceModal';
 import { LaudoAvaliacaoModal } from './components/inventory/LaudoAvaliacaoModal';
+import { ServiceModal } from './components/inventory/ServiceModal';
 import { UserProfileModal } from './components/layout/UserProfileModal';
 
 import { useEffect, useState } from 'react';
@@ -68,6 +69,7 @@ function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <ServiceModal />
         <PostServiceModal />
         <LaudoAvaliacaoModal />
         <UserProfileModal />

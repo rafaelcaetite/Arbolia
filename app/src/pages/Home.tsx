@@ -396,74 +396,76 @@ export function Home() {
           </div>
 
           <div className="w-full h-[320px] relative z-10 mt-6">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-              <ComposedChart 
-                data={weatherData} 
-                margin={{ top: 10, right: -20, left: -20, bottom: 30 }}
-                style={{ outline: 'none' }}
-                tabIndex={-1}
-              >
-                <defs>
-                  <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
+            {weatherData.length > 0 && (
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+                <ComposedChart 
+                  data={weatherData} 
+                  margin={{ top: 10, right: -20, left: -20, bottom: 30 }}
+                  style={{ outline: 'none' }}
+                  tabIndex={-1}
+                >
+                  <defs>
+                    <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    
+                    {/* Mapa Térmico Absoluto (Fixado entre 5°C e 40°C) */}
+                    <linearGradient id="lineGradient" x1="0" y1="10" x2="0" y2="290" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#8B0000" />    {/* 40°C - Vinho */}
+                      <stop offset="14%" stopColor="#FF0000" />   {/* 35°C - Vermelho */}
+                      <stop offset="28%" stopColor="#FF8C00" />   {/* 30°C - Laranja Escuro */}
+                      <stop offset="42%" stopColor="#FFB800" />   {/* 25°C - Amarelo Alaranjado */}
+                      <stop offset="57%" stopColor="#32CD32" />   {/* 20°C - Verde */}
+                      <stop offset="82%" stopColor="#87CEFA" />   {/* 11°C - Azul Claro */}
+                      <stop offset="100%" stopColor="#1e3a8a" />  {/* 5°C - Azul Escuro */}
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
                   
-                  {/* Mapa Térmico Absoluto (Fixado entre 5°C e 40°C) */}
-                  <linearGradient id="lineGradient" x1="0" y1="10" x2="0" y2="290" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#8B0000" />    {/* 40°C - Vinho */}
-                    <stop offset="14%" stopColor="#FF0000" />   {/* 35°C - Vermelho */}
-                    <stop offset="28%" stopColor="#FF8C00" />   {/* 30°C - Laranja Escuro */}
-                    <stop offset="42%" stopColor="#FFB800" />   {/* 25°C - Amarelo Alaranjado */}
-                    <stop offset="57%" stopColor="#32CD32" />   {/* 20°C - Verde */}
-                    <stop offset="82%" stopColor="#87CEFA" />   {/* 11°C - Azul Claro */}
-                    <stop offset="100%" stopColor="#1e3a8a" />  {/* 5°C - Azul Escuro */}
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} dy={15} />
-                
-                {/* Eixo Esquerdo: Temperatura Fixa (5-40) */}
-                <YAxis 
-                  yAxisId="left"
-                  domain={[5, 40]} 
-                  allowDecimals={false}
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 11 }} 
-                  unit="°"
-                />
-                
-                {/* Eixo Direito: Chuva (Escondido mas presente para escala) */}
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  domain={[0, 100]} 
-                  hide
-                />
+                  {/* Eixo Esquerdo: Temperatura Fixa (5-40) */}
+                  <YAxis 
+                    yAxisId="left"
+                    domain={[5, 40]} 
+                    allowDecimals={false}
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 11 }} 
+                    unit="°"
+                  />
+                  
+                  {/* Eixo Direito: Chuva (Escondido mas presente para escala) */}
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 100]} 
+                    hide
+                  />
 
-                <Tooltip
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                  cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
-                  formatter={(value: any, name: any) => {
-                    if (name === 'temp') return [`${value}°C`, 'Temperatura'];
-                    if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
-                    return null;
-                  }}
-                />
-                <Area yAxisId="left" type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
-                <Bar yAxisId="right" dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="temp"
-                  stroke="url(#lineGradient)"
-                  strokeWidth={5}
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                    cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
+                    formatter={(value: any, name: any) => {
+                      if (name === 'temp') return [`${value}°C`, 'Temperatura'];
+                      if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
+                      return null;
+                    }}
+                  />
+                  <Area yAxisId="left" type="monotone" dataKey="temp" name="temp-bg" stroke="none" fillOpacity={1} fill="url(#colorTemp)" />
+                  <Bar yAxisId="right" dataKey="rain" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={15} />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="temp"
+                    stroke="url(#lineGradient)"
+                    strokeWidth={5}
+                    dot={false}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: '#3b82f6' }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           {/* 5-Day Forecast Row */}
