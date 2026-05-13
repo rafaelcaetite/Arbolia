@@ -20,9 +20,11 @@ export function ServiceLog() {
 
   // Função para pegar o nome do cliente associado ao serviço
   const getClientName = (svc: any) => {
-    if (!svc?.treeIds || !Array.isArray(svc.treeIds)) return 'N/A';
+    const treeIds = svc?.treeIds || svc?.tree_ids || [];
+    if (!Array.isArray(treeIds) || treeIds.length === 0) return 'N/A';
+    
     // Pegamos o cliente da primeira árvore vinculada ao serviço
-    const tree = trees.find(t => svc.treeIds.includes(t.id));
+    const tree = trees.find(t => treeIds.includes(t.id));
     if (!tree) return 'N/A';
     const client = clients.find(c => c.id === tree.cliente_id);
     return String(client?.nome || 'N/A');
@@ -30,9 +32,11 @@ export function ServiceLog() {
 
   // Função para formatar a lista de árvores
   const getTreesSummary = (svc: any) => {
-    const treeIds = svc?.treeIds || [];
+    const treeIds = svc?.treeIds || svc?.tree_ids || [];
+    if (!Array.isArray(treeIds) || treeIds.length === 0) return 'N/A';
+    
     const svcTrees = trees.filter(t => treeIds.includes(t.id));
-    if (svcTrees.length === 0) return 'N/A';
+    if (svcTrees.length === 0) return `ID: ${treeIds[0].slice(0, 8)}...`;
     if (svcTrees.length === 1) return `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 4)})`;
     return `${svcTrees[0].especie} + ${svcTrees.length - 1} outras`;
   };

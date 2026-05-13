@@ -53,7 +53,12 @@ export function ServiceModal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.responsavel || isSubmitting) return;
+    if (isSubmitting) return;
+
+    if (!formData.responsavel) {
+      alert('Por favor, selecione um responsável/técnico para o serviço.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -86,12 +91,12 @@ export function ServiceModal() {
         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
           <div className="flex flex-col">
             <h2 className="text-xl font-black text-slate-800 tracking-tight">
-              {editingServiceId ? 'Editar Agendamento' : 'Novo Serviço em Massa'}
+              {editingServiceId ? 'Editar Agendamento' : (selectedTreeIds.length > 1 ? 'Novo Serviço em Massa' : 'Novo Serviço')}
             </h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
               {editingServiceId 
                 ? `Serviço # ${editingServiceId.slice(0, 8).toUpperCase()}`
-                : `${selectedTreeIds.length} árvore(s) selecionada(s)`
+                : `${selectedTreeIds.length} ${selectedTreeIds.length > 1 ? 'árvores selecionadas' : 'árvore selecionada'}`
               }
             </p>
           </div>
@@ -153,11 +158,10 @@ export function ServiceModal() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
-                required
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
-                className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50"
+                className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer disabled:opacity-50"
               >
                 <option value="" disabled>Selecione um responsável</option>
                 {technicians.map(tech => (

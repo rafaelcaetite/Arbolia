@@ -44,7 +44,7 @@ export function Inventory() {
                   : 'bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200'
               }`}
             >
-              <Plus size={16} /> Novo Serviço {hasSelection && `(${selectedTreeIds.length})`}
+              <Plus size={16} /> {selectedTreeIds.length > 1 ? 'Novo Serviço em Massa' : 'Novo Serviço'} {hasSelection && `(${selectedTreeIds.length})`}
             </button>
           </div>
         </div>

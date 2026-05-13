@@ -106,9 +106,15 @@ export function Home() {
         }
 
         // Usar dados 'current' para o estado principal (Agora)
+        // Buscamos a probabilidade de chuva do horário atual nos dados horários
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentIndex = data.hourly.time.findIndex((t: string) => new Date(t).getHours() === currentHour);
+        const currentProb = currentIndex !== -1 ? data.hourly.precipitation_probability[currentIndex] : 0;
+
         const current = {
           temp: Math.round(data.current.temperature_2m),
-          rain: Math.round(data.current.precipitation * 100) / 100,
+          rain: currentProb, // Agora usamos probabilidade em vez de mm
           humidity: data.current.relative_humidity_2m,
           wind: data.current.wind_speed_10m
         };
@@ -446,9 +452,45 @@ export function Home() {
                   <Tooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                     cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
-                    formatter={(value: any, name: any) => {
-                      if (name === 'temp') return [`${value}°C`, 'Temperatura'];
-                      if (name === 'rain') return [`${value}%`, 'Prob. Chuva'];
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white/95 backdrop-blur-md border border-slate-100 p-4 rounded-2xl shadow-2xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">{label}</p>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between gap-8">
+                                <div className="flex items-center gap-2">
+                                  <Thermometer size={14} className="text-orange-500" />
+                                  <span className="text-xs font-bold text-slate-600">Temperatura</span>
+                                </div>
+                                <span className="text-xs font-black text-slate-800">{data.temp}°C</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-8">
+                                <div className="flex items-center gap-2">
+                                  <CloudRain size={14} className="text-blue-500" />
+                                  <span className="text-xs font-bold text-slate-600">Prob. Chuva</span>
+                                </div>
+                                <span className="text-xs font-black text-slate-800">{data.rain}%</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-8">
+                                <div className="flex items-center gap-2">
+                                  <Droplets size={14} className="text-emerald-500" />
+                                  <span className="text-xs font-bold text-slate-600">Umidade</span>
+                                </div>
+                                <span className="text-xs font-black text-slate-800">{data.humidity}%</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-8">
+                                <div className="flex items-center gap-2">
+                                  <Wind size={14} className="text-emerald-600" />
+                                  <span className="text-xs font-bold text-slate-600">Vento</span>
+                                </div>
+                                <span className="text-xs font-black text-slate-800">{data.wind} km/h</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
                       return null;
                     }}
                   />
