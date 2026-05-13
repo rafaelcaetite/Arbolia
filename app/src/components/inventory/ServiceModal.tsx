@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Save, Scissors, Axe, Stethoscope, Syringe } from 'lucide-react';
 import { useAppStore, type Service } from '../../store/useAppStore';
 
@@ -16,6 +16,7 @@ export function ServiceModal() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   const technicians = useMemo(() => {
     return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
@@ -55,14 +56,7 @@ export function ServiceModal() {
     e.preventDefault();
     if (isSubmitting) return;
 
-    // Usar FormData para garantir que pegamos o valor atual do DOM se o estado estiver atrasado
-    const data = new FormData(e.currentTarget);
-    const responsavelValue = data.get('responsavel') as string;
-
-    if (!responsavelValue || !responsavelValue.trim()) {
-      alert('Por favor, selecione um responsável/técnico para o serviço.');
-      return;
-    }
+    const responsavelValue = formData.responsavel;
 
     const finalData = { ...formData, responsavel: responsavelValue };
 
@@ -164,6 +158,8 @@ export function ServiceModal() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
+                required
+                ref={selectRef}
                 name="responsavel"
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
