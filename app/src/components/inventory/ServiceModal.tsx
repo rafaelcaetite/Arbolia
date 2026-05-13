@@ -18,8 +18,7 @@ export function ServiceModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const technicians = useMemo(() => {
-    // Incluímos 'campo' também, pois são funcionários operacionais que podem ser responsáveis
-    return employees.filter(emp => emp.status === 'ativo');
+    return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
   }, [employees]);
 
   // Carregar dados se estiver editando
@@ -52,21 +51,27 @@ export function ServiceModal() {
 
   if (!isServiceModalOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!formData.responsavel) {
+    // Usar FormData para garantir que pegamos o valor atual do DOM se o estado estiver atrasado
+    const data = new FormData(e.currentTarget);
+    const responsavelValue = data.get('responsavel') as string;
+
+    if (!responsavelValue || !responsavelValue.trim()) {
       alert('Por favor, selecione um responsável/técnico para o serviço.');
       return;
     }
 
+    const finalData = { ...formData, responsavel: responsavelValue };
+
     setIsSubmitting(true);
     try {
       if (editingServiceId) {
-        await updateService(editingServiceId, formData);
+        await updateService(editingServiceId, finalData);
       } else {
-        await createService(formData as Omit<Service, 'id' | 'treeIds'>);
+        await createService(finalData as Omit<Service, 'id' | 'treeIds'>);
       }
       closeServiceModal();
     } catch (error) {
@@ -159,6 +164,7 @@ export function ServiceModal() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
+                name="responsavel"
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
