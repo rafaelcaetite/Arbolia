@@ -36,7 +36,7 @@ export function Inventory() {
               <Plus size={16} /> Nova Árvore
             </button>
             <button 
-              onClick={openServiceModal}
+              onClick={() => openServiceModal()}
               disabled={!hasSelection}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all shadow-sm ${
                 hasSelection 
