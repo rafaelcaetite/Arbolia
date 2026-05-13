@@ -14,6 +14,7 @@ export function ClientFormModal() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [emailError, setEmailError] = useState(false);
   const [formData, setFormData] = useState<Partial<Client>>({
     nome: '',
     documento: '',
@@ -26,6 +27,7 @@ export function ClientFormModal() {
   const editingClient = editingClientId ? clients.find(c => c.id === editingClientId) : null;
 
   useEffect(() => {
+    setEmailError(false);
     if (editingClient) {
       setFormData({
         nome: editingClient.nome,
@@ -49,8 +51,19 @@ export function ClientFormModal() {
 
   if (!isClientModalOpen) return null;
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.email && !validateEmail(formData.email)) {
+      setEmailError(true);
+      return;
+    }
+    
+    setEmailError(false);
     setIsLoading(true);
     
     try {
@@ -170,32 +183,25 @@ export function ClientFormModal() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                    <Mail size={12} className="text-primary" /> E-mail
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Mail size={12} className="text-primary" /> E-mail
+                    </div>
+                    {emailError && <span className="text-red-500 normal-case">E-mail inválido</span>}
                   </label>
                   <input 
                     required
-                    type="text"
+                    type="email"
                     maxLength={80}
                     placeholder="usuario@dominio.com"
                     value={formData.email}
                     onChange={e => {
-                      let val = e.target.value.toLowerCase().trim();
-                      
-                      // Forçar presença de @ se houver texto
-                      if (val.length > 0 && !val.includes('@')) {
-                        val = val + '@';
-                      }
-                      
-                      // Garantir apenas um @
-                      const parts = val.split('@');
-                      if (parts.length > 2) {
-                        val = parts[0] + '@' + parts.slice(1).join('').replace(/@/g, '');
-                      }
-                      
-                      setFormData({ ...formData, email: val });
+                      setEmailError(false);
+                      setFormData({ ...formData, email: e.target.value.toLowerCase().trim() });
                     }}
-                    className="bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 text-sm placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    className={`bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 text-sm placeholder:text-slate-300 focus:ring-2 transition-all outline-none ${
+                      emailError ? 'ring-2 ring-red-100 bg-red-50/30' : 'focus:ring-primary/20'
+                    }`}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
