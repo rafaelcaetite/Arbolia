@@ -90,13 +90,25 @@ export function Home() {
     const fetchWeather = async () => {
       setIsLoadingWeather(true);
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`);
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`;
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
+
+        if (!data.current || !data.hourly || !data.daily) {
+          throw new Error('Incomplete weather data received');
+        }
 
         // Usar dados 'current' para o estado principal (Agora)
         const current = {
           temp: Math.round(data.current.temperature_2m),
-          rain: Math.round(data.current.precipitation * 100) / 100, // em mm ou chance se preferir
+          rain: Math.round(data.current.precipitation * 100) / 100,
           humidity: data.current.relative_humidity_2m,
           wind: data.current.wind_speed_10m
         };
@@ -116,7 +128,7 @@ export function Home() {
             humidity: data.hourly.relative_humidity_2m[hourIndex],
             wind: data.hourly.wind_speed_10m[hourIndex]
           };
-        }); // Removido o filtro i % 2 para mostrar hora a hora
+        });
 
         // Previsão 5 dias (Excluindo hoje, pegando os próximos 5)
         const daily = data.daily.time.slice(1, 6).map((t: string, i: number) => {
@@ -143,7 +155,7 @@ export function Home() {
           rain: data.daily.precipitation_probability_max[0]
         });
       } catch (e) {
-        console.error('Erro ao buscar clima:', e);
+        console.error('Erro ao buscar clima na Home:', e);
       } finally {
         setIsLoadingWeather(false);
       }

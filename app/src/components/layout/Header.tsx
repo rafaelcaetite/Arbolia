@@ -16,9 +16,20 @@ export function Header() {
     const fetchCurrentWeather = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current_weather=true&timezone=auto`);
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current_weather=true&timezone=auto`;
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
         const data = await res.json();
-        setCurrentTemp(Math.round(data.current_weather.temperature));
+        if (data.current_weather) {
+          setCurrentTemp(Math.round(data.current_weather.temperature));
+        }
       } catch (e) {
         console.error('Erro ao buscar clima no Header:', e);
       } finally {
