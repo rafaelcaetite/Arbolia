@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, Save, Scissors, Axe, Stethoscope, Syringe } from 'lucide-react';
 import { useAppStore, type Service } from '../../store/useAppStore';
 
@@ -16,35 +16,35 @@ export function ServiceModal() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const selectRef = useRef<HTMLSelectElement>(null);
 
   const technicians = useMemo(() => {
     return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
   }, [employees]);
 
-  // Carregar dados se estiver editando
+  // Sincronizar estado local com o serviço sendo editado ou resetar para novo
   useEffect(() => {
-    if (editingService) {
-      setFormData({
-        tipo: editingService.tipo,
-        data: editingService.data,
-        horario: editingService.horario,
-        responsavel: editingService.responsavel,
-        status: editingService.status
-      });
-    } else {
-      setFormData({
-        tipo: 'Poda',
-        data: new Date().toISOString().split('T')[0],
-        horario: '08:00',
-        responsavel: '',
-        status: 'agendado'
-      });
+    if (isServiceModalOpen) {
+      if (editingService) {
+        setFormData({
+          tipo: editingService.tipo,
+          data: editingService.data,
+          horario: editingService.horario,
+          responsavel: editingService.responsavel,
+          status: editingService.status
+        });
+      } else {
+        setFormData({
+          tipo: 'Poda',
+          data: new Date().toISOString().split('T')[0],
+          horario: '08:00',
+          responsavel: '',
+          status: 'agendado'
+        });
+      }
     }
   }, [editingService, isServiceModalOpen]);
 
-  // Carregar funcionários se a lista estiver vazia ao abrir o modal
+  // Garantir que temos funcionários carregados
   useEffect(() => {
     if (isServiceModalOpen && employees.length === 0) {
       fetchEmployees();
@@ -53,31 +53,27 @@ export function ServiceModal() {
 
   if (!isServiceModalOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (isSubmitting) return;
 
-    setError(null);
-    const responsavelValue = formData.responsavel?.trim();
-
-    if (!responsavelValue) {
-      setError('Por favor, selecione um responsável');
+    if (!formData.responsavel) {
+      alert('Por favor, selecione um responsável/técnico para o serviço.');
       return;
     }
-
-    const finalData = { ...formData, responsavel: responsavelValue };
 
     setIsSubmitting(true);
     try {
       if (editingServiceId) {
-        await updateService(editingServiceId, finalData);
+        await updateService(editingServiceId, formData);
       } else {
-        await createService(finalData as Omit<Service, 'id' | 'treeIds'>);
+        await createService(formData as Omit<Service, 'id' | 'treeIds'>);
       }
       closeServiceModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao processar serviço:', error);
-      alert('Erro ao processar serviço. Verifique sua conexão.');
+      alert(`Erro ao salvar serviço: ${error.message || 'Verifique sua conexão'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -112,8 +108,8 @@ export function ServiceModal() {
           </button>
         </div>
 
-        <div className="p-8 bg-slate-50/30">
-          <form id="service-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <div className="p-8 space-y-6 bg-slate-50/30">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Serviço</label>
               <div className="grid grid-cols-2 gap-3 mt-1">
@@ -165,52 +161,39 @@ export function ServiceModal() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
-                ref={selectRef}
-                name="responsavel"
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
-                onChange={(e) => {
-                  setFormData({...formData, responsavel: e.target.value});
-                  setError(null);
-                }}
-                className={`w-full px-5 py-4 bg-white border-2 rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-4 transition-all cursor-pointer disabled:opacity-50 ${
-                  error ? 'border-red-500 focus:ring-red-500/10' : 'border-transparent focus:ring-primary/10'
-                }`}
+                onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
+                className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer disabled:opacity-50"
               >
-                <option value="" disabled>{technicians.length > 0 ? 'Selecione um responsável' : 'Nenhum funcionário ativo encontrado'}</option>
+                <option value="" disabled>Selecione um responsável</option>
                 {technicians.map(tech => (
                   <option key={tech.id} value={tech.nome}>{tech.nome}</option>
                 ))}
               </select>
-              {error && (
-                <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest ml-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                  {error}
-                </p>
-              )}
             </div>
-          </form>
-        </div>
+          </div>
 
-        <div className="px-8 py-6 border-t border-slate-100 bg-white flex justify-end">
-          <button 
-            type="submit"
-            form="service-form"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-primary text-white px-6 py-5 rounded-[24px] text-sm font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processando...
-              </>
-            ) : (
-              <>
-                <Save size={18} />
-                {editingServiceId ? 'Salvar Alterações' : 'Agendar Serviço'}
-              </>
-            )}
-          </button>
-        </div>
+          <div className="px-8 py-6 border-t border-slate-100 bg-white flex justify-end">
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-primary text-white px-6 py-5 rounded-[24px] text-sm font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Save size={18} />
+                  {editingServiceId ? 'Salvar Alterações' : 'Agendar Serviço'}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
