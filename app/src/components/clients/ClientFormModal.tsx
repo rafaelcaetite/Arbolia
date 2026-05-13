@@ -127,6 +127,7 @@ export function ClientFormModal() {
                 <input 
                   required
                   type="text"
+                  maxLength={80}
                   placeholder="Ex: Empresa Arbolia Ltda"
                   value={formData.nome}
                   onChange={e => setFormData({ ...formData, nome: e.target.value })}
@@ -141,21 +142,20 @@ export function ClientFormModal() {
                 <input 
                   required
                   type="text"
+                  maxLength={18}
                   placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   value={formData.documento}
                   onChange={e => {
-                    let val = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
-                    if (val.length > 14) val = val.slice(0, 14); // Limite máximo do CNPJ
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.length > 14) val = val.slice(0, 14);
 
                     let masked = val;
                     if (val.length <= 11) {
-                      // CPF: 000.000.000-00
                       masked = val
                         .replace(/(\d{3})(\d)/, '$1.$2')
                         .replace(/(\d{3})(\d)/, '$1.$2')
                         .replace(/(\d{3})(\d{1,2})/, '$1-$2');
                     } else {
-                      // CNPJ: 00.000.000/0000-00
                       masked = val
                         .replace(/^(\d{2})(\d)/, '$1.$2')
                         .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
@@ -175,10 +175,26 @@ export function ClientFormModal() {
                   </label>
                   <input 
                     required
-                    type="email"
-                    placeholder="contato@cliente.com"
+                    type="text"
+                    maxLength={80}
+                    placeholder="usuario@dominio.com"
                     value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value.toLowerCase().trim() })}
+                    onChange={e => {
+                      let val = e.target.value.toLowerCase().trim();
+                      
+                      // Forçar presença de @ se houver texto
+                      if (val.length > 0 && !val.includes('@')) {
+                        val = val + '@';
+                      }
+                      
+                      // Garantir apenas um @
+                      const parts = val.split('@');
+                      if (parts.length > 2) {
+                        val = parts[0] + '@' + parts.slice(1).join('').replace(/@/g, '');
+                      }
+                      
+                      setFormData({ ...formData, email: val });
+                    }}
                     className="bg-slate-50 border-none rounded-2xl px-5 py-4 text-slate-700 text-sm placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
@@ -189,6 +205,7 @@ export function ClientFormModal() {
                   <input 
                     required
                     type="text"
+                    maxLength={15}
                     placeholder="(00) 00000-0000"
                     value={formData.telefone}
                     onChange={e => {
@@ -218,6 +235,7 @@ export function ClientFormModal() {
                 </label>
                 <input 
                   type="text"
+                  maxLength={150}
                   placeholder="Rua, Número, Bairro, Cidade - UF"
                   value={formData.endereco}
                   onChange={e => setFormData({ ...formData, endereco: e.target.value })}
