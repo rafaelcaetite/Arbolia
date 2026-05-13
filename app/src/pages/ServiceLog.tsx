@@ -539,7 +539,9 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
                     onClick={() => setViewingImage(photo.dataUrl)}
                     className="aspect-square rounded-2xl overflow-hidden border border-slate-100 hover:ring-2 hover:ring-primary/20 transition-all group relative"
                   >
-                    <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    {photo.dataUrl && (
+                      <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    )}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <ExternalLink size={20} className="text-white" />
                     </div>

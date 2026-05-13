@@ -384,7 +384,7 @@ export function Home() {
           </div>
 
           <div className="w-full h-[320px] relative z-10 mt-6">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <ComposedChart 
                 data={weatherData} 
                 margin={{ top: 10, right: -20, left: -20, bottom: 30 }}
