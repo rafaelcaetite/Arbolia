@@ -225,7 +225,7 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
 
 // ── Modal Principal ──────────────────────────────────────────────────────────
 export function TreeHistoryModal() {
-  const { isHistoryModalOpen, viewingHistoryTreeId, trees, services, closeHistoryModal } = useAppStore();
+  const { isHistoryModalOpen, viewingHistoryTreeId, trees, services, closeHistoryModal, openServiceModal } = useAppStore();
 
   if (!isHistoryModalOpen || !viewingHistoryTreeId) return null;
 
@@ -282,12 +282,26 @@ export function TreeHistoryModal() {
                     {/* Cabeçalho do serviço */}
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold text-slate-800 text-sm">{svc.tipo}</h4>
-                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                        svc.status === 'concluido' ? 'bg-emerald-100 text-emerald-700' :
-                        svc.status === 'atrasado'  ? 'bg-red-100 text-red-700'         : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {svc.status}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          svc.status === 'concluido' ? 'bg-emerald-100 text-emerald-700' :
+                          svc.status === 'atrasado'  ? 'bg-red-100 text-red-700'         : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {svc.status}
+                        </span>
+                        {svc.status === 'agendado' && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openServiceModal(svc.id);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="Editar Agendamento"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Dados */}

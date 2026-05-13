@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, Save, Scissors, Axe, Stethoscope, Syringe } from 'lucide-react';
 import { useAppStore, type Service } from '../../store/useAppStore';
 
 export function ServiceModal() {
-  const { isServiceModalOpen, closeServiceModal, createService, selectedTreeIds, employees, fetchEmployees } = useAppStore();
+  const { isServiceModalOpen, closeServiceModal, createService, updateService, selectedTreeIds, employees, fetchEmployees, services, editingServiceId } = useAppStore();
   
+  const editingService = editingServiceId ? services.find(s => s.id === editingServiceId) : null;
+
   const [formData, setFormData] = useState<Partial<Service>>({
     tipo: 'Poda',
     data: new Date().toISOString().split('T')[0],
@@ -19,12 +21,33 @@ export function ServiceModal() {
     return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
   }, [employees]);
 
+  // Carregar dados se estiver editando
+  useEffect(() => {
+    if (editingService) {
+      setFormData({
+        tipo: editingService.tipo,
+        data: editingService.data,
+        horario: editingService.horario,
+        responsavel: editingService.responsavel,
+        status: editingService.status
+      });
+    } else {
+      setFormData({
+        tipo: 'Poda',
+        data: new Date().toISOString().split('T')[0],
+        horario: '08:00',
+        responsavel: '',
+        status: 'agendado'
+      });
+    }
+  }, [editingService, isServiceModalOpen]);
+
   // Carregar funcionários se a lista estiver vazia ao abrir o modal
-  useState(() => {
-    if (employees.length === 0) {
+  useEffect(() => {
+    if (isServiceModalOpen && employees.length === 0) {
       fetchEmployees();
     }
-  });
+  }, [isServiceModalOpen, employees.length, fetchEmployees]);
 
   if (!isServiceModalOpen) return null;
 
@@ -34,11 +57,15 @@ export function ServiceModal() {
 
     setIsSubmitting(true);
     try {
-      await createService(formData as Omit<Service, 'id' | 'treeIds'>);
+      if (editingServiceId) {
+        await updateService(editingServiceId, formData);
+      } else {
+        await createService(formData as Omit<Service, 'id' | 'treeIds'>);
+      }
       closeServiceModal();
     } catch (error) {
-      console.error('Erro ao criar serviço:', error);
-      alert('Erro ao agendar serviço. Verifique sua conexão.');
+      console.error('Erro ao processar serviço:', error);
+      alert('Erro ao processar serviço. Verifique sua conexão.');
     } finally {
       setIsSubmitting(false);
     }
@@ -52,37 +79,42 @@ export function ServiceModal() {
   ] as const;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
-      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={closeServiceModal}></div>
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 sm:p-0">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={closeServiceModal}></div>
       
-      <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/10 w-full max-w-md relative z-10 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
-        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+      <div className="bg-white rounded-[32px] shadow-2xl shadow-slate-900/10 w-full max-w-md relative z-10 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
           <div className="flex flex-col">
-            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Novo Serviço em Massa</h2>
-            <p className="text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-full mt-1 border border-emerald-100">
-              {selectedTreeIds.length} árvore(s) selecionada(s)
+            <h2 className="text-xl font-black text-slate-800 tracking-tight">
+              {editingServiceId ? 'Editar Agendamento' : 'Novo Serviço em Massa'}
+            </h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              {editingServiceId 
+                ? `Serviço # ${editingServiceId.slice(0, 8).toUpperCase()}`
+                : `${selectedTreeIds.length} árvore(s) selecionada(s)`
+              }
             </p>
           </div>
           <button onClick={closeServiceModal} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 bg-slate-50/30">
-          <form id="service-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Serviço</label>
-              <div className="grid grid-cols-2 gap-2 mt-1">
+        <div className="p-8 bg-slate-50/30">
+          <form id="service-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Serviço</label>
+              <div className="grid grid-cols-2 gap-3 mt-1">
                 {serviceTypes.map((srv) => (
                   <button
                     key={srv.id}
                     type="button"
                     disabled={isSubmitting}
                     onClick={() => setFormData({...formData, tipo: srv.id})}
-                    className={`flex items-center gap-2 py-3 px-3 rounded-xl text-xs font-bold transition-all border ${
+                    className={`flex items-center gap-2 py-3.5 px-4 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border-2 ${
                       formData.tipo === srv.id 
-                        ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                        ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
+                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
                     } disabled:opacity-50`}
                   >
                     {srv.icon}
@@ -93,39 +125,39 @@ export function ServiceModal() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Data Agendada</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data Agendada</label>
                 <input 
                   type="date" 
                   required
                   disabled={isSubmitting}
                   value={formData.data || ''}
                   onChange={(e) => setFormData({...formData, data: e.target.value})}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50"
+                  className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50"
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Horário</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Horário</label>
                 <input 
                   type="time" 
                   required
                   disabled={isSubmitting}
                   value={formData.horario || ''}
                   onChange={(e) => setFormData({...formData, horario: e.target.value})}
-                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50"
+                  className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50"
                 />
               </div>
             </div>
             
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Responsável / Equipe</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Responsável / Equipe</label>
               <select
                 required
                 disabled={isSubmitting}
                 value={formData.responsavel || ''}
                 onChange={(e) => setFormData({...formData, responsavel: e.target.value})}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer disabled:opacity-50"
+                className="w-full px-5 py-4 bg-white border-none rounded-2xl text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer disabled:opacity-50"
               >
                 <option value="" disabled>Selecione um responsável</option>
                 {technicians.map(tech => (
@@ -136,22 +168,22 @@ export function ServiceModal() {
           </form>
         </div>
 
-        <div className="px-6 py-5 border-t border-slate-100 bg-white flex justify-end">
+        <div className="px-8 py-6 border-t border-slate-100 bg-white flex justify-end">
           <button 
             type="submit"
             form="service-form"
             disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/30 transition-all transform hover:scale-[1.01] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-primary text-white px-6 py-5 rounded-[24px] text-sm font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Agendando...
+                Processando...
               </>
             ) : (
               <>
                 <Save size={18} />
-                Agendar Serviço
+                {editingServiceId ? 'Salvar Alterações' : 'Agendar Serviço'}
               </>
             )}
           </button>

@@ -128,6 +128,7 @@ interface AppState {
   editingTreeId: string | null
   
   isServiceModalOpen: boolean
+  editingServiceId: string | null
   
   isHistoryModalOpen: boolean
   viewingHistoryTreeId: string | null
@@ -178,9 +179,10 @@ interface AppState {
   createTree: (data: Omit<Tree, 'id' | 'data_cadastro'>) => Promise<void>
 
   
-  openServiceModal: () => void
+  openServiceModal: (id?: string) => void
   closeServiceModal: () => void
-  createService: (data: Omit<Service, 'id' | 'treeIds'>) => Promise<void>
+  createService: (data: Partial<Service>) => Promise<void>
+  updateService: (id: string, updates: Partial<Service>) => Promise<void>
   completeService: (id: string, reavaliacao?: string, validade?: string) => Promise<void>
   deactivateTrees: (treeIds: string[], motivo: string) => Promise<void>
   
@@ -251,6 +253,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   editingTreeId: null,
   
   isServiceModalOpen: false,
+  editingServiceId: null,
   
   isHistoryModalOpen: false,
   viewingHistoryTreeId: null,
@@ -389,8 +392,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   
-  openServiceModal: () => set({ isServiceModalOpen: true }),
-  closeServiceModal: () => set({ isServiceModalOpen: false }),
+  openServiceModal: (id) => set({ isServiceModalOpen: true, editingServiceId: id || null }),
+  closeServiceModal: () => set({ isServiceModalOpen: false, editingServiceId: null }),
   createService: async (data) => {
     try {
       const { selectedTreeIds } = useAppStore.getState();
@@ -401,6 +404,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
     } catch (error) {
       console.error('Erro ao criar serviço:', error);
+      throw error;
+    }
+  },
+  updateService: async (id, updates) => {
+    try {
+      const updated = await api.updateService(id, updates);
+      set((state) => ({
+        services: state.services.map(s => s.id === id ? updated : s)
+      }));
+    } catch (error) {
+      console.error('Erro ao atualizar serviço:', error);
       throw error;
     }
   },

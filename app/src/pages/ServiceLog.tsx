@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
-import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink } from 'lucide-react';
+import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil } from 'lucide-react';
 
 
 export function ServiceLog() {
-  const { services, trees, clients } = useAppStore();
+  const { services, trees, clients, openServiceModal } = useAppStore();
   
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -396,11 +396,21 @@ export function ServiceLog() {
                           <div className="flex items-center justify-end gap-2">
                             <button 
                               onClick={() => setViewingService(svc)}
-                              title="Ver Acervo (Fotos/Docs)"
+                              title="Ver Detalhes"
                               className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                             >
                               <Eye size={16} />
                             </button>
+
+                            {svc.status === 'agendado' && (
+                              <button 
+                                onClick={() => openServiceModal(svc.id)}
+                                title="Editar Agendamento"
+                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            )}
 
                             {svc.laudoGerado && (
                               <button 
