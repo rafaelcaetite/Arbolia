@@ -236,10 +236,14 @@ export function ClientFormModal() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                  <MapPin size={12} className="text-primary" /> Endereço Completo
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={12} className="text-primary" /> Endereço Completo
+                  </div>
+                  <span className="text-red-500 normal-case">* obrigatório</span>
                 </label>
                 <input 
+                  required
                   type="text"
                   maxLength={150}
                   placeholder="Rua, Número, Bairro, Cidade - UF"
