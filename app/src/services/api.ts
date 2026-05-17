@@ -202,6 +202,20 @@ export const api = {
     }
 
     return mapService(updatedService);
+  },
+
+  async deleteService(id: string) {
+    const { error: relError } = await supabase
+      .from('service_trees')
+      .delete()
+      .eq('service_id', id);
+    if (relError) throw relError;
+
+    const { error: serviceError } = await supabase
+      .from('services')
+      .delete()
+      .eq('id', id);
+    if (serviceError) throw serviceError;
   }
 };
 

@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
-import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil } from 'lucide-react';
+import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { ExportLogModal } from '../components/inventory/ExportLogModal';
 
 
 export function ServiceLog() {
-  const { services, trees, clients, openServiceModal } = useAppStore();
+  const { services, trees, clients, openServiceModal, userProfile, deleteService } = useAppStore();
   
+  const [serviceToDelete, setServiceToDelete] = useState<any | null>(null);
+
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [dateStart, setDateStart] = useState('');
@@ -192,6 +194,72 @@ export function ServiceLog() {
           trees={trees}
           clients={clients}
         />
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {serviceToDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-slate-100 p-6 space-y-4">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-3 bg-red-50 rounded-2xl">
+                <Trash2 size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Confirmar Exclusão</h3>
+                <p className="text-xs text-slate-500">Esta ação é irreversível.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="font-semibold text-slate-400 uppercase">Tipo:</span>
+                <span className="font-bold text-slate-700">{serviceToDelete.tipo}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="font-semibold text-slate-400 uppercase">Cliente:</span>
+                <span className="font-bold text-slate-700">{getClientName(serviceToDelete)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="font-semibold text-slate-400 uppercase">Data:</span>
+                <span className="font-bold text-slate-700">
+                  {new Date(serviceToDelete.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              {serviceToDelete.horario && (
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-slate-400 uppercase">Horário:</span>
+                  <span className="font-bold text-slate-700">{serviceToDelete.horario.slice(0, 5)}</span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Tem certeza de que deseja excluir permanentemente este agendamento de atendimento técnico? Todos os vínculos com as árvores serão removidos.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setServiceToDelete(null)}
+                className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await deleteService(serviceToDelete.id);
+                    setServiceToDelete(null);
+                  } catch (err) {
+                    alert("Erro ao excluir o serviço. Tente novamente.");
+                  }
+                }}
+                className="px-5 py-2 bg-red-600 text-white rounded-xl text-xs font-bold hover:bg-red-700 hover:shadow-red-600/10 transition-all shadow-lg active:scale-95"
+              >
+                Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Header da Página */}
@@ -411,6 +479,16 @@ export function ServiceLog() {
                                 className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                               >
                                 <Pencil size={16} />
+                              </button>
+                            )}
+
+                            {userProfile?.role === 'admin' && (svc.status === 'agendado' || svc.status === 'atrasado') && (
+                              <button 
+                                onClick={() => setServiceToDelete(svc)}
+                                title="Excluir Agendamento"
+                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                              >
+                                <Trash2 size={16} />
                               </button>
                             )}
 

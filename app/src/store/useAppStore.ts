@@ -201,6 +201,7 @@ interface AppState {
   createService: (data: Partial<Service>) => Promise<void>
   updateService: (id: string, updates: Partial<Service>) => Promise<void>
   completeService: (id: string, reavaliacao?: string, validade?: string) => Promise<void>
+  deleteService: (id: string) => Promise<void>
   deactivateTrees: (treeIds: string[], motivo: string) => Promise<void>
   
   addServiceAttachment: (serviceId: string, treeId: string, attachment: ServiceAttachment) => Promise<void>
@@ -605,6 +606,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ services: newServices });
     } catch (error) {
       console.error('Erro ao concluir serviço:', error);
+      throw error;
+    }
+  },
+
+  deleteService: async (id) => {
+    try {
+      await api.deleteService(id);
+      set((state) => ({
+        services: state.services.filter(s => s.id !== id)
+      }));
+      get().generateNotifications();
+    } catch (error) {
+      console.error('Erro ao excluir serviço:', error);
       throw error;
     }
   },

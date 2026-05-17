@@ -100,7 +100,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
   };
 
   const exportToCSV = (data: Service[]) => {
-    const headers = ['ID', 'Data', 'Horário', 'Cliente', 'Árvores', 'Tipo de Serviço', 'Responsável', 'Status'];
+    const headers = ['ID', 'Data', 'Horário', 'Cliente', 'Árvores', 'Tipo de Serviço', 'Responsável', 'CREA', 'Status'];
     
     const rows = data.map(svc => {
       const treeIds = svc.treeIds || (svc as any).tree_ids || [];
@@ -119,6 +119,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
         treeSummary.replace(/;/g, ''),
         svc.tipo,
         svc.responsavel,
+        getTechCrea(svc.responsavel),
         svc.status
       ];
     });
