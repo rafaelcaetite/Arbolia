@@ -264,56 +264,53 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   notifications: [],
   generateNotifications: () => {
-    const { services } = get();
-    const newNotifications: AppNotification[] = [];
+    const { services, notifications: existingNotifications } = get();
     const today = new Date().toISOString().split('T')[0];
     
-    // 1. Serviços de Hoje
+    // 1. Manter notificações que NÃO são geradas automaticamente por data (como alertas climáticos)
+    const preservedNotifications = existingNotifications.filter(
+      n => !n.id.startsWith('hoje-') && !n.id.startsWith('atrasados-')
+    );
+
+    const newNotifications: AppNotification[] = [];
+
+    // Helper para verificar se a notificação já existia e estava marcada como lida
+    const isAlreadyRead = (id: string) => {
+      const existing = existingNotifications.find(n => n.id === id);
+      return existing ? existing.lida : false;
+    };
+
+    // 2. Serviços de Hoje
     const servicosHoje = services.filter(s => s.data === today && s.status !== 'concluido');
     if (servicosHoje.length > 0) {
+      const id = `hoje-${today}`;
       newNotifications.push({
-        id: `hoje-${today}`,
+        id,
         titulo: 'Alertas do Dia',
         mensagem: `Você tem ${servicosHoje.length} serviço(s) agendados para hoje.`,
         tipo: 'aviso',
-        lida: false,
+        lida: isAlreadyRead(id),
         data_criacao: new Date().toISOString(),
         acao: { tipo: 'servicos_hoje' }
       });
     }
 
-    // 2. Serviços Atrasados
+    // 3. Serviços Atrasados
     const servicosAtrasados = services.filter(s => s.status === 'atrasado');
     if (servicosAtrasados.length > 0) {
+      const id = `atrasados-${today}`;
       newNotifications.push({
-        id: `atrasados-${today}`,
+        id,
         titulo: 'Alerta Crítico',
         mensagem: `Existem ${servicosAtrasados.length} serviços em atraso no sistema.`,
         tipo: 'critico',
-        lida: false,
+        lida: isAlreadyRead(id),
         data_criacao: new Date().toISOString(),
         acao: { tipo: 'servicos_atrasados' }
       });
     }
 
-    // 3. Recomendação Técnica (Substituído pela lógica de clima agora, mas mantido como exemplo de inventário se quiser)
-    // Árvores com risco Alto/Crítico
-    /* (removido para focar no clima conforme feedback do usuário)
-    const arvoresRisco = trees.filter(t => t.status_risco === 'alto' || t.status_risco === 'critico');
-    if (arvoresRisco.length > 0) {
-      newNotifications.push({
-        id: `risco-${today}`,
-        titulo: 'Recomendação Técnica',
-        mensagem: `${arvoresRisco.length} árvore(s) de risco alto/crítico necessitam de acompanhamento.`,
-        tipo: 'recomendacao',
-        lida: false,
-        data_criacao: new Date().toISOString(),
-        acao: { tipo: 'arvores_risco' }
-      });
-    }
-    */
-
-    set({ notifications: newNotifications });
+    set({ notifications: [...newNotifications, ...preservedNotifications] });
   },
   addWeatherNotification: (weatherData: any) => {
     const { notifications } = get();
