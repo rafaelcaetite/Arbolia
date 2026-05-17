@@ -522,8 +522,14 @@ export function ServiceLog() {
 
 // ── Modal de Acervo do Atendimento ──────────────────────────────────────────
 function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () => void }) {
-  const { trees, clients } = useAppStore();
+  const { trees, clients, renameAttachment, deleteAttachment } = useAppStore();
   const [viewingAttachment, setViewingAttachment] = useState<any | null>(null);
+
+  const [renamingItem, setRenamingItem] = useState<any | null>(null);
+  const [newName, setNewName] = useState('');
+  const [deletingItem, setDeletingItem] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   const client = clients.find(c => {
     const treeIds = service?.treeIds || [];
@@ -533,18 +539,55 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
 
   const serviceTrees = trees.filter(t => service?.treeIds?.includes(t.id));
   
-  // Coletar todos os anexos de todas as árvores deste serviço
+  // Coletar todos os anexos de todas as árvores deste serviço com seus respectivos treeIds
   const allAttachments: any[] = [];
   if (service.attachmentsByTree) {
-    Object.values(service.attachmentsByTree).forEach((attachments: any) => {
+    Object.entries(service.attachmentsByTree).forEach(([treeId, attachments]: any) => {
       if (Array.isArray(attachments)) {
-        allAttachments.push(...attachments);
+        attachments.forEach((att: any) => {
+          allAttachments.push({ ...att, treeId });
+        });
       }
     });
   }
 
   const photos = allAttachments.filter(a => a.type === 'image');
   const docs = allAttachments.filter(a => a.type === 'pdf');
+
+  const handleRenameClick = (item: any) => {
+    setRenamingItem(item);
+    setNewName(item.name || '');
+  };
+
+  const handleDeleteClick = (item: any) => {
+    setDeletingItem(item);
+  };
+
+  const confirmRename = async () => {
+    if (!renamingItem || !newName.trim()) return;
+    setIsRenaming(true);
+    try {
+      await renameAttachment(service.id, renamingItem.treeId, renamingItem.id, newName.trim());
+      setRenamingItem(null);
+    } catch (e) {
+      alert("Erro ao renomear arquivo.");
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingItem) return;
+    setIsDeleting(true);
+    try {
+      await deleteAttachment(service.id, deletingItem.treeId, deletingItem.id);
+      setDeletingItem(null);
+    } catch (e) {
+      alert("Erro ao excluir arquivo.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -611,18 +654,47 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
             {photos.length > 0 ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {photos.map(photo => (
-                  <button 
+                  <div 
                     key={photo.id}
-                    onClick={() => setViewingAttachment(photo)}
-                    className="aspect-square rounded-2xl overflow-hidden border border-slate-100 hover:ring-2 hover:ring-primary/20 transition-all group relative"
+                    className="aspect-square rounded-2xl overflow-hidden border border-slate-100 hover:ring-2 hover:ring-primary/20 transition-all group relative bg-slate-50"
                   >
                     {(photo.dataUrl || photo.storagePath) && (
-                      <img src={photo.dataUrl || photo.storagePath} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <img src={photo.dataUrl || photo.storagePath} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                     )}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <ExternalLink size={20} className="text-white" />
+                    
+                    {/* Dark overlay on hover */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-3 transition-opacity">
+                      {/* Top: Photo Name */}
+                      <div className="w-full">
+                        <p className="text-[10px] text-white/90 font-bold truncate">{photo.name}</p>
+                      </div>
+                      
+                      {/* Bottom: Action Buttons */}
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRenameClick(photo); }}
+                          title="Renomear"
+                          className="p-1.5 bg-white/10 hover:bg-white/30 text-white rounded-lg transition-all active:scale-90"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteClick(photo); }}
+                          title="Excluir"
+                          className="p-1.5 bg-white/10 hover:bg-red-500 text-white rounded-lg transition-all active:scale-90"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setViewingAttachment(photo); }}
+                          title="Visualizar"
+                          className="p-1.5 bg-white/15 hover:bg-primary text-white rounded-lg transition-all active:scale-90"
+                        >
+                          <Eye size={12} />
+                        </button>
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -637,22 +709,49 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Documentos e Laudos</h3>
             <div className="space-y-3">
               {docs.map(doc => (
-                <button 
+                <div 
                   key={doc.id}
-                  onClick={() => setViewingAttachment(doc)}
-                  className="w-full text-left p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-slate-100/50 transition-colors"
+                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-slate-100/50 transition-all duration-200"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
+                  {/* Left Clickable Area (to View) */}
+                  <div 
+                    onClick={() => setViewingAttachment(doc)}
+                    className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm shrink-0">
                       <FileText size={20} />
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-700">{doc.name}</p>
-                      <p className="text-[10px] text-slate-400">PDF • {(doc.size / 1024).toFixed(0)} KB</p>
+                    <div className="truncate">
+                      <p className="text-sm font-bold text-slate-700 truncate">{doc.name}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">PDF • {(doc.size / 1024).toFixed(0)} KB</p>
                     </div>
                   </div>
-                  <Download size={18} className="text-slate-400 group-hover:scale-110 transition-transform" />
-                </button>
+
+                  {/* Actions on the Right */}
+                  <div className="flex items-center gap-1.5 shrink-0 ml-4">
+                    <button
+                      onClick={() => handleRenameClick(doc)}
+                      title="Renomear"
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-95"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(doc)}
+                      title="Excluir"
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                    <button
+                      onClick={() => setViewingAttachment(doc)}
+                      title="Visualizar / Baixar"
+                      className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all active:scale-95"
+                    >
+                      <Eye size={15} />
+                    </button>
+                  </div>
+                </div>
               ))}
 
               {docs.length === 0 && (
@@ -681,6 +780,69 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
           attachment={viewingAttachment} 
           onClose={() => setViewingAttachment(null)} 
         />
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {deletingItem && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-800">Confirmar Exclusão</h3>
+            <p className="text-sm text-slate-500">
+              Tem certeza que deseja excluir o anexo <strong className="text-slate-700">{deletingItem.name}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setDeletingItem(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-xs transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors"
+              >
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Renomear */}
+      {renamingItem && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-800">Renomear Anexo</h3>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Novo Nome do Arquivo</label>
+              <input
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-slate-700"
+                placeholder="Nome do arquivo"
+              />
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => setRenamingItem(null)}
+                disabled={isRenaming}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-xs transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmRename}
+                disabled={isRenaming || !newName.trim()}
+                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl text-xs transition-colors"
+              >
+                {isRenaming ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
