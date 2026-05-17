@@ -270,6 +270,24 @@ const addLocalId = (key: string, id: string) => {
   if (!arr.includes(id)) { arr.push(id); localStorage.setItem(key, JSON.stringify(arr)); }
 };
 
+const calculateDiff = (oldObj: any, newObj: any) => {
+  const ignoreKeys = ['id', 'created_at', 'updated_at', 'data_cadastro', 'ativo', 'treeIds'];
+  const diff: Record<string, { old: any; new: any }> = {};
+  if (!oldObj || !newObj) return diff;
+  Object.entries(newObj).forEach(([key, val]) => {
+    if (ignoreKeys.includes(key)) return;
+    
+    // Normalize para comparação (evita falsos positivos de datas vs strings)
+    const oldStr = JSON.stringify(oldObj[key])?.replace(/"/g, '');
+    const newStr = JSON.stringify(val)?.replace(/"/g, '');
+    
+    if (oldStr !== newStr && val !== undefined && oldStr !== undefined) {
+      diff[key] = { old: oldObj[key], new: val };
+    }
+  });
+  return Object.keys(diff).length > 0 ? diff : undefined;
+};
+
 export const useAppStore = create<AppState>((set, get) => ({
   // ... (existing state)
   // (Note: I will only replace the implementation of updateEmployee and relevant parts)
@@ -565,16 +583,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         trees: state.trees.map(t => t.id === id ? updated : t)
       }));
       
-      const diff: Record<string, any> = {};
-      if (oldTree) {
-        Object.entries(data).forEach(([key, val]) => {
-          const k = key as keyof Tree;
-          if (oldTree[k] !== val) {
-            diff[k] = val;
-          }
-        });
+      const diff = calculateDiff(oldTree, data);
+      if (diff) {
+        get().logAudit('UPDATE', 'Árvore', `Atualizou dados da árvore #${id.slice(0, 8)}`, diff);
       }
-      get().logAudit('UPDATE', 'Árvore', `Atualizou dados da árvore #${id.slice(0, 8)}`, diff);
     } catch (error) {
       console.error('Erro ao atualizar árvore:', error);
       throw error;
@@ -631,16 +643,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         services: state.services.map(s => s.id === id ? updated : s)
       }));
       
-      const diff: Record<string, any> = {};
-      if (oldService) {
-        Object.entries(updates).forEach(([key, val]) => {
-          const k = key as keyof Service;
-          if (JSON.stringify(oldService[k]) !== JSON.stringify(val)) {
-            diff[k] = val;
-          }
-        });
+      const diff = calculateDiff(oldService, updates);
+      if (diff) {
+        get().logAudit('UPDATE', 'Atendimento', `Atualizou atendimento #${id.slice(0, 8)} (${updated.tipo})`, diff);
       }
-      get().logAudit('UPDATE', 'Atendimento', `Atualizou atendimento #${id.slice(0, 8)} (${updated.tipo})`, diff);
     } catch (error) {
       console.error('Erro ao atualizar serviço:', error);
       throw error;
@@ -829,16 +835,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         clients: state.clients.map(c => c.id === id ? updated : c)
       }));
 
-      const diff: Record<string, any> = {};
-      if (oldClient) {
-        Object.entries(updates).forEach(([key, val]) => {
-          const k = key as keyof Client;
-          if (oldClient[k] !== val) {
-            diff[k] = val;
-          }
-        });
+      const diff = calculateDiff(oldClient, updates);
+      if (diff) {
+        get().logAudit('UPDATE', 'Cliente', `Atualizou dados do cliente: ${updated.nome}`, diff);
       }
-      get().logAudit('UPDATE', 'Cliente', `Atualizou dados do cliente: ${updated.nome}`, diff);
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
       throw error;

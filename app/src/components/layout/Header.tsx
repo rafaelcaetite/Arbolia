@@ -29,7 +29,26 @@ export function Header() {
 
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  
+  const [filterDate, setFilterDate] = useState('');
+  const [filterEmployee, setFilterEmployee] = useState('');
+  const [visibleCount, setVisibleCount] = useState(5);
+  
   const auditLogRef = useRef<HTMLDivElement>(null);
+
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter(log => {
+      const matchDate = filterDate ? log.created_at.startsWith(filterDate) : true;
+      const matchEmp = filterEmployee ? log.user_name === filterEmployee : true;
+      return matchDate && matchEmp;
+    });
+  }, [auditLogs, filterDate, filterEmployee]);
+
+  const visibleAuditLogs = filteredAuditLogs.slice(0, visibleCount);
+
+  const auditEmployees = useMemo(() => {
+    return Array.from(new Set(auditLogs.map(l => l.user_name))).sort();
+  }, [auditLogs]);
 
   useEffect(() => {
     if (userProfile?.role === 'admin') {
@@ -294,21 +313,40 @@ export function Header() {
             {isAuditLogOpen && (
               <div className="absolute top-full right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-200">
                 <div className="p-4 border-b border-slate-50 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                    <History size={16} className="text-primary" />
-                    Histórico do Sistema
-                  </h3>
-                  <p className="text-[10px] text-slate-400 mt-1">Registros recentes de alterações de usuários</p>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                      <History size={16} className="text-primary" />
+                      Histórico
+                    </h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <input 
+                      type="date" 
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                      className="text-[10px] px-2 py-1.5 rounded border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary flex-1"
+                    />
+                    <select
+                      value={filterEmployee}
+                      onChange={(e) => setFilterEmployee(e.target.value)}
+                      className="text-[10px] px-2 py-1.5 rounded border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary flex-1"
+                    >
+                      <option value="">Todos usuários</option>
+                      {auditEmployees.map(emp => (
+                        <option key={emp} value={emp}>{emp}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
-                  {auditLogs.length === 0 ? (
+                  {visibleAuditLogs.length === 0 ? (
                     <div className="p-8 text-center flex flex-col items-center text-slate-400">
                       <History size={32} className="mb-2 text-slate-300 opacity-50" />
-                      <p className="text-sm font-medium">Nenhum log registrado</p>
+                      <p className="text-sm font-medium">Nenhum log encontrado</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-50">
-                      {auditLogs.map(log => (
+                      {visibleAuditLogs.map(log => (
                         <div 
                           key={log.id} 
                           onClick={() => setExpandedLogId(expandedLogId === log.id ? null : log.id)}
@@ -344,23 +382,46 @@ export function Header() {
                               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {Object.entries(log.payload)
                                   .filter(([key, val]) => key !== 'id' && key !== 'created_at' && key !== 'updated_at' && val !== undefined && val !== null)
-                                  .map(([key, value]) => (
-                                  <div key={key} className="bg-white border border-slate-100 rounded-md p-2 shadow-sm flex flex-col gap-0.5">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
-                                      {key.replace(/_/g, ' ')}
-                                    </span>
-                                    <span className="text-[11px] font-medium text-slate-700 truncate" title={String(value)}>
-                                      {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : 
-                                       typeof value === 'object' ? JSON.stringify(value) : 
-                                       String(value) || '-'}
-                                    </span>
-                                  </div>
-                                ))}
+                                  .map(([key, value]: [string, any]) => {
+                                    const isDiffObj = value && typeof value === 'object' && ('old' in value || 'new' in value);
+                                    const oldVal = isDiffObj ? value.old : undefined;
+                                    const newVal = isDiffObj ? value.new : value;
+                                    
+                                    const formatVal = (v: any) => typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : typeof v === 'object' && v !== null ? JSON.stringify(v) : (String(v) || '-');
+
+                                    return (
+                                      <div key={key} className="bg-white border border-slate-100 rounded-md p-2 shadow-sm flex flex-col gap-0.5">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                          {key.replace(/_/g, ' ')}
+                                        </span>
+                                        <div className="flex flex-col text-[11px] font-medium truncate">
+                                          {oldVal !== undefined && oldVal !== null && (
+                                            <span className="text-slate-400 line-through text-[9px] leading-tight truncate" title={String(oldVal)}>
+                                              {formatVal(oldVal)}
+                                            </span>
+                                          )}
+                                          <span className="text-slate-700 truncate" title={String(newVal)}>
+                                            {formatVal(newVal)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             )}
                           </div>
                         </div>
                       ))}
+                      {visibleCount < filteredAuditLogs.length && (
+                        <div className="p-3 text-center border-t border-slate-50">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setVisibleCount(v => v + 5); }}
+                            className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider"
+                          >
+                            Ver mais
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
