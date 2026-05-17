@@ -13,6 +13,7 @@ Plataforma web para inventário, monitoramento e gestão de serviços de arboriz
 - **Gestão de Serviços** — Agendamento de podas, supressões e avaliações com histórico por árvore
 - **CRM de Clientes** — Cards com badges de árvores, agendamentos e documentos vinculados
 - **Alertas Inteligentes** — Dashboard de vencimentos agrupados por período (esta semana, 30 dias, em breve)
+- **Central de Notificações Reativas 🔔** — Sino no cabeçalho 100% funcional com alertas automáticos em tempo real para serviços do dia, serviços atrasados e recomendações técnicas baseadas no monitoramento de clima (API Open-Meteo)
 - **Acervo Documental** — Galeria de fotos e repositório de PDFs com busca por tags automáticas
 - **Login Seguro** — Sistema de autenticação via Supabase com perfis técnicos e níveis de acesso
 - **Software Instalável (PWA)** — O sistema pode ser instalado no Windows, Android e iOS com ícone próprio

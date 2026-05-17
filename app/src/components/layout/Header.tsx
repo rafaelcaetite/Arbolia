@@ -1,16 +1,36 @@
-import { Bell, Search, CloudRain, Navigation } from 'lucide-react';
+import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SecureImage } from '../common/SecureImage';
 
 export function Header() {
-  const { weatherCity, userProfile, openProfileModal } = useAppStore();
+  const { weatherCity, userProfile, openProfileModal, notifications, markNotificationAsRead, markAllNotificationsAsRead, addWeatherNotification } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   // Fallbacks para quando o perfil ainda não carregou
   const displayName = userProfile?.nome || 'Técnico';
   const displayInitial = displayName.charAt(0).toUpperCase();
+
+  const unreadCount = notifications.filter(n => !n.lida).length;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    }
+    if (isNotificationsOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isNotificationsOpen]);
 
   useEffect(() => {
     const fetchCurrentWeather = async () => {
@@ -29,6 +49,7 @@ export function Header() {
         const data = await res.json();
         if (data.current_weather) {
           setCurrentTemp(Math.round(data.current_weather.temperature));
+          addWeatherNotification(data.current_weather);
         }
       } catch (e) {
         console.error('Erro ao buscar clima no Header:', e);
@@ -68,10 +89,84 @@ export function Header() {
           />
         </div>
         
-        <button className="relative p-2 text-slate-400 hover:bg-slate-50 hover:text-primary rounded-full transition-colors">
-          <Bell size={20} />
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        <div className="relative" ref={notificationsRef}>
+          <button 
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className={`relative p-2 rounded-full transition-colors ${isNotificationsOpen ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:bg-slate-50 hover:text-primary'}`}
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            )}
+          </button>
+
+          {isNotificationsOpen && (
+            <div className="absolute top-full right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+              <div className="p-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-slate-800">Notificações</h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {unreadCount} novas
+                    </span>
+                  )}
+                </div>
+                {unreadCount > 0 && (
+                  <button 
+                    onClick={() => markAllNotificationsAsRead()}
+                    className="text-xs font-semibold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors"
+                  >
+                    <Check size={14} />
+                    Marcar todas como lidas
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-[60vh] overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center flex flex-col items-center justify-center text-slate-400">
+                    <CheckCircle size={32} className="mb-2 text-slate-300 opacity-50" />
+                    <p className="text-sm font-medium">Você não tem notificações</p>
+                    <p className="text-xs mt-1">Tudo em dia no momento.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-50">
+                    {notifications.sort((a, b) => new Date(b.data_criacao).getTime() - new Date(a.data_criacao).getTime()).map(notif => (
+                      <div 
+                        key={notif.id} 
+                        onClick={() => {
+                          markNotificationAsRead(notif.id);
+                          // Here we could add navigation based on notif.acao
+                          setIsNotificationsOpen(false);
+                        }}
+                        className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer group flex gap-3 ${!notif.lida ? 'bg-blue-50/30' : 'opacity-70'}`}
+                      >
+                        <div className="flex-shrink-0 mt-1">
+                          {notif.tipo === 'critico' && <AlertTriangle size={18} className="text-red-500" />}
+                          {notif.tipo === 'aviso' && <Clock size={18} className="text-amber-500" />}
+                          {notif.tipo === 'recomendacao' && <Info size={18} className="text-blue-500" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className={`text-sm font-bold truncate pr-4 ${!notif.lida ? 'text-slate-800' : 'text-slate-600'}`}>
+                              {notif.titulo}
+                            </h4>
+                            {!notif.lida && (
+                              <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5"></span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+                            {notif.mensagem}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div 
           onClick={openProfileModal}

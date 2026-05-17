@@ -109,6 +109,16 @@ export interface Service {
   laudoData?: ISALaudoData
 }
 
+export interface AppNotification {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'aviso' | 'critico' | 'recomendacao';
+  lida: boolean;
+  data_criacao: string;
+  acao?: { tipo: 'servicos_hoje' | 'arvores_risco' | 'servicos_atrasados', id?: string };
+}
+
 
 interface AppState {
   clients: Client[]
@@ -120,6 +130,12 @@ interface AppState {
   setUser: (user: User | null) => void
   signOut: () => Promise<void>
   
+  notifications: AppNotification[]
+  generateNotifications: () => void
+  addWeatherNotification: (weatherData: any) => void
+  markNotificationAsRead: (id: string) => void
+  markAllNotificationsAsRead: () => void
+
   hoveredTreeId: string | null
 
   selectedTreeIds: string[]
@@ -243,8 +259,116 @@ export const useAppStore = create<AppState>((set, get) => ({
   setUser: (user) => set({ user }),
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ user: null, userProfile: null, clients: [], trees: [], services: [], employees: [] });
+    set({ user: null, userProfile: null, clients: [], trees: [], services: [], employees: [], notifications: [] });
   },
+
+  notifications: [],
+  generateNotifications: () => {
+    const { services, trees } = get();
+    const newNotifications: AppNotification[] = [];
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 1. Serviços de Hoje
+    const servicosHoje = services.filter(s => s.data === today && s.status !== 'concluido');
+    if (servicosHoje.length > 0) {
+      newNotifications.push({
+        id: `hoje-${today}`,
+        titulo: 'Alertas do Dia',
+        mensagem: `Você tem ${servicosHoje.length} serviço(s) agendados para hoje.`,
+        tipo: 'aviso',
+        lida: false,
+        data_criacao: new Date().toISOString(),
+        acao: { tipo: 'servicos_hoje' }
+      });
+    }
+
+    // 2. Serviços Atrasados
+    const servicosAtrasados = services.filter(s => s.status === 'atrasado');
+    if (servicosAtrasados.length > 0) {
+      newNotifications.push({
+        id: `atrasados-${today}`,
+        titulo: 'Alerta Crítico',
+        mensagem: `Existem ${servicosAtrasados.length} serviços em atraso no sistema.`,
+        tipo: 'critico',
+        lida: false,
+        data_criacao: new Date().toISOString(),
+        acao: { tipo: 'servicos_atrasados' }
+      });
+    }
+
+    // 3. Recomendação Técnica (Substituído pela lógica de clima agora, mas mantido como exemplo de inventário se quiser)
+    // Árvores com risco Alto/Crítico
+    /* (removido para focar no clima conforme feedback do usuário)
+    const arvoresRisco = trees.filter(t => t.status_risco === 'alto' || t.status_risco === 'critico');
+    if (arvoresRisco.length > 0) {
+      newNotifications.push({
+        id: `risco-${today}`,
+        titulo: 'Recomendação Técnica',
+        mensagem: `${arvoresRisco.length} árvore(s) de risco alto/crítico necessitam de acompanhamento.`,
+        tipo: 'recomendacao',
+        lida: false,
+        data_criacao: new Date().toISOString(),
+        acao: { tipo: 'arvores_risco' }
+      });
+    }
+    */
+
+    set({ notifications: newNotifications });
+  },
+  addWeatherNotification: (weatherData: any) => {
+    const { notifications } = get();
+    const today = new Date().toISOString().split('T')[0];
+    const weatherId = `weather-${today}`;
+    
+    // Evita duplicar se já existir
+    if (notifications.some(n => n.id === weatherId)) return;
+
+    let mensagem = null;
+    let titulo = 'Recomendação Climática';
+    let tipo: 'aviso' | 'recomendacao' | 'critico' = 'recomendacao';
+
+    // Windspeed em km/h
+    const wind = weatherData.windspeed;
+    const code = weatherData.weathercode;
+
+    // Códigos Open-Meteo: Chuva (61, 63, 65, 80, 81, 82), Tempestade (95, 96, 99)
+    const isRaining = [61, 63, 65, 80, 81, 82].includes(code);
+    const isStorming = [95, 96, 99].includes(code);
+
+    if (isStorming || wind > 40) {
+      titulo = 'Alerta Climático Crítico';
+      mensagem = `Condições perigosas detectadas (Ventos de ${wind}km/h ou Tempestade). Recomendamos suspender o trabalho em altura e poda com motosserras.`;
+      tipo = 'critico';
+    } else if (isRaining || wind > 20) {
+      mensagem = `Condições instáveis (Chuva ou ventos de ${wind}km/h). Avalie com cautela a segurança para realização de podas hoje.`;
+      tipo = 'aviso';
+    } else {
+      mensagem = 'Condições climáticas favoráveis para serviços de poda e supressão hoje.';
+      tipo = 'recomendacao';
+    }
+
+    if (mensagem) {
+      set({
+        notifications: [
+          {
+            id: weatherId,
+            titulo,
+            mensagem,
+            tipo,
+            lida: false,
+            data_criacao: new Date().toISOString(),
+          },
+          ...notifications
+        ]
+      });
+    }
+  },
+  markNotificationAsRead: (id) => set(state => ({
+    notifications: state.notifications.map(n => n.id === id ? { ...n, lida: true } : n)
+  })),
+  markAllNotificationsAsRead: () => set(state => ({
+    notifications: state.notifications.map(n => ({ ...n, lida: true }))
+  })),
 
   hoveredTreeId: null,
   selectedTreeIds: [],
@@ -324,6 +448,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       ]);
       
       set({ clients, trees, services });
+      get().generateNotifications();
 
       // 4. Se for admin, carregar funcionários
       if (profile?.role === 'admin') {
