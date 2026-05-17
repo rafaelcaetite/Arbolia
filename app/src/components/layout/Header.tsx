@@ -135,7 +135,7 @@ export function Header() {
           id: t.id,
           type: 'arvore',
           title: t.especie,
-          subtitle: `Risco: ${t.status_risco.toUpperCase()} · ID: #${t.id.slice(0, 8).toUpperCase()}`,
+          subtitle: `Risco: ${t.status_risco ? t.status_risco.toUpperCase() : 'N/A'} · ID: #${t.id.slice(0, 8).toUpperCase()}`,
           badge: 'Árvore',
           badgeClass: 'bg-emerald-100 text-emerald-700',
           onClick: () => {
