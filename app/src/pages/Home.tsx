@@ -202,12 +202,13 @@ export function Home() {
         serviceDate.setHours(0, 0, 0, 0);
 
         const diffTime = serviceDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-        let homeGroup = 'proximos';
+        let homeGroup = 'em_breve';
         if (diffDays < 0) homeGroup = 'atrasado';
         else if (diffDays === 0) homeGroup = 'hoje';
         else if (diffDays === 1) homeGroup = 'amanha';
+        else if (diffDays > 1 && diffDays <= 7) homeGroup = 'esta_semana';
 
         return {
           ...service,
@@ -219,13 +220,14 @@ export function Home() {
       .sort((a, b) => new Date(a.data + 'T00:00:00').getTime() - new Date(b.data + 'T00:00:00').getTime());
   }, [services]);
 
-  // Agrupando por categoria (limite total exibido para não estourar a tela: 6)
-  const homeServices = pendingServices.slice(0, 6);
+  // Agrupando por categoria (limite total exibido para não estourar a tela: 10)
+  const homeServices = pendingServices.slice(0, 10);
   const groupedServices = {
     atrasado: homeServices.filter(s => s.homeGroup === 'atrasado'),
     hoje: homeServices.filter(s => s.homeGroup === 'hoje'),
     amanha: homeServices.filter(s => s.homeGroup === 'amanha'),
-    proximos: homeServices.filter(s => s.homeGroup === 'proximos')
+    esta_semana: homeServices.filter(s => s.homeGroup === 'esta_semana'),
+    em_breve: homeServices.filter(s => s.homeGroup === 'em_breve')
   };
 
   return (
@@ -579,10 +581,17 @@ export function Home() {
                   </div>
                 )}
 
-                {groupedServices.proximos.length > 0 && (
+                {groupedServices.esta_semana.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-1">Próximos</h3>
-                    {groupedServices.proximos.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-purple-600 border-b border-slate-100 pb-1">Esta Semana</h3>
+                    {groupedServices.esta_semana.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                  </div>
+                )}
+
+                {groupedServices.em_breve.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-1">Em Breve</h3>
+                    {groupedServices.em_breve.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
                   </div>
                 )}
               </>
