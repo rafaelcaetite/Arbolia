@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { X, FileText, Download, Calendar, Users, Filter, CheckCircle } from 'lucide-react';
-import { type Service, type Tree, type Client } from '../../store/useAppStore';
+import { useAppStore, type Service, type Tree, type Client } from '../../store/useAppStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -12,6 +12,7 @@ interface ExportLogModalProps {
 }
 
 export function ExportLogModal({ onClose, services, trees, clients }: ExportLogModalProps) {
+  const { employees } = useAppStore();
   const [selectedFormat, setSelectedFormat] = useState<'pdf' | 'csv'>('pdf');
   
   const [filterClientId, setFilterClientId] = useState<string>('all');
@@ -43,6 +44,12 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
   const getClientFilterName = (clientId: string) => {
     if (clientId === 'all') return 'Todos os Clientes';
     return clients.find(c => c.id === clientId)?.nome || 'Desconhecido';
+  };
+
+  const getTechCrea = (techName: string) => {
+    if (!techName || techName === 'Não atribuído') return 'N/A';
+    const emp = employees.find(e => e.nome === techName);
+    return emp?.crea || 'N/A';
   };
 
   const handleExport = () => {
@@ -171,17 +178,19 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       return [
         svc.id.slice(0, 8).toUpperCase(),
         new Date(svc.data + 'T00:00:00').toLocaleDateString('pt-BR'),
+        svc.horario || 'N/D',
         getClientName(svc),
         treeSummary,
         svc.tipo,
         svc.status.toUpperCase(),
-        svc.responsavel
+        svc.responsavel || 'N/A',
+        getTechCrea(svc.responsavel)
       ];
     });
 
     autoTable(doc, {
       startY: 45,
-      head: [['ID', 'Data', 'Cliente', 'Árvores', 'Tipo', 'Status', 'Responsável']],
+      head: [['ID', 'Data', 'Horário', 'Cliente', 'Árvores', 'Tipo', 'Status', 'Responsável', 'CREA']],
       body: tableData,
       theme: 'grid',
       headStyles: {
@@ -202,13 +211,15 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
         font: 'helvetica'
       },
       columnStyles: {
-        0: { cellWidth: 25, fontStyle: 'bold' },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 'auto' },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 25 },
-        6: { cellWidth: 40 }
+        0: { cellWidth: 20, fontStyle: 'bold' },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 16 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 'auto' },
+        5: { cellWidth: 22 },
+        6: { cellWidth: 28 }, // Mais larga para status
+        7: { cellWidth: 35 },
+        8: { cellWidth: 20 }
       }
     });
 
