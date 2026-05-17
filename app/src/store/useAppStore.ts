@@ -264,7 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   notifications: [],
   generateNotifications: () => {
-    const { services, trees } = get();
+    const { services } = get();
     const newNotifications: AppNotification[] = [];
     const today = new Date().toISOString().split('T')[0];
     
