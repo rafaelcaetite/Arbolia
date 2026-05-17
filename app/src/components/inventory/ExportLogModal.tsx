@@ -3,6 +3,7 @@ import { X, FileText, Download, Calendar, Users, Filter, CheckCircle } from 'luc
 import { useAppStore, type Service, type Tree, type Client } from '../../store/useAppStore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import logoArbolia from '../../assets/logo_arbolia.png';
 
 interface ExportLogModalProps {
   onClose: () => void;
@@ -52,7 +53,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
     return emp?.crea || 'N/A';
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     // 1. Aplicar Filtros
     let filtered = [...services];
 
@@ -93,7 +94,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
     if (selectedFormat === 'csv') {
       exportToCSV(filtered);
     } else {
-      exportToPDF(filtered);
+      await exportToPDF(filtered);
     }
     
     onClose();
@@ -139,11 +140,48 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
     document.body.removeChild(link);
   };
 
-  const exportToPDF = (data: Service[]) => {
+  const exportToPDF = async (data: Service[]) => {
     const doc = new jsPDF('landscape');
     
     // Cores Arbolia (Brand)
     const primaryColor = [16, 185, 129]; // emerald-500
+    
+    // Configurações Globais
+    doc.setFont("helvetica");
+
+    // Carregar Logo
+    const loadLogo = (): Promise<string | null> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+          } else {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = logoArbolia;
+      });
+    };
+
+    const logoBase64 = await loadLogo();
+
+    if (logoBase64) {
+      try {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        // Canto superior direito, em cima do histórico (startY é 45)
+        doc.addImage(logoBase64, 'PNG', pageWidth - 14 - 38, 12, 38, 15);
+      } catch (e) {
+        console.error('Erro ao adicionar imagem no PDF:', e);
+      }
+    }
     
     // Configurações Globais
     doc.setFont("helvetica");

@@ -492,15 +492,6 @@ export function ServiceLog() {
                                 <Trash2 size={16} />
                               </button>
                             )}
-
-                            {svc.laudoGerado && (
-                              <button 
-                                title="Ver Laudo"
-                                className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                              >
-                                <FileText size={16} />
-                              </button>
-                            )}
                           </div>
                         </td>
                       </tr>
