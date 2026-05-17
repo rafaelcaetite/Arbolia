@@ -559,11 +559,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   closeEditModal: () => set({ isEditModalOpen: false, editingTreeId: null }),
   updateTree: async (id, data) => {
     try {
+      const oldTree = get().trees.find(t => t.id === id);
       const updated = await api.updateTree(id, data);
       set((state) => ({
         trees: state.trees.map(t => t.id === id ? updated : t)
       }));
-      get().logAudit('UPDATE', 'Árvore', `Atualizou dados da árvore #${id.slice(0, 8)}`, data);
+      
+      const diff: Record<string, any> = {};
+      if (oldTree) {
+        Object.entries(data).forEach(([key, val]) => {
+          const k = key as keyof Tree;
+          if (oldTree[k] !== val) {
+            diff[k] = val;
+          }
+        });
+      }
+      get().logAudit('UPDATE', 'Árvore', `Atualizou dados da árvore #${id.slice(0, 8)}`, diff);
     } catch (error) {
       console.error('Erro ao atualizar árvore:', error);
       throw error;
@@ -614,11 +625,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   updateService: async (id, updates) => {
     try {
+      const oldService = get().services.find(s => s.id === id);
       const updated = await api.updateService(id, updates);
       set((state) => ({
         services: state.services.map(s => s.id === id ? updated : s)
       }));
-      get().logAudit('UPDATE', 'Atendimento', `Atualizou atendimento #${id.slice(0, 8)} (${updated.tipo})`, updates);
+      
+      const diff: Record<string, any> = {};
+      if (oldService) {
+        Object.entries(updates).forEach(([key, val]) => {
+          const k = key as keyof Service;
+          if (JSON.stringify(oldService[k]) !== JSON.stringify(val)) {
+            diff[k] = val;
+          }
+        });
+      }
+      get().logAudit('UPDATE', 'Atendimento', `Atualizou atendimento #${id.slice(0, 8)} (${updated.tipo})`, diff);
     } catch (error) {
       console.error('Erro ao atualizar serviço:', error);
       throw error;
@@ -801,11 +823,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   updateClient: async (id, updates) => {
     try {
+      const oldClient = get().clients.find(c => c.id === id);
       const updated = await api.updateClient(id, updates);
       set(state => ({
         clients: state.clients.map(c => c.id === id ? updated : c)
       }));
-      get().logAudit('UPDATE', 'Cliente', `Atualizou dados do cliente: ${updated.nome}`, updates);
+
+      const diff: Record<string, any> = {};
+      if (oldClient) {
+        Object.entries(updates).forEach(([key, val]) => {
+          const k = key as keyof Client;
+          if (oldClient[k] !== val) {
+            diff[k] = val;
+          }
+        });
+      }
+      get().logAudit('UPDATE', 'Cliente', `Atualizou dados do cliente: ${updated.nome}`, diff);
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
       throw error;
