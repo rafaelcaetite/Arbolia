@@ -18,6 +18,13 @@ import { useEffect, useState } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { supabase } from './lib/supabase';
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { userProfile } = useAppStore();
+  if (!userProfile) return null;
+  if (userProfile.role !== 'admin') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   const { user, setUser, initializeData } = useAppStore();
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -65,7 +72,7 @@ function App() {
           <Route path="/alertas" element={<Alerts />} />
           <Route path="/acervo" element={<Acervo />} />
           <Route path="/historico" element={<ServiceLog />} />
-          <Route path="/funcionarios" element={<Employees />} />
+          <Route path="/funcionarios" element={<AdminRoute><Employees /></AdminRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

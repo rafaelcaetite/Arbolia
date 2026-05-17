@@ -434,7 +434,7 @@ export function Header() {
           <div className="flex flex-col items-end mr-1">
             <span className="text-sm font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors">{userProfile?.nome}</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              {userProfile?.role === 'admin' ? 'Administrador' : userProfile?.role === 'tecnico' ? 'Engenheiro' : 'Técnico de Campo'}
+              {userProfile?.role === 'admin' ? 'Administrador' : userProfile?.role === 'tecnico' ? 'Técnico' : 'Técnico de Campo'}
             </span>
           </div>
           

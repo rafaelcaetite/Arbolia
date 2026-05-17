@@ -404,7 +404,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
           <div className="text-center z-10">
             <h3 className="text-white font-bold text-lg">{employee.nome.split(' ')[0]}</h3>
             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mt-1 block">
-              {employee.role === 'admin' ? 'Administrador' : employee.role === 'tecnico' ? 'Engenheiro' : 'Assistente'}
+              {employee.role === 'admin' ? 'Administrador' : employee.role === 'tecnico' ? 'Técnico' : 'Assistente'}
             </span>
           </div>
         </div>

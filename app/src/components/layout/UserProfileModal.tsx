@@ -191,7 +191,7 @@ export function UserProfileModal() {
           <div className="text-center z-10">
             <h3 className="text-white font-bold text-lg truncate max-w-full">{userProfile.nome.split(' ')[0]}</h3>
             <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mt-1 block">
-              {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'tecnico' ? 'Engenheiro' : 'Campo'}
+              {userProfile.role === 'admin' ? 'Administrador' : userProfile.role === 'tecnico' ? 'Técnico' : 'Campo'}
             </span>
           </div>
         </div>
