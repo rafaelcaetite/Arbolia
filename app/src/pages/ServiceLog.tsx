@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
-import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Search, FileText, User, ChevronRight, Download, Eye, Pencil, Trash2, MapPin } from 'lucide-react';
 import { ExportLogModal } from '../components/inventory/ExportLogModal';
 import { AttachmentViewer } from '../components/common/AttachmentViewer';
 
