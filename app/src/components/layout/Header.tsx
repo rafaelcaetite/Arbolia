@@ -341,10 +341,21 @@ export function Header() {
                             
                             {/* Expandable Payload Section */}
                             {expandedLogId === log.id && log.payload && (
-                              <div className="mt-3 pt-3 border-t border-slate-100 bg-slate-50 rounded-lg p-2 text-[10px] font-mono text-slate-600 max-h-32 overflow-y-auto">
-                                <pre className="whitespace-pre-wrap break-all">
-                                  {JSON.stringify(log.payload, null, 2)}
-                                </pre>
+                              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {Object.entries(log.payload)
+                                  .filter(([key, val]) => key !== 'id' && key !== 'created_at' && key !== 'updated_at' && val !== undefined && val !== null)
+                                  .map(([key, value]) => (
+                                  <div key={key} className="bg-white border border-slate-100 rounded-md p-2 shadow-sm flex flex-col gap-0.5">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                                      {key.replace(/_/g, ' ')}
+                                    </span>
+                                    <span className="text-[11px] font-medium text-slate-700 truncate" title={String(value)}>
+                                      {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : 
+                                       typeof value === 'object' ? JSON.stringify(value) : 
+                                       String(value) || '-'}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
