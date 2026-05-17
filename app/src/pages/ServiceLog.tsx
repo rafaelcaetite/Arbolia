@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil, Trash2, MapPin } from 'lucide-react';
 import { ExportLogModal } from '../components/inventory/ExportLogModal';
+import { AttachmentViewer } from '../components/common/AttachmentViewer';
 
 
 export function ServiceLog() {
@@ -531,7 +532,7 @@ export function ServiceLog() {
 // ── Modal de Acervo do Atendimento ──────────────────────────────────────────
 function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () => void }) {
   const { trees, clients } = useAppStore();
-  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [viewingAttachment, setViewingAttachment] = useState<any | null>(null);
 
   const client = clients.find(c => {
     const treeIds = service?.treeIds || [];
@@ -621,11 +622,11 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
                 {photos.map(photo => (
                   <button 
                     key={photo.id}
-                    onClick={() => setViewingImage(photo.dataUrl)}
+                    onClick={() => setViewingAttachment(photo)}
                     className="aspect-square rounded-2xl overflow-hidden border border-slate-100 hover:ring-2 hover:ring-primary/20 transition-all group relative"
                   >
-                    {photo.dataUrl && (
-                      <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    {(photo.dataUrl || photo.storagePath) && (
+                      <img src={photo.dataUrl || photo.storagePath} alt={photo.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     )}
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <ExternalLink size={20} className="text-white" />
@@ -644,27 +645,11 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
           <section>
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Documentos e Laudos</h3>
             <div className="space-y-3">
-              {service.laudoGerado && (
-                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between group hover:bg-emerald-100/50 transition-colors cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
-                      <FileText size={20} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-emerald-900">Laudo Técnico Oficial (PDF)</p>
-                      <p className="text-[10px] text-emerald-600/70">Documento gerado automaticamente pelo Arbolia</p>
-                    </div>
-                  </div>
-                  <Download size={18} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-                </div>
-              )}
-              
               {docs.map(doc => (
-                <a 
+                <button 
                   key={doc.id}
-                  href={doc.dataUrl}
-                  download={doc.name}
-                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-slate-100/50 transition-colors"
+                  onClick={() => setViewingAttachment(doc)}
+                  className="w-full text-left p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:bg-slate-100/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
@@ -676,10 +661,10 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
                     </div>
                   </div>
                   <Download size={18} className="text-slate-400 group-hover:scale-110 transition-transform" />
-                </a>
+                </button>
               ))}
 
-              {!service.laudoGerado && docs.length === 0 && (
+              {docs.length === 0 && (
                 <div className="p-8 border-2 border-dashed border-slate-100 rounded-3xl text-center">
                   <p className="text-sm text-slate-400 italic">Nenhum documento ou laudo disponível.</p>
                 </div>
@@ -699,21 +684,12 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
         </div>
       </div>
 
-      {/* Viewer de Imagem (Full Screen) */}
-      {viewingImage && (
-        <div 
-          className="fixed inset-0 bg-black/95 z-[110] flex items-center justify-center p-8 animate-in fade-in duration-300"
-          onClick={() => setViewingImage(null)}
-        >
-          <button className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors">
-            <ChevronRight size={32} className="rotate-180" />
-          </button>
-          <img 
-            src={viewingImage} 
-            alt="Visualização" 
-            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg animate-in zoom-in-95 duration-300" 
-          />
-        </div>
+      {/* Viewer de Anexo (Full Screen / Premium Modal) */}
+      {viewingAttachment && (
+        <AttachmentViewer 
+          attachment={viewingAttachment} 
+          onClose={() => setViewingAttachment(null)} 
+        />
       )}
     </div>
   );
