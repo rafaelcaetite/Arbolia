@@ -1,4 +1,4 @@
-import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check, X, History } from 'lucide-react';
+import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check, X, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +28,7 @@ export function Header() {
   const notificationsRef = useRef<HTMLDivElement>(null);
 
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const auditLogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function Header() {
     function handleClickOutside(event: MouseEvent) {
       if (auditLogRef.current && !auditLogRef.current.contains(event.target as Node)) {
         setIsAuditLogOpen(false);
+        setExpandedLogId(null);
       }
     }
     if (isAuditLogOpen) {
@@ -307,7 +309,11 @@ export function Header() {
                   ) : (
                     <div className="divide-y divide-slate-50">
                       {auditLogs.map(log => (
-                        <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors group flex gap-3">
+                        <div 
+                          key={log.id} 
+                          onClick={() => setExpandedLogId(expandedLogId === log.id ? null : log.id)}
+                          className="p-4 hover:bg-slate-50 transition-colors group flex gap-3 cursor-pointer"
+                        >
                           <div className="flex-shrink-0 mt-1">
                             <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 text-xs uppercase border border-slate-200 shadow-sm">
                               {log.user_name.charAt(0)}
@@ -322,9 +328,25 @@ export function Header() {
                                 {new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' })}
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-600 leading-snug">
-                              <span className="font-semibold text-slate-700">{log.action === 'CREATE' ? 'Criou' : log.action === 'UPDATE' ? 'Editou' : 'Excluiu'}</span> {log.entity.toLowerCase()}: {log.details}
-                            </p>
+                            <div className="flex justify-between items-end gap-2">
+                              <p className="text-[11px] text-slate-600 leading-snug">
+                                <span className="font-semibold text-slate-700">{log.action === 'CREATE' ? 'Criou' : log.action === 'UPDATE' ? 'Editou' : 'Excluiu'}</span> {log.entity.toLowerCase()}: {log.details}
+                              </p>
+                              {log.payload && (
+                                <div className="text-slate-400">
+                                  {expandedLogId === log.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Expandable Payload Section */}
+                            {expandedLogId === log.id && log.payload && (
+                              <div className="mt-3 pt-3 border-t border-slate-100 bg-slate-50 rounded-lg p-2 text-[10px] font-mono text-slate-600 max-h-32 overflow-y-auto">
+                                <pre className="whitespace-pre-wrap break-all">
+                                  {JSON.stringify(log.payload, null, 2)}
+                                </pre>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
