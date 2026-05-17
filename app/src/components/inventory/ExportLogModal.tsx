@@ -172,8 +172,8 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       const treeSummary = svcTrees.length === 0 
         ? 'N/A' 
         : svcTrees.length === 1 
-          ? svcTrees[0].especie 
-          : `${svcTrees[0].especie} + ${svcTrees.length - 1} outras`;
+          ? `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 8).toUpperCase()})` 
+          : `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 8).toUpperCase()}) + ${svcTrees.length - 1} outras`;
 
       return [
         svc.id.slice(0, 8).toUpperCase(),
@@ -212,8 +212,8 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       },
       columnStyles: {
         0: { cellWidth: 20, fontStyle: 'bold' },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 16 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 22 },
         3: { cellWidth: 40 },
         4: { cellWidth: 'auto' },
         5: { cellWidth: 22 },
