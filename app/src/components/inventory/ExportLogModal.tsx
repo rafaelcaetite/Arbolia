@@ -114,7 +114,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       return [
         svc.id,
         new Date(svc.data + 'T00:00:00').toLocaleDateString('pt-BR'),
-        svc.horario || 'N/D',
+        svc.horario ? svc.horario.slice(0, 5) : 'N/D',
         getClientName(svc),
         treeSummary.replace(/;/g, ''),
         svc.tipo,
@@ -178,7 +178,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       return [
         svc.id.slice(0, 8).toUpperCase(),
         new Date(svc.data + 'T00:00:00').toLocaleDateString('pt-BR'),
-        svc.horario || 'N/D',
+        svc.horario ? svc.horario.slice(0, 5) : 'N/D',
         getClientName(svc),
         treeSummary,
         svc.tipo,
