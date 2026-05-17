@@ -299,14 +299,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const state = get();
       if (!state.userProfile) return;
-      const newLog = await api.createAuditLog({
+      await api.createAuditLog({
         user_id: state.userProfile.id,
         user_name: state.userProfile.nome,
         action,
         entity,
         details
       });
-      set(s => ({ auditLogs: [newLog, ...s.auditLogs] }));
+      if (state.userProfile.role === 'admin') {
+        get().fetchAuditLogs();
+      }
     } catch (e) {
       console.error('Erro ao registrar log:', e);
     }

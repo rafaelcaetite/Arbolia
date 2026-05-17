@@ -230,13 +230,10 @@ export const api = {
   },
 
   async createAuditLog(log: Omit<AuditLog, 'id' | 'created_at'>) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('audit_logs')
-      .insert([log])
-      .select()
-      .single();
+      .insert([log]);
     if (error) throw error;
-    return data as AuditLog;
   }
 };
 
