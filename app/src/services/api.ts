@@ -121,13 +121,7 @@ export const api = {
       .order('data', { ascending: false });
     if (error) throw error;
     
-    return (data || []).map(s => ({
-      ...s,
-      treeIds: s.tree_ids || [],
-      laudoGerado: s.laudo_gerado,
-      laudoData: s.laudo_data,
-      attachmentsByTree: s.attachments_by_tree || {}
-    })) as Service[];
+    return (data || []).map(mapService);
   },
 
   async createService(service: Omit<Service, 'id'>) {
@@ -170,13 +164,7 @@ export const api = {
       }
     }
 
-    return {
-      ...newService,
-      treeIds: newService.tree_ids || [],
-      laudoGerado: newService.laudo_gerado,
-      laudoData: newService.laudo_data,
-      attachmentsByTree: newService.attachments_by_tree || {}
-    } as Service;
+    return mapService(newService);
   },
 
   async updateService(id: string, updates: Partial<Service>) {
@@ -213,12 +201,29 @@ export const api = {
       }
     }
 
-    return {
-      ...updatedService,
-      treeIds: updatedService.tree_ids || [],
-      laudoGerado: updatedService.laudo_gerado,
-      laudoData: updatedService.laudo_data,
-      attachmentsByTree: updatedService.attachments_by_tree || {}
-    } as Service;
+    return mapService(updatedService);
   }
 };
+
+// Helper to map and dynamically evaluate logical service status
+function mapService(s: any): Service {
+  let status = s.status;
+  if (status === 'agendado') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const svcDate = new Date(s.data + 'T00:00:00');
+    svcDate.setHours(0, 0, 0, 0);
+    if (svcDate < today) {
+      status = 'atrasado';
+    }
+  }
+
+  return {
+    ...s,
+    status,
+    treeIds: s.tree_ids || [],
+    laudoGerado: s.laudo_gerado,
+    laudoData: s.laudo_data,
+    attachmentsByTree: s.attachments_by_tree || {}
+  } as Service;
+}

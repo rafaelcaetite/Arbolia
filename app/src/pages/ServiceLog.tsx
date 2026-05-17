@@ -70,12 +70,12 @@ export function ServiceLog() {
       const matchesStatus = statusFilter === 'Todos' || svc.status === statusFilter;
 
       // Filtro por data
-      const svcDate = new Date(svc.data);
-      const matchesDateStart = !dateStart || svcDate >= new Date(dateStart);
-      const matchesDateEnd = !dateEnd || svcDate <= new Date(dateEnd);
+      const svcDate = new Date(svc.data + 'T00:00:00');
+      const matchesDateStart = !dateStart || svcDate >= new Date(dateStart + 'T00:00:00');
+      const matchesDateEnd = !dateEnd || svcDate <= new Date(dateEnd + 'T00:00:00');
 
       return matchesSearch && matchesType && matchesStatus && matchesDateStart && matchesDateEnd;
-    }).sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+    }).sort((a, b) => new Date(b.data + 'T00:00:00').getTime() - new Date(a.data + 'T00:00:00').getTime());
   }, [services, trees, clients, searchTerm, serviceType, statusFilter, dateStart, dateEnd]);
   
   // Estados para ordenação

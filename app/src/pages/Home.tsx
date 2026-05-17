@@ -182,7 +182,7 @@ export function Home() {
     if (status === 'concluido') return 'concluido';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const serviceDate = new Date(dateStr);
+    const serviceDate = new Date(dateStr + 'T00:00:00');
     serviceDate.setHours(0, 0, 0, 0);
 
     const diffTime = serviceDate.getTime() - today.getTime();
@@ -205,7 +205,8 @@ export function Home() {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         let homeGroup = 'proximos';
-        if (diffDays <= 0) homeGroup = 'hoje';
+        if (diffDays < 0) homeGroup = 'atrasado';
+        else if (diffDays === 0) homeGroup = 'hoje';
         else if (diffDays === 1) homeGroup = 'amanha';
 
         return {
@@ -221,6 +222,7 @@ export function Home() {
   // Agrupando por categoria (limite total exibido para não estourar a tela: 6)
   const homeServices = pendingServices.slice(0, 6);
   const groupedServices = {
+    atrasado: homeServices.filter(s => s.homeGroup === 'atrasado'),
     hoje: homeServices.filter(s => s.homeGroup === 'hoje'),
     amanha: homeServices.filter(s => s.homeGroup === 'amanha'),
     proximos: homeServices.filter(s => s.homeGroup === 'proximos')
@@ -553,23 +555,33 @@ export function Home() {
               </div>
             ) : (
               <>
+                {groupedServices.atrasado.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-red-600 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse inline-block" />
+                      Atrasados
+                    </h3>
+                    {groupedServices.atrasado.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                  </div>
+                )}
+
                 {groupedServices.hoje.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-red-500 border-b border-slate-100 pb-1">Hoje</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 border-b border-slate-100 pb-1">Hoje</h3>
                     {groupedServices.hoje.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
                   </div>
                 )}
 
                 {groupedServices.amanha.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-yellow-500 border-b border-slate-100 pb-1">Amanhã</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-yellow-600 border-b border-slate-100 pb-1">Amanhã</h3>
                     {groupedServices.amanha.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
                   </div>
                 )}
 
                 {groupedServices.proximos.length > 0 && (
                   <div className="flex flex-col gap-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-500 border-b border-slate-100 pb-1">Próximos</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-1">Próximos</h3>
                     {groupedServices.proximos.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
                   </div>
                 )}
@@ -598,7 +610,7 @@ function renderServiceCard(service: any, clients: any[], trees: any[], openPostS
   });
   const owners = [...ownerIds].map(id => clients.find((c: any) => c.id === id)).filter(Boolean);
 
-  const isHoje = service.homeGroup === 'hoje';
+  const isHojeOrAtrasado = service.homeGroup === 'hoje' || service.homeGroup === 'atrasado';
 
   return (
     <div key={service.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors group">
@@ -634,7 +646,7 @@ function renderServiceCard(service: any, clients: any[], trees: any[], openPostS
           </div>
         </div>
 
-        {isHoje && openPostServiceModal && (
+        {isHojeOrAtrasado && openPostServiceModal && (
           <button
             onClick={() => openPostServiceModal(service.id)}
             className="flex items-center gap-1.5 bg-white hover:bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm"
