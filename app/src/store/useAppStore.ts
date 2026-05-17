@@ -135,6 +135,7 @@ interface AppState {
   addWeatherNotification: (weatherData: any) => void
   markNotificationAsRead: (id: string) => void
   markAllNotificationsAsRead: () => void
+  deleteNotification: (id: string) => void
 
   hoveredTreeId: string | null
 
@@ -245,7 +246,13 @@ interface AppState {
   createEmployee: (data: any) => Promise<void>
   updateEmployee: (id: string, data: any) => Promise<void>
   uploadFile: (bucket: string, file: File) => Promise<string>
-}
+}const getLocalArray = (key: string): string[] => {
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; }
+};
+const addLocalId = (key: string, id: string) => {
+  const arr = getLocalArray(key);
+  if (!arr.includes(id)) { arr.push(id); localStorage.setItem(key, JSON.stringify(arr)); }
+};
 
 export const useAppStore = create<AppState>((set, get) => ({
   // ... (existing state)
@@ -267,9 +274,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { services, notifications: existingNotifications } = get();
     const today = new Date().toISOString().split('T')[0];
     
+    const readIds = getLocalArray('arbolia_read_notifs');
+    const deletedIds = getLocalArray('arbolia_deleted_notifs');
+
     // 1. Manter notificações que NÃO são geradas automaticamente por data (como alertas climáticos)
     const preservedNotifications = existingNotifications.filter(
-      n => !n.id.startsWith('hoje-') && !n.id.startsWith('atrasados-')
+      n => !n.id.startsWith('hoje-') && !n.id.startsWith('atrasados-') && !deletedIds.includes(n.id)
     );
 
     const newNotifications: AppNotification[] = [];
@@ -277,37 +287,41 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Helper para verificar se a notificação já existia e estava marcada como lida
     const isAlreadyRead = (id: string) => {
       const existing = existingNotifications.find(n => n.id === id);
-      return existing ? existing.lida : false;
+      return (existing && existing.lida) || readIds.includes(id);
     };
 
     // 2. Serviços de Hoje
     const servicosHoje = services.filter(s => s.data === today && s.status !== 'concluido');
     if (servicosHoje.length > 0) {
       const id = `hoje-${today}`;
-      newNotifications.push({
-        id,
-        titulo: 'Alertas do Dia',
-        mensagem: `Você tem ${servicosHoje.length} serviço(s) agendados para hoje.`,
-        tipo: 'aviso',
-        lida: isAlreadyRead(id),
-        data_criacao: new Date().toISOString(),
-        acao: { tipo: 'servicos_hoje' }
-      });
+      if (!deletedIds.includes(id)) {
+        newNotifications.push({
+          id,
+          titulo: 'Alertas do Dia',
+          mensagem: `Você tem ${servicosHoje.length} serviço(s) agendados para hoje.`,
+          tipo: 'aviso',
+          lida: isAlreadyRead(id),
+          data_criacao: new Date().toISOString(),
+          acao: { tipo: 'servicos_hoje' }
+        });
+      }
     }
 
     // 3. Serviços Atrasados
     const servicosAtrasados = services.filter(s => s.status === 'atrasado');
     if (servicosAtrasados.length > 0) {
       const id = `atrasados-${today}`;
-      newNotifications.push({
-        id,
-        titulo: 'Alerta Crítico',
-        mensagem: `Existem ${servicosAtrasados.length} serviços em atraso no sistema.`,
-        tipo: 'critico',
-        lida: isAlreadyRead(id),
-        data_criacao: new Date().toISOString(),
-        acao: { tipo: 'servicos_atrasados' }
-      });
+      if (!deletedIds.includes(id)) {
+        newNotifications.push({
+          id,
+          titulo: 'Alerta Crítico',
+          mensagem: `Existem ${servicosAtrasados.length} serviços em atraso no sistema.`,
+          tipo: 'critico',
+          lida: isAlreadyRead(id),
+          data_criacao: new Date().toISOString(),
+          acao: { tipo: 'servicos_atrasados' }
+        });
+      }
     }
 
     set({ notifications: [...newNotifications, ...preservedNotifications] });
@@ -317,7 +331,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const today = new Date().toISOString().split('T')[0];
     const weatherId = `weather-${today}`;
     
-    // Evita duplicar se já existir
+    const deletedIds = getLocalArray('arbolia_deleted_notifs');
+    const readIds = getLocalArray('arbolia_read_notifs');
+
+    // Evita duplicar ou recriar deletada
+    if (deletedIds.includes(weatherId)) return;
     if (notifications.some(n => n.id === weatherId)) return;
 
     let mensagem = null;
@@ -352,7 +370,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             titulo,
             mensagem,
             tipo,
-            lida: false,
+            lida: readIds.includes(weatherId),
             data_criacao: new Date().toISOString(),
           },
           ...notifications
@@ -360,12 +378,30 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
     }
   },
-  markNotificationAsRead: (id) => set(state => ({
-    notifications: state.notifications.map(n => n.id === id ? { ...n, lida: true } : n)
-  })),
-  markAllNotificationsAsRead: () => set(state => ({
-    notifications: state.notifications.map(n => ({ ...n, lida: true }))
-  })),
+  markNotificationAsRead: (id) => {
+    addLocalId('arbolia_read_notifs', id);
+    set(state => ({
+      notifications: state.notifications.map(n => n.id === id ? { ...n, lida: true } : n)
+    }));
+  },
+  markAllNotificationsAsRead: () => {
+    const { notifications } = get();
+    const readIds = getLocalArray('arbolia_read_notifs');
+    notifications.forEach(n => {
+      if (!readIds.includes(n.id)) readIds.push(n.id);
+    });
+    localStorage.setItem('arbolia_read_notifs', JSON.stringify(readIds));
+
+    set(state => ({
+      notifications: state.notifications.map(n => ({ ...n, lida: true }))
+    }));
+  },
+  deleteNotification: (id) => {
+    addLocalId('arbolia_deleted_notifs', id);
+    set(state => ({
+      notifications: state.notifications.filter(n => n.id !== id)
+    }));
+  },
 
   hoveredTreeId: null,
   selectedTreeIds: [],

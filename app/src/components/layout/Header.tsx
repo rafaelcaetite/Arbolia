@@ -1,10 +1,10 @@
-import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check } from 'lucide-react';
+import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect, useRef } from 'react';
 import { SecureImage } from '../common/SecureImage';
 
 export function Header() {
-  const { weatherCity, userProfile, openProfileModal, notifications, markNotificationAsRead, markAllNotificationsAsRead, addWeatherNotification } = useAppStore();
+  const { weatherCity, userProfile, openProfileModal, notifications, markNotificationAsRead, markAllNotificationsAsRead, addWeatherNotification, deleteNotification } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -148,12 +148,24 @@ export function Header() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className={`text-sm font-bold truncate pr-4 ${!notif.lida ? 'text-slate-800' : 'text-slate-600'}`}>
+                            <h4 className={`text-sm font-bold truncate pr-2 ${!notif.lida ? 'text-slate-800' : 'text-slate-600'}`}>
                               {notif.titulo}
                             </h4>
-                            {!notif.lida && (
-                              <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5"></span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {!notif.lida && (
+                                <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-0.5"></span>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notif.id);
+                                }}
+                                className="text-slate-400 hover:text-red-500 transition-colors p-1 -mr-2 -mt-1 rounded-full hover:bg-red-50 opacity-0 group-hover:opacity-100"
+                                title="Excluir notificação"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
                           </div>
                           <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
                             {notif.mensagem}
