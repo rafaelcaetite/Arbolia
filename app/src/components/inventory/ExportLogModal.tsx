@@ -211,7 +211,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
         font: 'helvetica'
       },
       columnStyles: {
-        0: { cellWidth: 20, fontStyle: 'bold' },
+        0: { cellWidth: 26, fontStyle: 'bold' },
         1: { cellWidth: 24 },
         2: { cellWidth: 22 },
         3: { cellWidth: 40 },
