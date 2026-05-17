@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
-import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil, Trash2, MapPin } from 'lucide-react';
 import { ExportLogModal } from '../components/inventory/ExportLogModal';
 
 
@@ -424,7 +424,7 @@ export function ServiceLog() {
                             <span className="text-sm font-semibold text-slate-700">
                               {new Date(svc.data + 'T00:00:00').toLocaleDateString()}
                             </span>
-                            <span className="text-[10px] text-slate-400">{svc.horario || 'Horário não def.'}</span>
+                            <span className="text-[10px] text-slate-400">{svc.horario ? svc.horario.slice(0, 5) : 'Horário não def.'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -571,9 +571,14 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
               <span className="text-xs text-slate-400 font-medium">#{service.id.slice(0, 8)}</span>
             </div>
             <h2 className="text-xl font-bold text-slate-800">Acervo do Atendimento</h2>
-            <p className="text-sm text-slate-500">
-              {client?.nome || 'Cliente não identificado'} • {new Date(service.data + 'T00:00:00').toLocaleDateString()}
-            </p>
+            <div className="flex flex-col gap-1 mt-1 text-sm text-slate-500">
+              <span>{client?.nome || 'Cliente não identificado'} • {new Date(service.data + 'T00:00:00').toLocaleDateString()}</span>
+              {client?.endereco && (
+                <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                  <MapPin size={12} /> {client.endereco}
+                </span>
+              )}
+            </div>
           </div>
           <button 
             onClick={onClose}
