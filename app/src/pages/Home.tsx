@@ -230,6 +230,23 @@ export function Home() {
     em_breve: homeServices.filter(s => s.homeGroup === 'em_breve')
   };
 
+  let recBg = 'bg-emerald-600 shadow-emerald-950/20';
+  let recTextHeader = 'text-emerald-100';
+  
+  if (!isLoadingWeather) {
+    const maxRain = weatherData.length > 0 ? Math.max(...weatherData.map(d => d.rain)) : 0;
+    if (maxRain > 60) {
+      recBg = 'bg-red-600 shadow-red-950/20';
+      recTextHeader = 'text-red-100';
+    } else if (maxRain > 30) {
+      recBg = 'bg-orange-500 shadow-orange-950/20';
+      recTextHeader = 'text-orange-100';
+    }
+  } else {
+    recBg = 'bg-slate-600 shadow-slate-950/20 animate-pulse';
+    recTextHeader = 'text-slate-200';
+  }
+
   return (
     <div className="flex flex-col gap-8 pb-12">
       <style>{`
@@ -344,12 +361,12 @@ export function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 relative z-10">
             {/* Recommendation Card */}
-            <div className="col-span-1 md:col-span-2 bg-emerald-600 rounded-3xl p-6 text-white flex items-center gap-5 shadow-lg shadow-emerald-900/20">
+            <div className={`col-span-1 md:col-span-2 ${recBg} rounded-3xl p-6 text-white flex items-center gap-5 shadow-lg transition-all duration-500`}>
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                 <ShieldAlert className="text-white" size={24} />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-emerald-100 uppercase tracking-wider mb-1">Recomendação Operacional</h4>
+                <h4 className={`font-bold text-sm ${recTextHeader} uppercase tracking-wider mb-1`}>Recomendação Operacional</h4>
                 <p className="text-sm text-white/90 leading-relaxed">
                   {getRecommendation()}
                 </p>
