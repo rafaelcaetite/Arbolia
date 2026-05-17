@@ -184,7 +184,7 @@ export function Header() {
   }
 
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-20">
+    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-[150]">
       <div className="flex items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-800">{greeting}, {displayName.split(' ')[0]} 👋</h1>
         <div className="h-8 w-px bg-slate-200 mx-2"></div>
@@ -217,7 +217,7 @@ export function Header() {
           />
 
           {isSearchOpen && searchQuery.trim() && (
-            <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-100 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full left-0 mt-2 w-80 sm:w-[480px] bg-white border border-slate-100 rounded-2xl shadow-2xl z-[9999] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="px-4 py-2 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resultados Sugeridos</span>
                 <span className="text-[9px] bg-slate-100 text-slate-500 font-bold px-1.5 py-0.5 rounded-full">{searchResults.length} encontrados</span>
