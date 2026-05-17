@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Tree, Client, Service, UserProfile } from '../store/useAppStore';
+import type { Tree, Client, Service, UserProfile, AuditLog } from '../store/useAppStore';
 
 export const api = {
   // --- Clientes ---
@@ -216,6 +216,27 @@ export const api = {
       .delete()
       .eq('id', id);
     if (serviceError) throw serviceError;
+  },
+
+  // --- Audit Logs ---
+  async getAuditLogs() {
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data as AuditLog[];
+  },
+
+  async createAuditLog(log: Omit<AuditLog, 'id' | 'created_at'>) {
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .insert([log])
+      .select()
+      .single();
+    if (error) throw error;
+    return data as AuditLog;
   }
 };
 

@@ -33,6 +33,16 @@ export interface UserProfile {
   data_cadastro?: string
 }
 
+export interface AuditLog {
+  id: string
+  user_id: string
+  user_name: string
+  action: 'CREATE' | 'UPDATE' | 'DELETE'
+  entity: string
+  details: string
+  created_at: string
+}
+
 export interface MapBounds {
   south: number
   west: number
@@ -132,6 +142,10 @@ interface AppState {
   
   notifications: AppNotification[]
   generateNotifications: () => void
+
+  auditLogs: AuditLog[]
+  fetchAuditLogs: () => Promise<void>
+  logAudit: (action: 'CREATE' | 'UPDATE' | 'DELETE', entity: string, details: string) => Promise<void>
   addWeatherNotification: (weatherData: any) => void
   markNotificationAsRead: (id: string) => void
   markAllNotificationsAsRead: () => void
@@ -271,6 +285,33 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   notifications: [],
+  
+  auditLogs: [],
+  fetchAuditLogs: async () => {
+    try {
+      const logs = await api.getAuditLogs();
+      set({ auditLogs: logs });
+    } catch (e) {
+      console.error('Erro ao carregar audit logs:', e);
+    }
+  },
+  logAudit: async (action, entity, details) => {
+    try {
+      const state = get();
+      if (!state.userProfile) return;
+      const newLog = await api.createAuditLog({
+        user_id: state.userProfile.id,
+        user_name: state.userProfile.nome,
+        action,
+        entity,
+        details
+      });
+      set(s => ({ auditLogs: [newLog, ...s.auditLogs] }));
+    } catch (e) {
+      console.error('Erro ao registrar log:', e);
+    }
+  },
+
   generateNotifications: () => {
     const { services, notifications: existingNotifications } = get();
     const today = new Date().toISOString().split('T')[0];
@@ -518,6 +559,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((state) => ({
         trees: state.trees.map(t => t.id === id ? updated : t)
       }));
+      get().logAudit('UPDATE', 'Árvore', `Atualizou dados da árvore #${id.slice(0, 8)}`);
     } catch (error) {
       console.error('Erro ao atualizar árvore:', error);
       throw error;
@@ -530,6 +572,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((state) => ({
         trees: [newTree, ...state.trees]
       }));
+      get().logAudit('CREATE', 'Árvore', `Cadastrou nova árvore #${newTree.id.slice(0, 8)} (${newTree.especie})`);
     } catch (error: any) {
       console.error('Erro ao criar árvore:', error);
       // Fallback: se o erro for de coluna faltante (fotos), tentamos sem ela
@@ -559,6 +602,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         services: [newService, ...state.services],
         selectedTreeIds: []
       }));
+      get().logAudit('CREATE', 'Atendimento', `Criou agendamento de ${newService.tipo} para ${selectedTreeIds.length} árvore(s)`);
     } catch (error) {
       console.error('Erro ao criar serviço:', error);
       throw error;
@@ -570,6 +614,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((state) => ({
         services: state.services.map(s => s.id === id ? updated : s)
       }));
+      get().logAudit('UPDATE', 'Atendimento', `Atualizou atendimento #${id.slice(0, 8)} (${updated.tipo})`);
     } catch (error) {
       console.error('Erro ao atualizar serviço:', error);
       throw error;

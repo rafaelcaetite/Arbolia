@@ -1,4 +1,4 @@
-import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check, X } from 'lucide-react';
+import { Bell, Search, CloudRain, Navigation, CheckCircle, AlertTriangle, Info, Clock, Check, X, History } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,12 +18,37 @@ export function Header() {
     trees,
     services,
     openClientDetailsModal,
-    openTreeDetailsModal
+    openTreeDetailsModal,
+    auditLogs,
+    fetchAuditLogs
   } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
+
+  const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
+  const auditLogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (userProfile?.role === 'admin') {
+      fetchAuditLogs();
+    }
+  }, [userProfile?.role]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (auditLogRef.current && !auditLogRef.current.contains(event.target as Node)) {
+        setIsAuditLogOpen(false);
+      }
+    }
+    if (isAuditLogOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isAuditLogOpen]);
 
   // Fallbacks para quando o perfil ainda não carregou
   const displayName = userProfile?.nome || 'Técnico';
@@ -254,6 +279,63 @@ export function Header() {
           )}
         </div>
         
+        {userProfile?.role === 'admin' && (
+          <div className="relative" ref={auditLogRef}>
+            <button 
+              onClick={() => setIsAuditLogOpen(!isAuditLogOpen)}
+              className={`relative p-2 rounded-full transition-colors ${isAuditLogOpen ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:bg-slate-50 hover:text-primary'}`}
+              title="Log de Alterações"
+            >
+              <History size={20} />
+            </button>
+
+            {isAuditLogOpen && (
+              <div className="absolute top-full right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+                <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <History size={16} className="text-primary" />
+                    Histórico do Sistema
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-1">Registros recentes de alterações de usuários</p>
+                </div>
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {auditLogs.length === 0 ? (
+                    <div className="p-8 text-center flex flex-col items-center text-slate-400">
+                      <History size={32} className="mb-2 text-slate-300 opacity-50" />
+                      <p className="text-sm font-medium">Nenhum log registrado</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {auditLogs.map(log => (
+                        <div key={log.id} className="p-4 hover:bg-slate-50 transition-colors group flex gap-3">
+                          <div className="flex-shrink-0 mt-1">
+                            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 text-xs uppercase border border-slate-200 shadow-sm">
+                              {log.user_name.charAt(0)}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-0.5">
+                              <h4 className="text-xs font-bold text-slate-800 truncate pr-2">
+                                {log.user_name}
+                              </h4>
+                              <span className="text-[9px] text-slate-400 font-medium whitespace-nowrap">
+                                {new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-600 leading-snug">
+                              <span className="font-semibold text-slate-700">{log.action === 'CREATE' ? 'Criou' : log.action === 'UPDATE' ? 'Editou' : 'Excluiu'}</span> {log.entity.toLowerCase()}: {log.details}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="relative" ref={notificationsRef}>
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
