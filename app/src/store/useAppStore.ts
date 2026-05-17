@@ -649,6 +649,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
 
       set({ services: newServices });
+      get().logAudit('UPDATE', 'Atendimento', `Concluiu atendimento #${id.slice(0, 8)}`);
     } catch (error) {
       console.error('Erro ao concluir serviço:', error);
       throw error;
@@ -661,6 +662,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((state) => ({
         services: state.services.filter(s => s.id !== id)
       }));
+      get().logAudit('DELETE', 'Atendimento', `Excluiu atendimento #${id.slice(0, 8)}`);
       get().generateNotifications();
     } catch (error) {
       console.error('Erro ao excluir serviço:', error);
@@ -752,6 +754,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             : t
         )
       }));
+      get().logAudit('DELETE', 'Árvore', `Inativou/Suprimiu ${treeIds.length} árvore(s). Motivo: ${motivo.slice(0, 30)}...`);
     } catch (error) {
       console.error('Erro ao inativar árvores:', error);
       throw error;
@@ -786,6 +789,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const newClient = await api.createClient(data);
       set(state => ({ clients: [newClient, ...state.clients] }));
+      get().logAudit('CREATE', 'Cliente', `Cadastrou novo cliente: ${newClient.nome}`);
     } catch (error) {
       console.error('Erro ao criar cliente:', error);
       throw error;
@@ -797,6 +801,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set(state => ({
         clients: state.clients.map(c => c.id === id ? updated : c)
       }));
+      get().logAudit('UPDATE', 'Cliente', `Atualizou dados do cliente: ${updated.nome}`);
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
       throw error;
