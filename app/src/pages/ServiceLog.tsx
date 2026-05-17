@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 
 import { useAppStore } from '../store/useAppStore';
 import { Search, FileText, User, ChevronRight, Download, Eye, ExternalLink, Pencil } from 'lucide-react';
+import { ExportLogModal } from '../components/inventory/ExportLogModal';
 
 
 export function ServiceLog() {
@@ -158,39 +159,10 @@ export function ServiceLog() {
   }, [sortedServices, sortConfig.field, sortConfig.direction]);
 
   const [viewingService, setViewingService] = useState<any | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleExportCSV = () => {
-
-    // Cabeçalhos do CSV
-    const headers = ['ID', 'Data', 'Horário', 'Cliente', 'Árvores', 'Tipo de Serviço', 'Responsável', 'Status'];
-    
-    // Mapear os serviços filtrados para linhas do CSV
-    const rows = filteredServices.map(svc => [
-      svc.id,
-      new Date(svc.data + 'T00:00:00').toLocaleDateString(),
-      svc.horario || 'N/D',
-      getClientName(svc),
-      getTreesSummary(svc).replace(/;/g, ''), // Limpeza básica para o delimitador
-      svc.tipo,
-      svc.responsavel,
-      svc.status
-    ]);
-
-    // Unir com ponto e vírgula (delimitador padrão do Excel em PT-BR)
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map(row => row.join(';'))
-    ].join('\n');
-
-    // Adicionar BOM para suporte a caracteres especiais no Excel
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `arbolia_historico_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportClick = () => {
+    setIsExportModalOpen(true);
   };
 
   if (isDataLoading && services.length > 0) {
@@ -212,6 +184,16 @@ export function ServiceLog() {
         />
       )}
 
+      {/* Modal de Exportação */}
+      {isExportModalOpen && (
+        <ExportLogModal 
+          onClose={() => setIsExportModalOpen(false)}
+          services={services}
+          trees={trees}
+          clients={clients}
+        />
+      )}
+
       {/* Header da Página */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -220,11 +202,11 @@ export function ServiceLog() {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={handleExportCSV}
+            onClick={handleExportClick}
             className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
           >
             <Download size={16} />
-            Exportar CSV
+            Exportar
           </button>
         </div>
       </div>
