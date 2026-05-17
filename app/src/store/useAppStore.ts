@@ -483,11 +483,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ clients, trees, services });
       get().generateNotifications();
 
-      // 4. Se for admin, carregar funcionários
-      if (profile?.role === 'admin') {
-        const employees = await api.getEmployees();
-        set({ employees });
-      }
+      // 4. Carrega funcionários para todos os perfis (necessário para exibição de CREA e atribuição de técnicos)
+      const employees = await api.getEmployees();
+      set({ employees });
     } catch (error) {
       console.error('Erro ao carregar dados do Supabase:', error);
     }
