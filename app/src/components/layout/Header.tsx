@@ -184,7 +184,7 @@ export function Header() {
   }
 
   return (
-    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-[150]">
+    <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-[30]">
       <div className="flex items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-800">{greeting}, {displayName.split(' ')[0]} 👋</h1>
         <div className="h-8 w-px bg-slate-200 mx-2"></div>
