@@ -6,6 +6,7 @@ export function SettingsModal() {
   const { isSettingsModalOpen, closeSettingsModal, theme, setTheme } = useAppStore();
   const [isVisible, setIsVisible] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
+  const [weatherAlerts, setWeatherAlerts] = useState(true);
 
   useEffect(() => {
     if (isSettingsModalOpen) {
@@ -99,10 +100,18 @@ export function SettingsModal() {
                 <h4 className="text-sm font-bold text-slate-800">Alertas Meteorológicos</h4>
                 <p className="text-xs text-slate-500 mt-1">Receber notificações sobre mudanças bruscas de clima.</p>
               </div>
-              <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                <input type="checkbox" name="toggle" id="toggle-weather" defaultChecked className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-primary transition-transform translate-x-6 z-10" />
-                <label htmlFor="toggle-weather" className="toggle-label block overflow-hidden h-6 rounded-full bg-primary cursor-pointer"></label>
-              </div>
+              <button 
+                onClick={() => setWeatherAlerts(!weatherAlerts)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  weatherAlerts ? 'bg-primary' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    weatherAlerts ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
             </div>
           </section>
 
@@ -118,10 +127,12 @@ export function SettingsModal() {
                 <h4 className="text-sm font-bold text-slate-800">Alta Precisão GPS</h4>
                 <p className="text-xs text-slate-500 mt-1">Habilitar tracking de precisão contínuo (Gasta mais bateria).</p>
               </div>
-              <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                <input type="checkbox" disabled name="toggle" id="toggle-gps" className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none border-slate-300 z-10" />
-                <label htmlFor="toggle-gps" className="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300"></label>
-              </div>
+              <button 
+                disabled
+                className="relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed rounded-full border-2 border-transparent bg-slate-200 transition-colors duration-200 ease-in-out focus:outline-none"
+              >
+                <span className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0" />
+              </button>
             </div>
           </section>
 
@@ -137,16 +148,6 @@ export function SettingsModal() {
           </button>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .toggle-checkbox:checked {
-          right: 0;
-          border-color: var(--color-primary, #10b981);
-        }
-        .toggle-checkbox:checked + .toggle-label {
-          background-color: var(--color-primary, #10b981);
-        }
-      `}} />
     </div>
   );
 }
