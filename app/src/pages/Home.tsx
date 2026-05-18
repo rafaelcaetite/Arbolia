@@ -331,7 +331,7 @@ export function Home() {
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 relative z-20">
             <div className="flex items-center gap-5 flex-1 w-full">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200 shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200 dark:shadow-none shrink-0">
                 <CloudRain size={32} />
               </div>
               <div className="flex-1 min-w-0">
