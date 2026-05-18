@@ -50,7 +50,7 @@ export function Home() {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=5&language=pt&format=json`,
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=20&language=pt&format=json`,
           { signal: abortController.signal }
         );
         const data = await res.json();
@@ -60,17 +60,28 @@ export function Home() {
           return;
         }
 
-        const results = data.results.map((item: any) => {
+        const mapped = data.results.map((item: any) => {
           const state = item.admin1 ? `, ${item.admin1}` : '';
           const country = item.country ? ` - ${item.country}` : '';
+          const isBrazil = item.country_code === 'BR' || 
+                           (item.country && (item.country.toLowerCase() === 'brasil' || item.country.toLowerCase() === 'brazil'));
           return {
             display_name: `${item.name}${state}${country}`,
             name: item.name,
             lat: item.latitude,
-            lon: item.longitude
+            lon: item.longitude,
+            isBrazil
           };
         });
 
+        // Ordena priorizando Brasil no topo
+        const sorted = [...mapped].sort((a, b) => {
+          if (a.isBrazil && !b.isBrazil) return -1;
+          if (!a.isBrazil && b.isBrazil) return 1;
+          return 0;
+        });
+
+        const results = sorted.slice(0, 5);
         searchCache.current[searchQuery] = results; // Salva no cache
         setSuggestions(results);
       } catch (e: any) {
