@@ -50,26 +50,27 @@ export function Home() {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&countrycodes=br&limit=15&addressdetails=1&featuretype=settlement`,
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=5&language=pt&format=json`,
           { signal: abortController.signal }
         );
         const data = await res.json();
         
-        const filtered = data.filter((item: any) => {
-          const type = item.addresstype || item.type;
-          const isCityType = ['city', 'town', 'municipality', 'administrative'].includes(type);
-          const name = item.display_name.toLowerCase();
-          const isNotStreet = !name.includes('rua ') && !name.includes('avenida') && !name.includes('av. ') && 
-                             !name.includes('travessa') && !name.includes('alameda') && !name.includes('praça') &&
-                             !name.includes('pç. ') && !name.includes('edifício');
-          return isCityType && isNotStreet;
-        });
-        
-        const unique = filtered.filter((v: any, i: number, a: any[]) => 
-          a.findIndex(t => t.display_name === v.display_name) === i
-        );
+        if (!data.results) {
+          setSuggestions([]);
+          return;
+        }
 
-        const results = unique.slice(0, 5);
+        const results = data.results.map((item: any) => {
+          const state = item.admin1 ? `, ${item.admin1}` : '';
+          const country = item.country ? ` - ${item.country}` : '';
+          return {
+            display_name: `${item.name}${state}${country}`,
+            name: item.name,
+            lat: item.latitude,
+            lon: item.longitude
+          };
+        });
+
         searchCache.current[searchQuery] = results; // Salva no cache
         setSuggestions(results);
       } catch (e: any) {
@@ -77,7 +78,7 @@ export function Home() {
           console.error('Erro na busca de cidades:', e);
         }
       }
-    }, 100);
+    }, 300);
 
     return () => {
       clearTimeout(timer);
@@ -344,13 +345,13 @@ export function Home() {
                         <button
                           key={i}
                           onClick={() => {
-                            setWeatherCity({ name: s.display_name.split(',')[0], lat: parseFloat(s.lat), lon: parseFloat(s.lon) });
+                            setWeatherCity({ name: s.name, lat: s.lat, lon: s.lon });
                             setSuggestions([]);
                             setSearchQuery('');
                           }}
                           className="w-full text-left px-4 py-3 text-xs text-slate-600 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors"
                         >
-                          <span className="font-bold text-slate-800">{s.display_name.split(',')[0]}</span>
+                          <span className="font-bold text-slate-800">{s.name}</span>
                           <span className="text-slate-400 ml-2 truncate block">{s.display_name}</span>
                         </button>
                       ))}
