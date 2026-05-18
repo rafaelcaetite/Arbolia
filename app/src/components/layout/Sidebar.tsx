@@ -1,5 +1,5 @@
 import { Map as MapIcon, Users, AlertTriangle, Archive, Settings, LogOut, LayoutDashboard, History, ShieldCheck } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 
 export function Sidebar() {
@@ -20,11 +20,13 @@ export function Sidebar() {
     <aside className="w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-sm z-10 relative">
       {/* Logo */}
       <div className="h-20 flex items-center justify-center border-b border-slate-50">
-        <img
-          src="/logo.png"
-          alt="Arbolia"
-          className="h-14 w-auto object-contain mt-4"
-        />
+        <Link to="/" className="transition-opacity hover:opacity-90 active:scale-95 transition-transform duration-100">
+          <img
+            src="/logo.png"
+            alt="Arbolia"
+            className="h-14 w-auto object-contain mt-4 cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Menu */}
