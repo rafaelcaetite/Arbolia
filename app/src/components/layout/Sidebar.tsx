@@ -4,7 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 
 export function Sidebar() {
-  const { userProfile, signOut, openSettingsModal } = useAppStore();
+  const { userProfile, signOut, openSettingsModal, theme } = useAppStore();
   const isAdmin = userProfile?.role === 'admin';
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -25,7 +25,7 @@ export function Sidebar() {
         <div className="h-20 flex items-center justify-center border-b border-slate-50">
           <Link to="/" className="transition-opacity hover:opacity-90 active:scale-95 transition-transform duration-100">
             <img
-              src="/logo.png"
+              src={theme === 'dark' ? '/logo_branca.png' : '/logo.png'}
               alt="Arbolia"
               className="h-14 w-auto object-contain mt-4 cursor-pointer"
             />
