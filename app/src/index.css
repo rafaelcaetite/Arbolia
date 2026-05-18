@@ -58,3 +58,120 @@
     @apply bg-slate-50 text-slate-800 antialiased font-sans transition-colors duration-300;
   }
 }
+
+/* =========================================================================
+   ELEMENTOS DE COMPILARAÇÃO E ADAPTAÇÃO AO DARK MODE (PREMIUM UX)
+   ========================================================================= */
+
+/* 1. Custom scrollbar globally for dark mode */
+:root[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #121212 !important;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #2d2d2d !important;
+  border-radius: 9999px;
+  border: 2px solid #121212 !important;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #3d3d3d !important;
+}
+
+/* Firefox scrollbar */
+:root[data-theme="dark"] {
+  scrollbar-width: thin;
+  scrollbar-color: #2d2d2d #121212;
+}
+
+/* 2. Leaflet Dark Mode popups and zoom controls */
+:root[data-theme="dark"] .leaflet-popup-content-wrapper,
+:root[data-theme="dark"] .leaflet-popup-tip {
+  background-color: #1e1e1e !important;
+  color: #f4f4f5 !important;
+  border: 1px solid #2d2d2d;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+}
+:root[data-theme="dark"] .leaflet-popup-content {
+  color: #f4f4f5 !important;
+}
+:root[data-theme="dark"] .leaflet-popup-content h3 {
+  color: #ffffff !important;
+}
+:root[data-theme="dark"] .leaflet-popup-content strong {
+  color: #e4e4e7 !important;
+}
+:root[data-theme="dark"] .leaflet-bar a {
+  background-color: #1e1e1e !important;
+  color: #f4f4f5 !important;
+  border-bottom: 1px solid #2d2d2d !important;
+}
+:root[data-theme="dark"] .leaflet-bar a:hover {
+  background-color: #2d2d2d !important;
+}
+
+/* 3. Recharts Dark Mode Grid line & Labels */
+:root[data-theme="dark"] .recharts-cartesian-grid-horizontal line,
+:root[data-theme="dark"] .recharts-cartesian-grid-vertical line {
+  stroke: #2d2d2d !important;
+}
+:root[data-theme="dark"] .recharts-text {
+  fill: #71717a !important;
+}
+
+/* 4. Custom overrides for weather widget and chips in dark mode */
+:root[data-theme="dark"] .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+:root[data-theme="dark"] .bg-blue-50\/30 {
+  background-color: #121212 !important; /* Beautiful dark chips instead of light blue */
+  border-color: #2d2d2d !important;
+}
+:root[data-theme="dark"] .hover\:bg-slate-100\/50:hover {
+  background-color: #1e1e1e !important;
+}
+:root[data-theme="dark"] .bg-blue-50\/50 {
+  background-color: #121212 !important; /* Rich dark/black stats card instead of translucent white */
+  border-color: #2d2d2d !important;
+}
+:root[data-theme="dark"] .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+:root[data-theme="dark"] .bg-emerald-50\/50 {
+  background-color: #121212 !important; /* Rich dark/black stats card instead of translucent white */
+  border-color: #2d2d2d !important;
+}
+:root[data-theme="dark"] .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+:root[data-theme="dark"] .border-blue-100 {
+  border-color: #2d2d2d !important;
+}
+:root[data-theme="dark"] .border-emerald-100 {
+  border-color: #2d2d2d !important;
+}
+:root[data-theme="dark"] .text-slate-700 {
+  color: #f4f4f5 !important;
+}
+:root[data-theme="dark"] .text-emerald-700 {
+  color: #34d399 !important;
+}
+:root[data-theme="dark"] .text-blue-500 {
+  color: #60a5fa !important;
+}
+:root[data-theme="dark"] .bg-blue-500\/10 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+:root[data-theme="dark"] .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Background blur glow decor in weather widget should be subtle */
+:root[data-theme="dark"] .blur-3xl {
+  opacity: 0.15 !important;
+}

@@ -104,6 +104,7 @@ export function InteractiveMap() {
   const selectedTreeIds = useAppStore(s => s.selectedTreeIds);
   const setHoveredTreeId = useAppStore(s => s.setHoveredTreeId);
   const toggleTreeSelection = useAppStore(s => s.toggleTreeSelection);
+  const theme = useAppStore(s => s.theme);
 
   const defaultCenter: [number, number] = [-20.7546, -42.8825];
 
@@ -116,8 +117,12 @@ export function InteractiveMap() {
         zoomControl={false}
       >
         <TileLayer
+          key={theme}
           attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url={theme === 'dark'
+            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          }
         />
         <MapBoundsListener />
         <MapPickerListener />
