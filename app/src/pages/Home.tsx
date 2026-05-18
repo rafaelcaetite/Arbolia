@@ -90,7 +90,7 @@ export function Home() {
     const fetchWeather = async () => {
       setIsLoadingWeather(true);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,relative_humidity_2m,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation,relative_humidity_2m,wind_speed_10m,wind_gusts_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`;
         const res = await fetch(url, {
           method: 'GET',
           headers: {
@@ -128,8 +128,10 @@ export function Home() {
             time: `${hours.toString().padStart(2, '0')}:00`,
             temp: data.hourly.temperature_2m[hourIndex],
             rain: data.hourly.precipitation_probability[hourIndex],
+            precipitation: data.hourly.precipitation[hourIndex] || 0,
             humidity: data.hourly.relative_humidity_2m[hourIndex],
-            wind: data.hourly.wind_speed_10m[hourIndex]
+            wind: data.hourly.wind_speed_10m[hourIndex],
+            gusts: data.hourly.wind_gusts_10m[hourIndex] || 0
           };
         });
 
@@ -170,11 +172,21 @@ export function Home() {
   const currentStats = currentWeather || { temp: '--', humidity: '--', wind: '--', rain: '--' };
 
   const getRecommendation = () => {
-    if (isLoadingWeather) return "Calculando...";
-    const maxRain = Math.max(...weatherData.map(d => d.rain));
-    if (maxRain > 60) return "Risco alto de temporais. Suspenda todas as atividades em campo e evite proximidade com árvores de grande porte.";
-    if (maxRain > 30) return "Chuva moderada prevista. Evite podas drásticas e operações de escalada. Risco de solo escorregadio.";
-    return "Condições favoráveis para manejo arbóreo e vistorias técnicas. Aproveite a estabilidade do clima.";
+    if (isLoadingWeather || weatherData.length === 0) return "Calculando...";
+    const maxGusts = Math.max(...weatherData.map(d => d.gusts || 0));
+    const maxRainProb = Math.max(...weatherData.map(d => d.rain || 0));
+    const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
+
+    // 1. Risco Alto
+    if (maxGusts > 45 || (maxRainProb > 50 && maxRainVol > 10)) {
+      return "Risco alto de temporais ou queda de galhos. Suspenda atividades em altura e evite proximidade com árvores.";
+    }
+    // 2. Atenção
+    if (maxGusts > 25 || (maxRainProb > 30 && maxRainVol > 2)) {
+      return "Condições instáveis. Evite podas de grande porte e escalada. Atenção ao solo escorregadio.";
+    }
+    // 3. Favorável
+    return "Condições favoráveis para manejo arbóreo.";
   };
 
   // Reutilizando a lógica de status dos Alertas
@@ -233,16 +245,19 @@ export function Home() {
   let recBg = 'bg-emerald-600 shadow-emerald-950/20';
   let recTextHeader = 'text-emerald-100';
   
-  if (!isLoadingWeather) {
-    const maxRain = weatherData.length > 0 ? Math.max(...weatherData.map(d => d.rain)) : 0;
-    if (maxRain > 60) {
+  if (!isLoadingWeather && weatherData.length > 0) {
+    const maxGusts = Math.max(...weatherData.map(d => d.gusts || 0));
+    const maxRainProb = Math.max(...weatherData.map(d => d.rain || 0));
+    const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
+
+    if (maxGusts > 45 || (maxRainProb > 50 && maxRainVol > 10)) {
       recBg = 'bg-red-600 shadow-red-950/20';
       recTextHeader = 'text-red-100';
-    } else if (maxRain > 30) {
+    } else if (maxGusts > 25 || (maxRainProb > 30 && maxRainVol > 2)) {
       recBg = 'bg-orange-500 shadow-orange-950/20';
       recTextHeader = 'text-orange-100';
     }
-  } else {
+  } else if (isLoadingWeather) {
     recBg = 'bg-slate-600 shadow-slate-950/20 animate-pulse';
     recTextHeader = 'text-slate-200';
   }
@@ -487,9 +502,9 @@ export function Home() {
                               <div className="flex items-center justify-between gap-8">
                                 <div className="flex items-center gap-2">
                                   <CloudRain size={14} className="text-blue-500" />
-                                  <span className="text-xs font-bold text-slate-600">Prob. Chuva</span>
+                                  <span className="text-xs font-bold text-slate-600">Prob. Chuva / Volume</span>
                                 </div>
-                                <span className="text-xs font-black text-slate-800">{data.rain}%</span>
+                                <span className="text-xs font-black text-slate-800">{data.rain}% / {data.precipitation} mm</span>
                               </div>
                               <div className="flex items-center justify-between gap-8">
                                 <div className="flex items-center gap-2">
@@ -501,9 +516,9 @@ export function Home() {
                               <div className="flex items-center justify-between gap-8">
                                 <div className="flex items-center gap-2">
                                   <Wind size={14} className="text-emerald-600" />
-                                  <span className="text-xs font-bold text-slate-600">Vento</span>
+                                  <span className="text-xs font-bold text-slate-600">Vento / Rajada</span>
                                 </div>
-                                <span className="text-xs font-black text-slate-800">{data.wind} km/h</span>
+                                <span className="text-xs font-black text-slate-800">{data.wind} km/h / {data.gusts} km/h</span>
                               </div>
                             </div>
                           </div>
