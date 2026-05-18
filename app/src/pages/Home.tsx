@@ -179,15 +179,15 @@ export function Home() {
     const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
 
     // 1. Risco Alto
-    if (maxGusts > 45 || (maxRainProb > 50 && maxRainVol > 10)) {
-      return "Risco alto de temporais ou queda de galhos. Suspenda atividades em altura e evite proximidade com árvores.";
+    if (maxGusts > 55 || (maxRainProb > 50 && maxRainVol > 10)) {
+      return "Risco alto de temporais ou ventania severa. Paralisação total das atividades em campo.";
     }
     // 2. Atenção
-    if (maxGusts > 25 || (maxRainProb > 30 && maxRainVol > 2)) {
-      return "Condições instáveis. Evite podas de grande porte e escalada. Atenção ao solo escorregadio.";
+    if (maxGusts > 40 || (maxRainProb > 30 && maxRainVol > 2)) {
+      return "Condições de atenção. O Responsável Técnico da equipe avalia o local. Suspende-se apenas podas críticas ou uso de cesto aéreo.";
     }
     // 3. Favorável
-    return "Condições favoráveis para manejo arbóreo.";
+    return "Condições favoráveis para manejo arbóreo. Operação normal.";
   };
 
   // Reutilizando a lógica de status dos Alertas
@@ -251,10 +251,10 @@ export function Home() {
     const maxRainProb = Math.max(...weatherData.map(d => d.rain || 0));
     const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
 
-    if (maxGusts > 45 || (maxRainProb > 50 && maxRainVol > 10)) {
+    if (maxGusts > 55 || (maxRainProb > 50 && maxRainVol > 10)) {
       recBg = 'bg-red-600 shadow-red-950/20';
       recTextHeader = 'text-red-100';
-    } else if (maxGusts > 25 || (maxRainProb > 30 && maxRainVol > 2)) {
+    } else if (maxGusts > 40 || (maxRainProb > 30 && maxRainVol > 2)) {
       recBg = 'bg-orange-500 shadow-orange-950/20';
       recTextHeader = 'text-orange-100';
     }
