@@ -23,13 +23,14 @@ Plataforma web profissional para inventário, monitoramento, conformidade legal 
 - **Persistência de Leitura:** Ao clicar em uma notificação, o status **"Lida"** é salvo permanentemente no navegador via `localStorage`. As notificações lidas continuam marcadas como lidas mesmo após atualizar a página (`F5`) ou em novas sessões.
 - **Botão de Exclusão Definitiva (X):** Cada notificação possui um botão "X" (exclusão) que a remove imediatamente da UI e salva a ação no `localStorage`. Notificações excluídas **nunca mais** são recriadas no painel daquele dia.
 
-### 🌦️ Monitoramento Meteorológico & Recomendação Operacional Dinâmica
-- **Painel Climático Premium:** Integração em tempo real com a API **Open-Meteo**, trazendo temperatura, umidade, vento atual e a probabilidade de chuva hora a hora para as próximas 24 horas, além de um painel de previsão de 5 dias.
-- **Card de Recomendação Operacional Reativo:** Um painel inteligente analisa automaticamente os riscos meteorológicos para o manejo arbóreo do dia, alterando dinamicamente sua cor e sombra para dar feedback visual instantâneo:
-  - 🟢 **Condições Favoráveis (Verde Esmeralda):** Clima perfeito para manejo, podas e vistorias.
-  - 🟠 **Condições Instáveis (Laranja de Alerta):** Chuva/ventos moderados. Sugere evitar podas drásticas e escaladas de alto risco.
-  - 🔴 **Condições Críticas (Vermelho Alerta):** Risco iminente de temporais ou vendavais severos. Recomenda a suspensão total de trabalhos em altura e corte com motosserras.
-  - 🔘 **Modo Loading Elegante (Cinza Pulso):** Enquanto os dados de clima são buscados na API, o card exibe uma animação elegante em cinza ardósia (`animate-pulse`).
+### 🌦️ Monitoramento Meteorológico & Recomendação Operacional Dinâmica (Matriz Composta)
+- **Painel Climático Premium:** Integração em tempo real com a API **Open-Meteo**, coletando temperatura, umidade, vento atual, probabilidade de chuva, volume de precipitação (mm) e velocidade de rajadas de vento hora a hora para as próximas 24 horas, além de um painel de previsão de 5 dias.
+- **Card de Recomendação Operacional Reativo:** Um painel inteligente analisa automaticamente os riscos meteorológicos usando uma matriz robusta de critérios compostos para a segurança no manejo arbóreo:
+  - 🔴 **Condições Críticas (Risco Alto - Fundo Vermelho):** Acionada se rajadas de vento ultrapassarem **45 km/h** OU se a probabilidade de chuva passar de **50%** com volume acumulado superior a **10 mm**. Recomendação técnica: *"Risco alto de temporais ou queda de galhos. Suspenda atividades em altura e evite proximidade com árvores."*
+  - 🟠 **Condições Instáveis (Atenção - Fundo Laranja):** Acionada se rajadas de vento ultrapassarem **25 km/h** OU se a probabilidade de chuva passar de **30%** com volume acumulado superior a **2 mm**. Recomendação técnica: *"Condições instáveis. Evite podas de grande porte e escalada. Atenção ao solo escorregadio."*
+  - 🟢 **Condições Favoráveis (Fundo Verde):** Condições seguras, abaixo dos limites de atenção. Recomendação técnica: *"Condições favoráveis para manejo arbóreo."*
+  - 🔘 **Modo Loading Elegante (Cinza Pulso):** Exibe uma animação elegante em cinza ardósia (`animate-pulse`) enquanto os dados são carregados.
+- **Gráficos e Chips com Precisão de Volume:** Integração de volume de precipitação atual diretamente na visualização "Agora" (ex: `0%/0mm`) e nos detalhes do Tooltip interativo ao passar o mouse pelos horários do gráfico (exibe chuva/volume e vento/rajada).
 
 ### 👤 Cabeçalho Adaptativo & Saudação Dinâmica
 - **Boas-vindas Personalizadas:** A Header identifica a hora exata do sistema operacional do usuário e o cumprimenta de forma apropriada:
