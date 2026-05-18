@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
-import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, Sun, Moon } from 'lucide-react';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +10,7 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   
   const setUser = useAppStore(state => state.setUser);
+  const { theme, setTheme } = useAppStore();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +33,21 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative">
+      {/* Theme Toggle Switch */}
+      <button
+        type="button"
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        className="fixed top-6 right-6 p-3 rounded-full bg-white dark:bg-zinc-800 border border-slate-100 dark:border-zinc-700 shadow-md hover:scale-105 active:scale-95 transition-all text-slate-500 dark:text-slate-400 flex items-center justify-center cursor-pointer z-50"
+        title={theme === 'dark' ? 'Ativar Modo Claro' : 'Ativar Modo Escuro'}
+      >
+        {theme === 'dark' ? (
+          <Sun size={20} className="text-yellow-400 fill-yellow-400 animate-in spin duration-300" />
+        ) : (
+          <Moon size={20} className="text-slate-600 fill-slate-100 animate-in spin duration-300" />
+        )}
+      </button>
+
       {/* Background Decor */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -42,7 +57,7 @@ export function Login() {
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Arbolia Logo" className="h-16 mx-auto mb-4" />
+          <img src={theme === 'dark' ? '/logo_branca.png' : '/logo.png'} alt="Arbolia Logo" className="h-16 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bem-vindo ao Arbolia</h1>
           <p className="text-slate-500 text-sm mt-1">Gestão inteligente de arborização urbana</p>
         </div>
