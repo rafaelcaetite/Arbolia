@@ -45,17 +45,17 @@ export function Employees() {
   };
 
   return (
-    <div className="flex flex-col gap-8 pb-12 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Equipe Arbolia</h1>
-          <p className="text-slate-500 font-medium">Gerencie os acessos e perfis técnicos da plataforma.</p>
+    <div className="flex flex-col gap-6 pb-12 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Equipe Arbolia</h1>
+          <p className="text-slate-500 text-sm font-medium">Gerencie os acessos e perfis técnicos da plataforma.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95"
+          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-2xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95 self-start sm:self-center shrink-0 text-sm"
         >
-          <UserPlus size={20} />
+          <UserPlus size={18} />
           Novo Funcionário
         </button>
       </div>

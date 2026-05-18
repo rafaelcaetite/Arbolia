@@ -267,19 +267,19 @@ export function Clients() {
     <div className="h-full flex flex-col gap-6 relative">
       <ClientDetailsModal />
       <ClientFormModal />
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-            <Building2 className="text-primary" /> Carteira de Clientes
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2 truncate">
+            <Building2 className="text-primary shrink-0" size={20} /> Carteira de Clientes
           </h1>
-          <p className="text-slate-500 text-sm mt-1">Gerencie os proprietários e contratantes do inventário.</p>
+          <p className="text-slate-500 text-xs mt-0.5">Proprietários e contratantes do inventário.</p>
         </div>
         <button 
           id="new-client-btn"
           onClick={() => openClientModal()}
-          className="bg-primary text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
+          className="bg-primary text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 self-start sm:self-center shrink-0 text-sm"
         >
-          <Plus size={20} /> Novo Cliente
+          <Plus size={18} /> Novo Cliente
         </button>
       </div>
 

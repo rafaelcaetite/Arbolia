@@ -264,17 +264,17 @@ export function ServiceLog() {
       )}
 
       {/* Header da Página */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Log de Atendimentos</h1>
-          <p className="text-slate-500 text-sm">Histórico global de todos os serviços e auditoria do sistema.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-800 tracking-tight">Log de Atendimentos</h1>
+          <p className="text-slate-500 text-xs">Histórico global de todos os serviços e auditoria do sistema.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button 
             onClick={handleExportClick}
             className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
           >
-            <Download size={16} />
+            <Download size={15} />
             Exportar
           </button>
         </div>

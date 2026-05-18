@@ -47,7 +47,7 @@ async function downloadAttachment(att: RichAttachment) {
   a.click();
 }
 
-// ── Lightbox (Imagens) ────────────────────────────────────────────────────────
+// ── Lightbox (Imagens) — fullscreen mobile friendly ───────────────────────────
 
 function Lightbox({ items, index, onClose }: {
   items: RichAttachment[];
@@ -59,6 +59,7 @@ function Lightbox({ items, index, onClose }: {
   const item = items[current];
 
   useEffect(() => {
+    setCurrentUrl(null);
     const resolveUrl = async () => {
       if (item.dataUrl) {
         setCurrentUrl(item.dataUrl);
@@ -73,137 +74,125 @@ function Lightbox({ items, index, onClose }: {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center" onClick={onClose}>
-      <div className="flex items-stretch max-w-5xl w-full mx-4 gap-0 rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-        {/* Imagem */}
-        <div className="flex-1 bg-black flex items-center justify-center relative min-h-[400px]">
-          {currentUrl ? (
-            <img src={currentUrl} alt={item.name} className="max-h-[85vh] max-w-full object-contain" />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-slate-500">
-              <Loader2 className="animate-spin" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Carregando imagem segura...</span>
-            </div>
-          )}
-          {items.length > 1 && (
-            <>
-              <button onClick={() => setCurrent(p => Math.max(0, p-1))} disabled={current === 0}
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-30 transition-all">
-                <ChevronLeft size={20} />
-              </button>
-              <button onClick={() => setCurrent(p => Math.min(items.length-1, p+1))} disabled={current === items.length-1}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-30 transition-all">
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
+    <div className="fixed inset-0 z-[300] bg-slate-900/95 backdrop-blur-sm flex flex-col" onClick={onClose}>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 py-3 shrink-0" onClick={e => e.stopPropagation()}>
+        <div className="flex flex-col min-w-0">
+          <p className="text-white text-sm font-bold truncate">{item.name}</p>
+          <p className="text-slate-400 text-xs truncate">{item.clienteNome} · {item.treeEspecie}</p>
         </div>
+        <div className="flex items-center gap-2 shrink-0 ml-3">
+          <button onClick={() => downloadAttachment(item)}
+            className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all">
+            <Download size={13} /> Baixar
+          </button>
+          <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all">
+            <X size={18} />
+          </button>
+        </div>
+      </div>
 
-        {/* Painel lateral */}
-        <div className="w-64 bg-white flex flex-col shrink-0">
-          <div className="flex justify-between items-center px-4 py-3 border-b border-slate-100">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Detalhes</span>
-            <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 text-slate-400">
-              <X size={16} />
+      {/* Image */}
+      <div className="flex-1 flex items-center justify-center relative px-4 min-h-0" onClick={e => e.stopPropagation()}>
+        {currentUrl ? (
+          <img src={currentUrl} alt={item.name} className="max-h-full max-w-full object-contain rounded-xl" />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-slate-400">
+            <Loader2 className="animate-spin" size={32} />
+            <span className="text-xs font-bold uppercase tracking-widest">Carregando...</span>
+          </div>
+        )}
+        {items.length > 1 && (
+          <>
+            <button onClick={() => setCurrent(p => Math.max(0, p-1))} disabled={current === 0}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-20 transition-all">
+              <ChevronLeft size={20} />
             </button>
-          </div>
-          <div className="p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Arquivo</p>
-              <p className="text-sm font-semibold text-slate-700 break-all">{item.name}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1.5">Tags</p>
-              <div className="flex flex-wrap gap-1">
-                {item.tags.map(tag => (
-                  <span key={tag} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">{tag}</span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Árvore</p>
-              <p className="text-sm font-semibold text-slate-700">{item.treeEspecie}</p>
-              <p className="text-[10px] font-mono text-slate-400"># {item.treeId.slice(0,8).toUpperCase()}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Serviço</p>
-              <p className="text-sm font-semibold text-slate-700">{item.serviceTipo}</p>
-              <p className="text-xs text-slate-400">{new Date(item.serviceData + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Cliente</p>
-              <p className="text-sm font-semibold text-slate-700">{item.clienteNome}</p>
-            </div>
-          </div>
-          <div className="p-4 border-t border-slate-100 flex gap-2">
-            <button onClick={() => downloadAttachment(item)}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all">
-              <Download size={13} /> Baixar
+            <button onClick={() => setCurrent(p => Math.min(items.length-1, p+1))} disabled={current === items.length-1}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-20 transition-all">
+              <ChevronRight size={20} />
             </button>
-          </div>
-          <div className="px-4 pb-4 text-center text-[10px] text-slate-400">
-            {current + 1} de {items.length}
-          </div>
-        </div>
+          </>
+        )}
+      </div>
+
+      {/* Bottom counter */}
+      <div className="shrink-0 py-3 text-center text-xs text-slate-500 font-medium">
+        {current + 1} de {items.length}
       </div>
     </div>
   );
 }
 
-// ── PDF Viewer Lateral ────────────────────────────────────────────────────────
+// ── PDF Viewer — fullscreen modal (funciona em mobile) ────────────────────────
 
 function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => void }) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (item.dataUrl && item.dataUrl.startsWith('data:')) {
-      try {
-        const base64 = item.dataUrl.split(',')[1];
-        const byteCharacters = atob(base64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+    setIsLoading(true);
+    const resolve = async () => {
+      if (item.dataUrl && item.dataUrl.startsWith('data:')) {
+        try {
+          const base64 = item.dataUrl.split(',')[1];
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
+          const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setIsLoading(false);
+          return () => URL.revokeObjectURL(url);
+        } catch (e) {
+          setPdfUrl(item.dataUrl || null);
+          setIsLoading(false);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setPdfUrl(url);
-        return () => URL.revokeObjectURL(url);
-      } catch (e) {
-        console.error('Erro ao converter PDF para Blob:', e);
-        setPdfUrl(item.dataUrl || null);
-      }
-    } else if (item.storagePath) {
-      const resolveStoragePdf = async () => {
+      } else if (item.storagePath) {
         const { data } = await supabase.storage.from('Documents').createSignedUrl(item.storagePath!, 3600);
         if (data) setPdfUrl(data.signedUrl);
-      };
-      resolveStoragePdf();
-    } else {
-      setPdfUrl(item.dataUrl || null);
-    }
+        setIsLoading(false);
+      } else {
+        setPdfUrl(item.dataUrl || null);
+        setIsLoading(false);
+      }
+    };
+    resolve();
   }, [item]);
 
   return (
-    <div className="fixed inset-0 z-[300] flex" onClick={onClose}>
-      <div className="flex-1 bg-slate-900/50 backdrop-blur-sm" />
-      <div className="w-[640px] max-w-full bg-white flex flex-col shadow-2xl animate-in slide-in-from-right-4 duration-200" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 shrink-0">
-          <div>
-            <p className="font-bold text-slate-800 text-sm">{item.name}</p>
-            <p className="text-xs text-slate-400">{item.clienteNome} · {item.serviceTipo}</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => downloadAttachment(item)}
-              className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all">
-              <Download size={13} /> Baixar
-            </button>
-            <button onClick={onClose} className="p-2 bg-slate-50 rounded-full hover:bg-slate-100 text-slate-400">
-              <X size={16} />
-            </button>
-          </div>
+    <div className="fixed inset-0 z-[300] flex flex-col bg-white animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 shrink-0 bg-white">
+        <button onClick={onClose} className="p-2 bg-slate-50 rounded-xl hover:bg-slate-100 text-slate-500 transition-all active:scale-95">
+          <X size={18} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-800 text-sm truncate">{item.name}</p>
+          <p className="text-xs text-slate-400 truncate">{item.clienteNome} · {item.serviceTipo}</p>
         </div>
-        <iframe src={pdfUrl || ''} title={item.name} className="flex-1 w-full border-0" />
+        <button onClick={() => downloadAttachment(item)}
+          className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all shrink-0 active:scale-95">
+          <Download size={13} /> Baixar
+        </button>
+      </div>
+
+      {/* PDF content */}
+      <div className="flex-1 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">
+            <Loader2 className="animate-spin" size={32} />
+            <span className="text-xs font-bold uppercase tracking-widest">Carregando documento...</span>
+          </div>
+        )}
+        {pdfUrl && (
+          <iframe
+            src={pdfUrl}
+            title={item.name}
+            className="w-full h-full border-0"
+            onLoad={() => setIsLoading(false)}
+          />
+        )}
       </div>
     </div>
   );
@@ -296,21 +285,21 @@ export function Acervo() {
 
       <div className="h-full flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center justify-between bg-white p-5 rounded-2xl shadow-sm border border-slate-100 shrink-0">
-          <div>
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-              <span className="text-2xl">🗂️</span> Acervo
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 shrink-0">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
+              <span className="text-xl">🗂️</span> Acervo
             </h1>
             <p className="text-slate-400 text-xs mt-0.5">
-              {allAttachments.length} arquivo{allAttachments.length !== 1 ? 's' : ''} · {allAttachments.filter(a=>a.type==='image').length} fotos · {allAttachments.filter(a=>a.type==='pdf').length} documentos
+              {allAttachments.length} arquivo{allAttachments.length !== 1 ? 's' : ''} · {allAttachments.filter(a=>a.type==='image').length} fotos · {allAttachments.filter(a=>a.type==='pdf').length} docs
             </p>
           </div>
 
           {/* Switch Modo */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl gap-1">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl gap-1 self-start sm:self-auto shrink-0">
             <button
               onClick={() => { setMode('gallery'); setBeforeAfter(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 mode === 'gallery' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -318,7 +307,7 @@ export function Acervo() {
             </button>
             <button
               onClick={() => { setMode('list'); setBeforeAfter(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 mode === 'list' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -420,8 +409,7 @@ export function Acervo() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                // Grid normal
+                // Grid normal — actions always visible on mobile
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
                   {images.map((photo, i) => (
                     <div key={photo.id} className="group relative cursor-pointer rounded-xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all"
@@ -430,9 +418,10 @@ export function Acervo() {
                         src={photo.dataUrl || photo.storagePath} 
                         alt={photo.name} 
                         bucket="Gallery"
-                        className="w-full h-32 group-hover:scale-105 transition-transform duration-300" 
+                        className="w-full h-32 group-hover:scale-105 transition-transform duration-300 object-cover" 
                       />
-                      <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {/* Actions — always visible on mobile via opacity-100 md:opacity-0 */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -452,8 +441,8 @@ export function Acervo() {
                           <Trash2 size={11} />
                         </button>
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
                         <p className="text-white text-[10px] font-bold truncate">{photo.treeEspecie}</p>
                         <p className="text-white/70 text-[9px] truncate">{photo.clienteNome}</p>
                       </div>
@@ -474,87 +463,72 @@ export function Acervo() {
                   <p className="text-xs">Adicione PDFs no Histórico de Serviços de qualquer árvore.</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50/70">
-                        <th className="text-left px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Documento</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tags</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Validade</th>
-                        <th className="px-4 py-3" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {filtered.map(doc => {
-                        const daysLeft = doc.docValidade ? daysUntil(doc.docValidade) : null;
-                        const isExpiringSoon = daysLeft !== null && daysLeft <= 15;
-                        return (
-                          <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-5 py-3">
-                              <div className="flex items-center gap-2">
-                                {isExpiringSoon && <AlertTriangle size={13} className="text-red-500 shrink-0" />}
-                                <FileText size={15} className="text-blue-500 shrink-0" />
-                                <span className="font-medium text-slate-700 text-xs">{doc.name}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex flex-wrap gap-1">
-                                <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">{doc.clienteNome}</span>
-                                <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">{doc.treeEspecie}</span>
-                                <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">{doc.serviceTipo}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                <div className="flex flex-col gap-3">
+                  {filtered.map(doc => {
+                    const daysLeft = doc.docValidade ? daysUntil(doc.docValidade) : null;
+                    const isExpiringSoon = daysLeft !== null && daysLeft <= 15;
+                    return (
+                      <div key={doc.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col gap-3">
+                        {/* Linha 1: ícone + nome + validade */}
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                            {isExpiringSoon
+                              ? <AlertTriangle size={18} className="text-red-500" />
+                              : <FileText size={18} className="text-blue-500" />
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-800 text-sm leading-tight truncate">{doc.name}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
                               {new Date(doc.serviceData + 'T00:00:00').toLocaleDateString('pt-BR')}
-                            </td>
-                            <td className="px-4 py-3">
-                              {daysLeft !== null ? (
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  isExpiringSoon ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
-                                }`}>
-                                  {daysLeft > 0 ? `${daysLeft}d` : 'Vencido'}
+                              {daysLeft !== null && (
+                                <span className={`ml-2 font-bold px-1.5 py-0.5 rounded-full text-[9px] ${isExpiringSoon ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                  {daysLeft > 0 ? `${daysLeft}d restantes` : 'Vencido'}
                                 </span>
-                              ) : (
-                                <span className="text-[10px] text-slate-300">—</span>
                               )}
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-1.5 justify-end">
-                                <button
-                                  onClick={() => setActionData({ type: 'rename', attachment: doc })}
-                                  className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-                                  title="Renomear"
-                                >
-                                  <Pencil size={13} />
-                                </button>
-                                <button
-                                  onClick={() => setActionData({ type: 'delete', attachment: doc })}
-                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                  title="Excluir"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                                <div className="w-px h-4 bg-slate-100 mx-0.5" />
-                                <button
-                                  onClick={() => setPdfPanel(doc)}
-                                  className="flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-primary bg-slate-50 hover:bg-primary/10 border border-slate-200 hover:border-primary/20 px-2.5 py-1.5 rounded-lg transition-all"
-                                >
-                                  <Eye size={11} /> Ver
-                                </button>
-                                <button
-                                  onClick={() => downloadAttachment(doc)}
-                                  className="flex items-center gap-1 text-[10px] font-bold text-white bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded-lg transition-all"
-                                >
-                                  <Download size={11} /> Baixar
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Linha 2: tags */}
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-md font-bold">{doc.clienteNome}</span>
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">{doc.treeEspecie}</span>
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">{doc.serviceTipo}</span>
+                        </div>
+
+                        {/* Linha 3: ações */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-slate-50">
+                          <button
+                            onClick={() => setPdfPanel(doc)}
+                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 py-2.5 rounded-xl transition-all active:scale-95"
+                          >
+                            <Eye size={14} /> Visualizar
+                          </button>
+                          <button
+                            onClick={() => downloadAttachment(doc)}
+                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 py-2.5 rounded-xl transition-all active:scale-95"
+                          >
+                            <Download size={14} /> Baixar
+                          </button>
+                          <button
+                            onClick={() => setActionData({ type: 'rename', attachment: doc })}
+                            className="p-2.5 text-slate-400 hover:text-primary bg-slate-50 hover:bg-primary/5 border border-slate-200 rounded-xl transition-all active:scale-95"
+                            title="Renomear"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => setActionData({ type: 'delete', attachment: doc })}
+                            className="p-2.5 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 border border-slate-200 rounded-xl transition-all active:scale-95"
+                            title="Excluir"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>
