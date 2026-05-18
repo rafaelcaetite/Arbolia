@@ -13,7 +13,7 @@ export function Home() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [weatherData, setWeatherData] = useState<any[]>([]);
   const [fiveDayForecast, setFiveDayForecast] = useState<any[]>([]);
-  const [currentWeather, setCurrentWeather] = useState<{ temp: any, humidity: any, wind: any, rain: any } | null>(null);
+  const [currentWeather, setCurrentWeather] = useState<{ temp: any, humidity: any, wind: any, rain: any, precipitation?: any } | null>(null);
   const [dailyStats, setDailyStats] = useState<{ min: number, max: number, rain: number } | null>(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -115,6 +115,7 @@ export function Home() {
         const current = {
           temp: Math.round(data.current.temperature_2m),
           rain: currentProb, // Agora usamos probabilidade em vez de mm
+          precipitation: data.current.precipitation || 0,
           humidity: data.current.relative_humidity_2m,
           wind: data.current.wind_speed_10m
         };
@@ -169,7 +170,7 @@ export function Home() {
     fetchWeather();
   }, [weatherCity]);
 
-  const currentStats = currentWeather || { temp: '--', humidity: '--', wind: '--', rain: '--' };
+  const currentStats = currentWeather || { temp: '--', humidity: '--', wind: '--', rain: '--', precipitation: '--' };
 
   const getRecommendation = () => {
     if (isLoadingWeather || weatherData.length === 0) return "Calculando...";
@@ -409,7 +410,7 @@ export function Home() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-blue-400 uppercase">Chuva</span>
-                    <span className="text-sm font-black text-blue-600">{isLoadingWeather ? '--' : `${currentStats.rain}%`}</span>
+                    <span className="text-sm font-black text-blue-600">{isLoadingWeather ? '--' : `${currentStats.rain}%/${currentStats.precipitation}mm`}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50/50 border border-emerald-100 rounded-2xl shadow-sm">
