@@ -1,43 +1,63 @@
-# Arbolia - Gestão de Arborização 🌳 (v1.1.0-prod)
-> **Status de Deploy:** Integração Supabase + Vercel (Produção Habilitada e Atualizada)
+# Arbolia - Gestão de Arborização 🌳 (v1.2.0-prod)
+> **Status de Deploy:** Integração Supabase + Vercel (Produção Habilitada, Otimizada e Atualizada)
 
-**Sistema Premium de Gestão de Arborização Urbana**
+**Plataforma Premium de Gestão de Arborização Urbana**
 
-Plataforma web profissional para inventário, monitoramento, conformidade legal e gestão de serviços de arborização — desenvolvida sob medida para engenheiros florestais, agrônomos, técnicos de campo e administradores de manejo arbóreo.
+Plataforma web de altíssimo nível para inventário georreferenciado, monitoramento em tempo real, conformidade legal e gestão de serviços de arborização. Desenvolvida especificamente sob medida para engenheiros florestais, agrônomos, técnicos de campo e administradores de manejo arbóreo.
 
 ---
 
-## ✨ Funcionalidades e Melhorias Recentes
+## ✨ Funcionalidades do Sistema e Recursos Recentes
 
-### 📅 Painel de Cronograma & Agendamentos Inteligentes (Home)
+O Arbolia foi projetado seguindo as melhores práticas globais de UI/UX, combinando componentes translúcidos (*glassmorphism*), micro-interações fluidas e uma robusta engenharia de software baseada em dados relacionais e em tempo real.
+
+### 📅 1. Painel de Cronograma & Agendamentos Inteligentes (Home)
 - **Visualização Granular e Dinâmica:** Cronograma de atendimentos pendentes agrupado inteligentemente por proximidade temporal:
-  - 🔴 **Atrasados:** Serviços não concluídos anteriores à data atual.
-  - 🟢 **Hoje:** Serviços agendados para a data corrente.
-  - 🔵 **Amanhã:** Planejamento rápido do dia seguinte.
+  - 🔴 **Atrasados:** Serviços pendentes não concluídos anteriores à data atual.
+  - 🟢 **Hoje:** Serviços agendados estritamente para a data corrente.
+  - 🔵 **Amanhã:** Planejamento rápido e visual do dia seguinte.
   - 🟡 **Esta Semana:** Visão tática dos próximos 7 dias.
-  - 🟣 **Em Breve:** Planejamento estratégico de médio prazo.
-- **Resolução de Datas e Fusos Horários:** Correção estrutural do parser de datas (`YYYY-MM-DD` com timezone local), garantindo que serviços vencidos apareçam estritamente como **Atrasados** e que o fuso horário da máquina do usuário seja 100% respeitado.
+  - 🟣 **Em Breve:** Planejamento estratégico de médio a longo prazo.
+- **Resolução de Datas e Fusos Horários:** Tratamento estrutural do parser de datas (`YYYY-MM-DD` com timezone local), garantindo que serviços vencidos apareçam de forma exata e que o fuso horário local seja 100% respeitado.
 
-### 🔔 Central de Notificações Persistente & Interativa
-- **Sino de Alertas no Cabeçalho:** Painel reativo com notificações em tempo real baseadas no status de serviços (atrasos, agendamentos do dia) e no clima.
-- **Persistência de Leitura:** Ao clicar em uma notificação, o status **"Lida"** é salvo permanentemente no navegador via `localStorage`. As notificações lidas continuam marcadas como lidas mesmo após atualizar a página (`F5`) ou em novas sessões.
-- **Botão de Exclusão Definitiva (X):** Cada notificação possui um botão "X" (exclusão) que a remove imediatamente da UI e salva a ação no `localStorage`. Notificações excluídas **nunca mais** são recriadas no painel daquele dia.
+### 🌦️ 2. Monitoramento Climático e Matriz Composta de Segurança
+- **API Open-Meteo Integrada:** Coleta em tempo real de temperatura, umidade, vento atual, probabilidade de chuva, volume de precipitação (mm) e rajadas de vento hora a hora.
+- **Auto-complete com Busca Inteligente de Cidades:** Campo de busca com sugestões instantâneas a cada caractere digitado (via geocoding). Conta com um algoritmo inteligente que **prioriza cidades do Brasil** nas primeiras posições.
+- **Card de Recomendação Operacional Reativo:** Analisa os riscos meteorológicos usando uma matriz robusta de critérios compostos para a segurança no manejo arbóreo:
+  - 🔴 **Condições Críticas (Fundo Vermelho):** Acionada se rajadas de vento ultrapassarem **55 km/h** OU probabilidade de chuva superior a **50%** com volume acumulado acima de **10 mm**. Ação: Paralisação total de campo.
+  - 🟠 **Condições Instáveis (Fundo Laranja):** Acionada se rajadas de vento ultrapassarem **40 km/h** OU probabilidade de chuva superior a **30%** com volume acumulado acima de **2 mm**. Ação: Responsável Técnico avalia o local e suspende podas críticas ou uso de cesto aéreo.
+  - 🟢 **Condições Favoráveis (Fundo Verde):** Rajadas abaixo de **40 km/h** e chuvas fracas/inexistentes. Ação: Operação normal.
+- **Chips e Gráficos Premium:** Integração de volume de precipitação atual na visualização "Agora" (ex: `0%/0mm`) e tooltips interativos ao passar o mouse pelas colunas do gráfico.
 
-### 🌦️ Monitoramento Meteorológico & Recomendação Operacional Dinâmica (Matriz Composta)
-- **Painel Climático Premium:** Integração em tempo real com a API **Open-Meteo**, coletando temperatura, umidade, vento atual, probabilidade de chuva, volume de precipitação (mm) e velocidade de rajadas de vento hora a hora para as próximas 24 horas, além de um painel de previsão de 5 dias.
-- **Card de Recomendação Operacional Reativo:** Um painel inteligente analisa automaticamente os riscos meteorológicos usando uma matriz robusta de critérios compostos para a segurança no manejo arbóreo:
-  - 🔴 **Condições Críticas (Risco Alto - Fundo Vermelho):** Acionada se rajadas de vento ultrapassarem **55 km/h** (árvores inteiras balançam e podem quebrar galhos) OU se a probabilidade de chuva passar de **50%** com volume acumulado superior a **10 mm**. Ação: Paralisação total de campo. Recomendação técnica: *"Risco alto de temporais ou ventania severa. Paralisação total das atividades em campo."*
-  - 🟠 **Condições Instáveis (Atenção - Fundo Laranja):** Acionada se rajadas de vento ultrapassarem **40 km/h** (galhos maiores balançam, dificultando o equilíbrio) OU se a probabilidade de chuva passar de **30%** com volume acumulado superior a **2 mm**. Ação: O Responsável Técnico da equipe avalia o local. Suspende-se apenas podas críticas ou uso de cesto aéreo no limite da rede elétrica. Recomendação técnica: *"Condições de atenção. O Responsável Técnico da equipe avalia o local. Suspende-se apenas podas críticas ou uso de cesto aéreo."*
-  - 🟢 **Condições Favoráveis (Fundo Verde):** Rajadas de vento abaixo de **40 km/h** e chuvas fracas (ou sem chuva). Ação: Operação normal. Recomendação técnica: *"Condições favoráveis para manejo arbóreo. Operação normal."*
-  - 🔘 **Modo Loading Elegante (Cinza Pulso):** Exibe uma animação elegante em cinza ardósia (`animate-pulse`) enquanto os dados são carregados.
-- **Gráficos e Chips com Precisão de Volume:** Integração de volume de precipitação atual diretamente na visualização "Agora" (ex: `0%/0mm`) e nos detalhes do Tooltip interativo ao passar o mouse pelos horários do gráfico (exibe chuva/volume e vento/rajada).
+### 🌗 3. Modo Escuro Premium (Dark Mode) de Alta Fidelidade
+- **Fadiga Visual Mínima:** Paleta calibrada em tons de cinza escuro e preto fosco premium (`#121212` e `#1e1e1e`), evitando tons azulados incômodos e luzes brancas ofuscantes.
+- **Logotipo Adaptativo:** O logotipo principal da Sidebar muda automaticamente para a versão branca oficial (`logo_branca.png`) ao ativar o modo escuro.
+- **Mapa Dark Mode Reativo:** Sincronização em tempo real do mapa do inventário (Leaflet), trocando os tiles de forma transparente para o **CartoDB Dark All**, com popups, marcadores e botões de controle perfeitamente estilizados em tons escuros.
+- **Scrollbars Personalizadas:** Barras de rolagem redesenhadas no `index.css` com trilhos pretos e cursores cinza-escuro discretos que reagem a hover, garantindo homogeneidade visual.
+- **Chips e Gráficos Adaptados:** Gráficos da Recharts com grades escuras translúcidas e textos acinzentados legíveis. Os 4 cards de clima (Temperatura, Vento, Chuva, Umidade) ganham fundos pretos foscos com bordas sutis de alto contraste.
 
-### 👤 Cabeçalho Adaptativo & Saudação Dinâmica
-- **Boas-vindas Personalizadas:** A Header identifica a hora exata do sistema operacional do usuário e o cumprimenta de forma apropriada:
-  - **Bom dia:** Das 00:00 às 11:59.
-  - **Boa tarde:** Das 12:00 às 17:59.
-  - **Boa noite:** Das 18:00 às 23:59.
-- **Localização de Clima:** Exibição da temperatura local e cidade no cabeçalho em formato premium de pílula translúcida.
+### ⚙️ 4. Painel de Configurações Completo e Funcional
+- **Configuração de Preferências:**
+  - **Alertas Meteorológicos:** Switch interativo e funcional que se conecta diretamente ao perfil do usuário no Supabase.
+  - **Frequência de Sincronização:** Definição de intervalos (5, 15, 30 ou 60 minutos) para requisições ao Supabase.
+  - **Unidades Climáticas:** Escolha entre Celsius/Fahrenheit e Km/h ou M/s.
+  - **Gestão de Cache:** Botão seguro para limpar os dados armazenados em cache local e forçar atualização completa.
+
+### 🚪 5. Confirmação de Saída Minimalista
+- **Segurança contra Ações Acidentais:** Ao clicar em "Sair" (LogOut) na Sidebar, um modal moderno de "Tem certeza que deseja sair?" impede desligamentos inesperados, mantendo um design limpo e harmônico com o resto da interface.
+
+### 🔔 6. Central de Notificações Persistente & Interativa
+- **Sino de Alertas no Cabeçalho:** Painel reativo com alertas climáticos e de serviços.
+- **Persistência de Leitura:** Status "Lida" salvo permanentemente no navegador via `localStorage`.
+- **Botão de Exclusão Definitiva (X):** Remove permanentemente a notificação e bloqueia sua recriação no mesmo dia.
+
+### 📄 7. Relatórios Técnicos e Emissão de Laudos de Avaliação de Risco (SaaS Ready)
+- **Exportação Multi-Formato:** Suporta exportação completa dos Logs de Atendimento e Inventário para arquivos **CSV** estruturados.
+- **Emissão Automática de Laudo de Avaliação de Risco Arbóreo em PDF:**
+  - Geração de laudos técnicos em PDF de alta qualidade e diagramação profissional baseados nos padrões internacionais de avaliação de risco (ISA).
+  - Inclui dados cadastrais do solicitante, informações biométricas da árvore (altura, diâmetro da copa, coordenadas), nível de risco geral e análises qualitativas completas.
+  - Três templates visuais pré-definidos (Técnico, Minimalista e Executivo) que adaptam as cores, cabeçalhos, bordas e layout do PDF de forma instantânea.
+  - Integração nativa de assinatura, CREA do técnico e imagens/anexos cadastrados.
 
 ---
 
@@ -45,17 +65,17 @@ Plataforma web profissional para inventário, monitoramento, conformidade legal 
 
 | Tecnologia | Finalidade |
 |---|---|
-| **React + TypeScript** | Frontend SPA com tipagem estrita para segurança e consistência de dados |
-| **Supabase** | Backend Completo (Autenticação JWT, Banco PostgreSQL, Storage de Laudos e Imagens) |
-| **Vite + PWA Plugin** | Compilação ultrarrápida, Service Workers ativos e suporte completo para instalação local (App Desktop/Mobile) |
+| **React + TypeScript** | SPA moderna com tipagem estrita para segurança de dados |
+| **Supabase (PostgreSQL)** | Autenticação JWT, Banco de Dados Relacional, Storage de Laudos e Anexos de Imagem |
+| **Vite + PWA Plugin** | Service Workers ativos, precaching de arquivos e suporte offline (Desktop/Mobile) |
 | **Tailwind CSS** | Estilização minimalista e customização visual premium com micro-interações |
 | **Zustand** | Gerenciamento de estado global centralizado, reativo e sincronizado com `localStorage` |
-| **React Leaflet** | Mapa georreferenciado interativo para marcação e identificação de árvores inventariadas |
-| **Lucide React** | Biblioteca de ícones moderna e uniforme em todo o sistema |
+| **React Leaflet** | Mapas georreferenciados interativos para marcação de árvores inventariadas |
+| **Recharts** | Gráficos meteorológicos altamente interativos e com suporte a temas |
 
 ---
 
-## 🚀 Rodando localmente
+## 🚀 Como Rodar Localmente
 
 ```bash
 # 1. Clone o repositório
@@ -66,7 +86,7 @@ cd arbolia/app
 npm install
 
 # 3. Configure as variáveis de ambiente
-# Crie um arquivo .env na pasta /app com as chaves do Supabase:
+# Crie um arquivo .env na pasta /app com suas credenciais do Supabase:
 # VITE_SUPABASE_URL=sua_url_supabase
 # VITE_SUPABASE_ANON_KEY=sua_chave_anonima_supabase
 
@@ -74,7 +94,7 @@ npm install
 npm run dev
 ```
 
-Acesse em `http://localhost:5173` (ou a porta sugerida no terminal).
+Abra seu navegador em `http://localhost:5173`.
 
 ---
 
@@ -82,30 +102,29 @@ Acesse em `http://localhost:5173` (ou a porta sugerida no terminal).
 
 ```
 arbolia/
-├── app/                    # Aplicação React (Vite)
+├── app/                    # Código-fonte da aplicação React (Vite)
 │   ├── src/
 │   │   ├── components/     # Componentes modulares
 │   │   │   ├── alerts/     # Modais de alertas, laudo e lembretes
 │   │   │   ├── clients/    # Modais e formulários de clientes
-│   │   │   ├── inventory/  # Mapa interativo, listagem de árvores, árvore form
-│   │   │   └── layout/     # Sidebar de navegação, Header com clima e perfil
-│   │   ├── pages/          # Home (Dashboard), Inventário, Clientes, Alertas, Acervo, Log de Atendimentos
+│   │   │   ├── inventory/  # Mapas, PDFs de Laudo, listas e modais de árvores
+│   │   │   └── layout/     # Sidebar, Header com clima, notificações e SettingsModal
+│   │   ├── pages/          # Dashboard (Home), Inventário, Clientes, Funcionários, Alertas, Acervo, Histórico
 │   │   └── store/          # Estado global centralizado (useAppStore.ts)
-│   └── public/             # Assets, logos e manifesto PWA
-├── architecture/           # POPs (Procedimentos Operacionais Padrão) e arquitetura do projeto
-├── .env.example            # Template de variáveis de ambiente do projeto
-└── gemini.md               # Constituição do projeto (Esquemas de dados, invariantes e regras)
+│   └── public/             # Assets, logotipos (logo.png, logo_branca.png) e manifesto PWA
+├── architecture/           # POPs (Procedimentos Operacionais Padrão)
+└── gemini.md               # Constituição do projeto (Schemas de dados, invariantes e regras)
 ```
 
 ---
 
-## 🗃️ Modelos de Dados (DB Supabase)
+## 🗃️ Modelagem do Supabase (Banco Relacional)
 
-Todos os modelos estão estruturados para suportar transições rápidas e consistência bidirecional:
-1. **Users/Profiles:** Contém perfis de funcionários com níveis de acesso dinâmicos (`admin`, `tecnico`, `campo`).
-2. **Clients:** Cadastro completo de clientes proprietários com CPF/CNPJ e dados de contato.
-3. **Trees:** Inventário técnico com coordenadas GPS, espécie, altura, diâmetro da copa, status de atividade e classificação de risco ISA (`baixo`, `medio`, `alto`, `critico`).
-4. **Services:** Registro de ordens de serviço (`poda`, `supressao`, `avaliacao`), datas de vencimento/reavaliação e armazenamento em array de anexos por árvore (`attachmentsByTree`).
+O Arbolia conta com tabelas normalizadas sob o PostgreSQL do Supabase, garantindo sincronização bidirecional e segurança RLS (*Row Level Security*):
+1. **Profiles (Usuários):** Perfis de funcionários com controle de acesso dinâmico por papel (`admin`, `tecnico`, `campo`).
+2. **Clientes:** Cadastro de pessoas físicas e jurídicas (CPF/CNPJ) e contatos.
+3. **Árvores:** Coordenadas de GPS de precisão (latitude/longitude), espécie, parâmetros biométricos, status de atividade e classificação de risco ISA.
+4. **Serviços:** Registro de ordens de serviço (`poda`, `supressao`, `avaliacao`), datas de vencimento/reavaliação e armazenamento em array de anexos por árvore (`attachmentsByTree`).
 
 ---
 
@@ -119,8 +138,10 @@ Todos os modelos estão estruturados para suportar transições rápidas e consi
 - [x] Central de Notificações gerenciável e persistente
 - [x] Monitoramento climático reativo com API Open-Meteo
 - [x] Relatórios e Laudos em PDF automatizados (SaaS Ready)
-- [ ] Aplicativo móvel para coleta offline de campo
+- [x] Modo Escuro Premium completo com Mapas e Logo condicional
+- [x] Auto-complete inteligente de cidades no clima priorizando o Brasil
+- [x] Modal minimalista de confirmação de saída
+- [ ] Aplicativo móvel nativo para coleta offline de campo
 
 ---
-
-> Desenvolvido sob rígidos padrões de design moderno, interfaces translúcidas e alta performance operacional.
+Desenvolvido com o máximo de capricho, interfaces fluidas e rigor de engenharia de software. 🌳🚀
