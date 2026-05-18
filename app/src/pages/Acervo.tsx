@@ -409,6 +409,7 @@ export function Acervo() {
                     </div>
                   ))}
                 </div>
+              ) : (
                 // Grid normal — actions always visible on mobile
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
                   {images.map((photo, i) => (
