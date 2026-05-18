@@ -1,12 +1,18 @@
-import { Map as MapIcon, Users, AlertTriangle, Archive, Settings, LogOut, LayoutDashboard, History, ShieldCheck } from 'lucide-react';
-import { NavLink, Link } from 'react-router-dom';
+import { Map as MapIcon, Users, AlertTriangle, Archive, Settings, LogOut, LayoutDashboard, History, ShieldCheck, X } from 'lucide-react';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const { userProfile, signOut, openSettingsModal, theme } = useAppStore();
   const isAdmin = userProfile?.role === 'admin';
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const location = useLocation();
+
+  // Fecha o menu no mobile sempre que a rota mudar
+  useEffect(() => {
+    if (onClose) onClose();
+  }, [location.pathname]);
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Início', path: '/' },
@@ -20,16 +26,33 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-sm z-10 relative">
-        {/* Logo */}
-        <div className="h-20 flex items-center justify-center border-b border-slate-50">
-          <Link to="/" className="transition-opacity hover:opacity-90 active:scale-95 transition-transform duration-100">
+      {/* Overlay Escurecido e Desfocado (Apenas Mobile) */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[40] lg:hidden animate-in fade-in duration-300"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Painel Lateral (Drawer no Mobile, Fixo no Desktop) */}
+      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-white border-r border-slate-100 flex flex-col h-full shadow-2xl lg:shadow-sm z-[50] lg:z-10 transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        {/* Logo & Mobile Close Button */}
+        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-50">
+          <Link to="/" className="transition-opacity hover:opacity-90 active:scale-95 transition-transform duration-100 mx-auto lg:mx-0">
             <img
               src={theme === 'dark' ? '/logo_branca.png' : '/logo.png'}
               alt="Arbolia"
               className="h-14 w-auto object-contain mt-4 cursor-pointer"
             />
           </Link>
+          <button 
+            onClick={onClose}
+            className="lg:hidden p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-full transition-colors absolute right-4 top-6"
+          >
+            <X size={24} />
+          </button>
         </div>
 
         {/* Menu */}

@@ -352,9 +352,9 @@ export function ServiceLog() {
       </div>
 
       {/* Tabela de Resultados */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-1 flex flex-col w-full max-w-[100vw]">
+        <div className="overflow-x-auto w-full touch-pan-x">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
                 <th 
