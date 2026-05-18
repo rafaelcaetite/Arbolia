@@ -6,17 +6,51 @@
 }
 
 :root[data-theme="dark"] {
-  --color-white: #0a0a0a;
-  --color-slate-50: #0a0a0a;
-  --color-slate-100: #171717;
-  --color-slate-200: #262626;
-  --color-slate-300: #404040;
-  --color-slate-400: #525252;
-  --color-slate-500: #a3a3a3;
-  --color-slate-600: #d4d4d4;
-  --color-slate-700: #e5e5e5;
-  --color-slate-800: #f5f5f5;
-  --color-slate-900: #fafafa;
+  /* Fundos Principais e Cards (Um pouco mais claro que preto puro, Material UI standard) */
+  --color-white: #1e1e1e;       /* Cards e Modais */
+  --color-slate-50: #121212;    /* Fundo principal da aplicação */
+  
+  /* Bordas e Elementos interativos */
+  --color-slate-100: #2d2d2d;
+  --color-slate-200: #3d3d3d;
+  --color-slate-300: #4f4f4f;
+  
+  /* Textos mudos e Ícones */
+  --color-slate-400: #71717a;
+  --color-slate-500: #a1a1aa;
+  
+  /* Textos Primários e Secundários */
+  --color-slate-600: #d4d4d8;
+  --color-slate-700: #e4e4e7;
+  --color-slate-800: #f4f4f5;
+  
+  /* Títulos (text-slate-900) viram branco */
+  --color-slate-900: #ffffff;
+}
+
+/* =========================================================================
+   PROTEÇÃO DE UX DO DARK MODE
+   Garante que botões e fundos escuros não quebrem o contraste
+   ========================================================================= */
+
+/* 1. Textos brancos dentro de botões coloridos devem continuar brancos */
+:root[data-theme="dark"] .text-white {
+  color: #ffffff !important;
+}
+
+/* 2. Overlays de Modal (bg-slate-900/60) e Botões Escuros devem continuar pretos */
+:root[data-theme="dark"] [class*="bg-slate-900"] {
+  --color-slate-900: #000000;
+}
+
+/* 3. Botões Escuros Secundários */
+:root[data-theme="dark"] [class*="bg-slate-800"] {
+  --color-slate-800: #111111;
+}
+
+/* 4. Divisórias Finas (Header/Sidebar) */
+:root[data-theme="dark"] .border-slate-50 {
+  border-color: #2d2d2d !important;
 }
 
 @layer base {
