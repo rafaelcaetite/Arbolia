@@ -37,7 +37,7 @@ export function LaudoAvaliacaoModal() {
   const cliente = serviceTree ? clients.find(c => c.id === serviceTree.cliente_id) : null;
 
   const [step, setStep] = useState(0);
-  const [templateId, setTemplateId] = useState<'standard' | 'safety' | 'health' | 'manager' | 'tecnico' | 'simplificado'>('standard');
+  const [templateId, setTemplateId] = useState<'standard' | 'safety' | 'health' | 'manager' | 'tecnico' | 'simplificado'>('simplificado');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const [done, setDone] = useState(false);
@@ -177,7 +177,7 @@ export function LaudoAvaliacaoModal() {
         tecnico:      { primary: [15, 23, 42], secondary: [71, 85, 105], title: 'LAUDO TÉCNICO DE RISCO (ISA TRAQ)', accent: [51, 65, 85], bg: [248, 250, 252] },
         simplificado: { primary: [22, 101, 52], secondary: [71, 85, 105], title: 'RELATÓRIO DE SEGURANÇA E MANUTENÇÃO', accent: [34, 197, 94], bg: [240, 253, 244] }
       }
-      const selectedId = templateId === 'tecnico' || templateId === 'simplificado' ? templateId : 'tecnico';
+      const selectedId = 'simplificado';
       const theme = themes[selectedId];
 
 
@@ -731,7 +731,6 @@ export function LaudoAvaliacaoModal() {
                     
                     <div className="flex flex-col gap-4">
                       {[
-                        { id: 'tecnico', label: 'Padrão Técnico Profissional', desc: 'Dados técnicos completos, matrizes ISA TRAQ e resumo formal.', icon: <FileText size={20} /> },
                         { id: 'simplificado', label: 'Relatório Simplificado', desc: 'Narrativa interpretativa e linguagem acessível para o cliente.', icon: <ShieldCheck size={20} /> }
                       ].map(opt => (
                         <button 
