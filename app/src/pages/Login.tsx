@@ -8,7 +8,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const setUser = useAppStore(state => state.setUser);
   const { theme, setTheme } = useAppStore();
 
@@ -58,7 +58,7 @@ export function Login() {
         {/* Logo Section */}
         <div className="text-center mb-8">
           <img src={theme === 'dark' ? '/logo_branca.png' : '/logo.png'} alt="Arbolia Logo" className="h-16 mx-auto mb-4 object-contain" />
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bem-vindo ao Arbolia</h1>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bem-vindo ao Sistema Arbolia</h1>
           <p className="text-slate-500 text-sm mt-1">Gestão inteligente de arborização urbana</p>
         </div>
 
