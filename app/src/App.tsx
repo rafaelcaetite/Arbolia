@@ -13,6 +13,7 @@ import { PostServiceModal } from './components/inventory/PostServiceModal';
 import { LaudoAvaliacaoModal } from './components/inventory/LaudoAvaliacaoModal';
 import { ServiceModal } from './components/inventory/ServiceModal';
 import { UserProfileModal } from './components/layout/UserProfileModal';
+import { SettingsModal } from './components/layout/SettingsModal';
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from './store/useAppStore';
@@ -26,8 +27,17 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  const { user, setUser, initializeData } = useAppStore();
+  const { user, setUser, initializeData, theme } = useAppStore();
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Efeito do Dark Mode
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }, [theme]);
 
   useEffect(() => {
     // 1. Verifica sessão inicial
@@ -80,6 +90,7 @@ function App() {
         <PostServiceModal />
         <LaudoAvaliacaoModal />
         <UserProfileModal />
+        <SettingsModal />
       </MainLayout>
     </Router>
   );

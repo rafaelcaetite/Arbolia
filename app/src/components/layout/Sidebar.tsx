@@ -3,7 +3,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 
 export function Sidebar() {
-  const { userProfile, signOut } = useAppStore();
+  const { userProfile, signOut, openSettingsModal } = useAppStore();
   const isAdmin = userProfile?.role === 'admin';
 
   const menuItems = [
@@ -52,7 +52,10 @@ export function Sidebar() {
 
       {/* Footer / User Profile Card */}
       <div className="p-4 border-t border-slate-50 space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200">
+        <button 
+          onClick={openSettingsModal}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200"
+        >
           <Settings size={20} />
           <span className="font-medium text-sm">Configurações</span>
         </button>

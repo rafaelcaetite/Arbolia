@@ -141,6 +141,9 @@ interface AppState {
   setUser: (user: User | null) => void
   signOut: () => Promise<void>
   
+  theme: 'light' | 'dark'
+  setTheme: (theme: 'light' | 'dark') => void
+  
   notifications: AppNotification[]
   generateNotifications: () => void
 
@@ -181,6 +184,10 @@ interface AppState {
   editingClientId: string | null
 
   isProfileModalOpen: boolean
+
+  isSettingsModalOpen: boolean
+  openSettingsModal: () => void
+  closeSettingsModal: () => void
 
   // Modal de Laudo ISA
   isLaudoModalOpen: boolean
@@ -288,7 +295,10 @@ const calculateDiff = (oldObj: any, newObj: any) => {
   return Object.keys(diff).length > 0 ? diff : undefined;
 };
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>((set, get) => {
+  const savedTheme = (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+  
+  return {
   // ... (existing state)
   // (Note: I will only replace the implementation of updateEmployee and relevant parts)
   clients: [],
@@ -297,6 +307,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   employees: [],
   user: null,
   userProfile: null,
+  
+  theme: savedTheme,
+  setTheme: (theme: 'light' | 'dark') => {
+    localStorage.setItem('theme', theme);
+    set({ theme });
+  },
+
   setUser: (user) => set({ user }),
   signOut: async () => {
     await supabase.auth.signOut();
@@ -487,6 +504,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isReminderModalOpen: false,
   activeReminderServiceId: null,
+
+  isSettingsModalOpen: false,
 
   isPostServiceModalOpen: false,
   activePostServiceId: null,
@@ -1040,4 +1059,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       throw error;
     }
   },
-}));
+
+  openSettingsModal: () => set({ isSettingsModalOpen: true }),
+  closeSettingsModal: () => set({ isSettingsModalOpen: false }),
+};
+});
