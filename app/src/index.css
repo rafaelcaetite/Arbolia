@@ -6,17 +6,17 @@
 }
 
 :root[data-theme="dark"] {
-  --color-white: #0f172a;
-  --color-slate-50: #0f172a;
-  --color-slate-100: #1e293b;
-  --color-slate-200: #334155;
-  --color-slate-300: #475569;
-  --color-slate-400: #64748b;
-  --color-slate-500: #94a3b8;
-  --color-slate-600: #cbd5e1;
-  --color-slate-700: #e2e8f0;
-  --color-slate-800: #f1f5f9;
-  --color-slate-900: #f8fafc;
+  --color-white: #0a0a0a;
+  --color-slate-50: #0a0a0a;
+  --color-slate-100: #171717;
+  --color-slate-200: #262626;
+  --color-slate-300: #404040;
+  --color-slate-400: #525252;
+  --color-slate-500: #a3a3a3;
+  --color-slate-600: #d4d4d4;
+  --color-slate-700: #e5e5e5;
+  --color-slate-800: #f5f5f5;
+  --color-slate-900: #fafafa;
 }
 
 @layer base {
