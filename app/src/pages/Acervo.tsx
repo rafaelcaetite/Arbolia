@@ -503,19 +503,19 @@ export function Acervo() {
                         <div className="flex items-center gap-2 pt-1 border-t border-slate-50">
                           <button
                             onClick={() => setPdfPanel(doc)}
-                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 py-2.5 rounded-xl transition-all active:scale-95"
+                            className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-xl transition-all active:scale-95"
                           >
                             <Eye size={14} /> Visualizar
                           </button>
                           <button
                             onClick={() => downloadAttachment(doc)}
-                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 py-2.5 rounded-xl transition-all active:scale-95"
+                            className="flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 px-4 py-2.5 rounded-xl transition-all active:scale-95"
                           >
                             <Download size={14} /> Baixar
                           </button>
                           <button
                             onClick={() => setActionData({ type: 'rename', attachment: doc })}
-                            className="p-2.5 text-slate-400 hover:text-primary bg-slate-50 hover:bg-primary/5 border border-slate-200 rounded-xl transition-all active:scale-95"
+                            className="ml-auto p-2.5 text-slate-400 hover:text-primary bg-slate-50 hover:bg-primary/5 border border-slate-200 rounded-xl transition-all active:scale-95"
                             title="Renomear"
                           >
                             <Pencil size={14} />
