@@ -39,6 +39,13 @@ function App() {
     }
   }, [theme]);
 
+  // Limpa a URL para a raiz ao fazer logout ou quando não houver usuário autenticado
+  useEffect(() => {
+    if (!checkingAuth && !user && window.location.pathname !== '/') {
+      window.history.replaceState(null, '', '/');
+    }
+  }, [user, checkingAuth]);
+
   useEffect(() => {
     // 1. Verifica sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
