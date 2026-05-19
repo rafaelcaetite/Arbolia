@@ -31,19 +31,35 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   
-  const [filterDate, setFilterDate] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
   const [filterEmployee, setFilterEmployee] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
   
   const auditLogRef = useRef<HTMLDivElement>(null);
 
   const filteredAuditLogs = useMemo(() => {
+    const getLocalDateString = (isoString: string) => {
+      try {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch {
+        return '';
+      }
+    };
+
     return auditLogs.filter(log => {
-      const matchDate = filterDate ? log.created_at.startsWith(filterDate) : true;
+      const localDateStr = getLocalDateString(log.created_at);
+      const matchStart = filterStartDate ? localDateStr >= filterStartDate : true;
+      const matchEnd = filterEndDate ? localDateStr <= filterEndDate : true;
       const matchEmp = filterEmployee ? log.user_name === filterEmployee : true;
-      return matchDate && matchEmp;
+      return matchStart && matchEnd && matchEmp;
     });
-  }, [auditLogs, filterDate, filterEmployee]);
+  }, [auditLogs, filterStartDate, filterEndDate, filterEmployee]);
 
   const visibleAuditLogs = filteredAuditLogs.slice(0, visibleCount);
 
@@ -322,29 +338,54 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
             {isAuditLogOpen && (
               <div className="absolute top-full right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-200">
                 <div className="p-4 border-b border-slate-50 bg-slate-50/50">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
                       <History size={16} className="text-primary" />
-                      Histórico
+                      Histórico de Auditoria
                     </h3>
+                    {(filterStartDate || filterEndDate || filterEmployee) && (
+                      <button 
+                        onClick={() => { setFilterStartDate(''); setFilterEndDate(''); setFilterEmployee(''); }}
+                        className="text-[10px] font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-0.5 border border-primary/20 hover:border-primary px-2 py-1 rounded-full bg-white shadow-sm"
+                      >
+                        <X size={10} />
+                        Limpar
+                      </button>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <input 
-                      type="date" 
-                      value={filterDate}
-                      onChange={(e) => setFilterDate(e.target.value)}
-                      className="text-[10px] px-2 py-1.5 rounded border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary flex-1"
-                    />
-                    <select
-                      value={filterEmployee}
-                      onChange={(e) => setFilterEmployee(e.target.value)}
-                      className="text-[10px] px-2 py-1.5 rounded border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary flex-1"
-                    >
-                      <option value="">Todos usuários</option>
-                      {auditEmployees.map(emp => (
-                        <option key={emp} value={emp}>{emp}</option>
-                      ))}
-                    </select>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Período de</span>
+                      <input 
+                        type="date" 
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 shadow-sm transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Até</span>
+                      <input 
+                        type="date" 
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 shadow-sm transition-all"
+                      />
+                    </div>
+                    <div className="col-span-2 flex flex-col gap-1 mt-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Filtrar por Usuário</span>
+                      <select
+                        value={filterEmployee}
+                        onChange={(e) => setFilterEmployee(e.target.value)}
+                        className="text-[10px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 shadow-sm transition-all w-full"
+                      >
+                        <option value="">Todos usuários</option>
+                        {auditEmployees.map(emp => (
+                          <option key={emp} value={emp}>{emp}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
