@@ -317,7 +317,16 @@ export const useAppStore = create<AppState>((set, get) => {
   setUser: (user) => set({ user }),
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ user: null, userProfile: null, clients: [], trees: [], services: [], employees: [], notifications: [] });
+    set({
+      user: null,
+      userProfile: null,
+      clients: [],
+      trees: [],
+      services: [],
+      employees: [],
+      notifications: [],
+      weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 }
+    });
   },
 
   notifications: [],
@@ -532,6 +541,19 @@ export const useAppStore = create<AppState>((set, get) => {
     try {
       const { user } = useAppStore.getState();
       if (!user) return;
+
+      // Carrega a última cidade escolhida por este usuário específico, se houver
+      const savedCity = localStorage.getItem(`arbolia_weather_city_${user.id}`);
+      if (savedCity) {
+        try {
+          const parsed = JSON.parse(savedCity);
+          if (parsed && parsed.name && parsed.lat && parsed.lon) {
+            set({ weatherCity: parsed });
+          }
+        } catch (e) {
+          console.error('Erro ao decodificar cidade persistida:', e);
+        }
+      }
 
       // 1. Tenta buscar o perfil do usuário logado
       let profile;
@@ -882,7 +904,13 @@ export const useAppStore = create<AppState>((set, get) => {
 
   // Clima
   weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 },
-  setWeatherCity: (city) => set({ weatherCity: city }),
+  setWeatherCity: (city) => {
+    const { user } = get();
+    if (user) {
+      localStorage.setItem(`arbolia_weather_city_${user.id}`, JSON.stringify(city));
+    }
+    set({ weatherCity: city });
+  },
 
   // Gestão de Funcionários
   fetchEmployees: async () => {
