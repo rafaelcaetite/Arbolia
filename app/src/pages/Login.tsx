@@ -24,6 +24,7 @@ export function Login() {
       });
 
       if (error) throw error;
+      window.history.replaceState(null, '', '/');
       setUser(data.user);
     } catch (err: any) {
       setError(err.message || 'Erro ao realizar login');
