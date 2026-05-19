@@ -4,6 +4,7 @@ import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, Ch
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 import { AttachmentViewer } from '../common/AttachmentViewer';
+import { formatTreeId } from '../../lib/treeUtils';
 
 export function TreeDetailsModal() {
   const { isTreeDetailsModalOpen, viewingTreeDetailsId, trees, clients, services, closeTreeDetailsModal, openHistoryModal } = useAppStore();
@@ -116,7 +117,7 @@ export function TreeDetailsModal() {
             <div>
               <h2 className="text-base font-bold text-slate-800 tracking-tight leading-tight">{tree.especie}</h2>
               <span className="text-[9px] text-slate-400 font-mono">
-                {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `ID: ${tree.id.slice(0, 8).toUpperCase()}`}
+                {formatTreeId(tree)}
               </span>
             </div>
           </div>

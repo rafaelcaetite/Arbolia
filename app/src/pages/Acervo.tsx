@@ -8,6 +8,7 @@ import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 import { supabase } from '../lib/supabase';
 import { ActionModal } from '../components/common/ActionModal';
+import { formatTreeId } from '../lib/treeUtils';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -226,7 +227,7 @@ export function Acervo() {
         const client = tree ? clients.find(c => c.id === tree.cliente_id) : undefined;
         const tags = [
           ...(client ? [client.nome] : []),
-          ...(tree ? [tree.especie, `# ${tree.id.slice(0, 8).toUpperCase()}`] : []),
+          ...(tree ? [tree.especie, formatTreeId(tree)] : []),
           svc.tipo,
           new Date(svc.data + 'T00:00:00').toLocaleDateString('pt-BR'),
         ].map(t => t.toLowerCase());
@@ -365,7 +366,7 @@ export function Acervo() {
                       <div className="flex items-center gap-2 mb-3">
                         <ArrowLeftRight size={14} className="text-primary" />
                         <span className="text-xs font-bold text-slate-600">{photos[0].treeEspecie}</span>
-                        <span className="text-[9px] font-mono text-slate-400"># {treeId.slice(0,8).toUpperCase()}</span>
+                        <span className="text-[9px] font-mono text-slate-400">{formatTreeId(trees.find(t => t.id === treeId) ?? treeId)}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         {photos.slice(0, 2).map((photo, i) => (

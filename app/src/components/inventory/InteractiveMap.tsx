@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useAppStore } from '../../store/useAppStore';
+import { formatTreeId } from '../../lib/treeUtils';
 
 // Custom icons using the user's provided icone.png
 const createCustomIcon = (isHighlighted: boolean, isInactive = false) => {
@@ -160,7 +161,7 @@ export function InteractiveMap() {
                       )}
                     </div>
                     <span className="text-[9px] font-mono text-slate-400 mt-0.5 tracking-wider">
-                      {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `# ${tree.id.slice(0, 8).toUpperCase()}`}
+                      {formatTreeId(tree)}
                     </span>
                   </div>
 

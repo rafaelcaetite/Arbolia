@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Search, ArrowDownWideNarrow, ListFilter, Trees, Building2, Phone, Mail, FileText, Info, X, Calendar, Leaf, Download, Pencil, Users, Plus } from 'lucide-react';
 import { useAppStore, type Tree, type Service, type ServiceAttachment } from '../store/useAppStore';
 import { ClientDetailsModal } from '../components/clients/ClientDetailsModal';
+import { formatTreeId } from '../lib/treeUtils';
 import { ClientFormModal } from '../components/clients/ClientFormModal';
 
 
@@ -50,7 +51,7 @@ function ClientPopover({ type, trees, services, docs, onClose }: {
                 <div key={t.id} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-slate-700">{t.especie}</span>
-                    <span className="text-[9px] font-mono text-slate-400"># {t.id.slice(0,8).toUpperCase()}</span>
+                    <span className="text-[9px] font-mono text-slate-400">{formatTreeId(t)}</span>
                   </div>
                   <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
                     t.status_risco === 'baixo' ? 'bg-emerald-100 text-emerald-700' :

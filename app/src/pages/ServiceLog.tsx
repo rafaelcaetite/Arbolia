@@ -4,6 +4,7 @@ import { useAppStore } from '../store/useAppStore';
 import { Search, FileText, User, ChevronRight, Download, Eye, Pencil, Trash2, MapPin } from 'lucide-react';
 import { ExportLogModal } from '../components/inventory/ExportLogModal';
 import { AttachmentViewer } from '../components/common/AttachmentViewer';
+import { formatTreeId } from '../lib/treeUtils';
 
 
 export function ServiceLog() {
@@ -44,11 +45,11 @@ export function ServiceLog() {
     const svcTrees = trees.filter(t => treeIds.includes(t.id));
     if (svcTrees.length === 0) {
       return treeIds.length === 1 
-        ? `Árvore #${treeIds[0].slice(0, 8)}`
+        ? `Árvore ${formatTreeId(treeIds[0])}`
         : `${treeIds.length} árvores (Carregando...)`;
     }
     
-    if (svcTrees.length === 1) return `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 4)})`;
+    if (svcTrees.length === 1) return `${svcTrees[0].especie} (${formatTreeId(svcTrees[0])})`;
     return `${svcTrees[0].especie} + ${svcTrees.length - 1} outras`;
   };
 
@@ -635,7 +636,7 @@ function ServiceAcervoModal({ service, onClose }: { service: any; onClose: () =>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-700">{tree.especie}</p>
-                    <p className="text-[10px] text-slate-400">ID: {tree.id.slice(0, 8)}</p>
+                    <p className="text-[10px] text-slate-400">ID: {formatTreeId(tree)}</p>
                   </div>
                 </div>
               ))}

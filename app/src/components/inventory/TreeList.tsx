@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, ArrowDownWideNarrow, ListFilter, History } from 'lucide-react';
 import { useAppStore, type Tree } from '../../store/useAppStore';
+import { formatTreeId } from '../../lib/treeUtils';
 
 type SortOption = 'recentes' | 'altura' | 'risco';
 type GroupOption = 'nenhum' | 'especie' | 'risco' | 'proprietario';
@@ -174,7 +175,7 @@ export function TreeList() {
 
                   <div className="mt-2">
                     <span className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 text-slate-400 text-[9px] font-mono px-2 py-0.5 rounded tracking-wider">
-                      {tree.codigo_v6 ? `ARB-${tree.codigo_v6.toString().padStart(3, '0')}` : `# ${tree.id.slice(0, 8).toUpperCase()}`}
+                      {formatTreeId(tree)}
                     </span>
                   </div>
 

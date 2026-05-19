@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SecureImage } from '../common/SecureImage';
+import { formatTreeId } from '../../lib/treeUtils';
 
 export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { 
@@ -181,7 +182,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
           id: t.id,
           type: 'arvore',
           title: t.especie,
-          subtitle: `Risco: ${t.status_risco ? t.status_risco.toUpperCase() : 'N/A'} · ID: #${t.id.slice(0, 8).toUpperCase()}`,
+          subtitle: `Risco: ${t.status_risco ? t.status_risco.toUpperCase() : 'N/A'} · ID: ${formatTreeId(t)}`,
           badge: 'Árvore',
           badgeClass: 'bg-emerald-100 text-emerald-700',
           onClick: () => {

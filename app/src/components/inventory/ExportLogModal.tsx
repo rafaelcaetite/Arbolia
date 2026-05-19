@@ -4,6 +4,7 @@ import { useAppStore, type Service, type Tree, type Client } from '../../store/u
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logoArbolia from '../../assets/logo_arbolia.png';
+import { formatTreeId } from '../../lib/treeUtils';
 
 interface ExportLogModalProps {
   onClose: () => void;
@@ -109,8 +110,8 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       const treeSummary = svcTrees.length === 0 
         ? 'N/A' 
         : svcTrees.length === 1 
-          ? svcTrees[0].especie 
-          : `${svcTrees[0].especie} + ${svcTrees.length - 1} outras`;
+          ? `${svcTrees[0].especie} (${formatTreeId(svcTrees[0])})` 
+          : `${svcTrees[0].especie} (${formatTreeId(svcTrees[0])}) + ${svcTrees.length - 1} outras`;
 
       return [
         svc.id,
@@ -211,8 +212,8 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
       const treeSummary = svcTrees.length === 0 
         ? 'N/A' 
         : svcTrees.length === 1 
-          ? `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 8).toUpperCase()})` 
-          : `${svcTrees[0].especie} (#${svcTrees[0].id.slice(0, 8).toUpperCase()}) + ${svcTrees.length - 1} outras`;
+          ? `${svcTrees[0].especie} (${formatTreeId(svcTrees[0])})` 
+          : `${svcTrees[0].especie} (${formatTreeId(svcTrees[0])}) + ${svcTrees.length - 1} outras`;
 
       return [
         svc.id.slice(0, 8).toUpperCase(),

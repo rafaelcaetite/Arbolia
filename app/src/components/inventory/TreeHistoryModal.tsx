@@ -4,6 +4,7 @@ import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 import { ActionModal } from '../common/ActionModal';
 import { AttachmentViewer } from '../common/AttachmentViewer';
+import { formatTreeId } from '../../lib/treeUtils';
 
 
 // ── Botões de Anexo por Serviço ──────────────────────────────────────────────
@@ -248,7 +249,7 @@ export function TreeHistoryModal() {
               <p className="text-xs font-medium text-slate-500">{tree?.especie}</p>
               {tree && (
                 <span className="inline-flex items-center bg-slate-100 border border-slate-200 text-slate-400 text-[9px] font-mono px-1.5 py-0.5 rounded tracking-wider">
-                  # {tree.id.slice(0, 8).toUpperCase()}
+                  {formatTreeId(tree)}
                 </span>
               )}
             </div>

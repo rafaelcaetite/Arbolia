@@ -1,14 +1,16 @@
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area } from 'recharts';
-import { Trees, Users, AlertTriangle, CloudRain, Clock, CheckCircle2, Thermometer, Droplets, Wind, ShieldAlert, Navigation, Search } from 'lucide-react';
+import { Trees, Users, AlertTriangle, CloudRain, Clock, CheckCircle2, Thermometer, Droplets, Wind, ShieldAlert, Navigation, Search, Pencil, Trash2 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { ActionModal } from '../components/common/ActionModal';
 
 export function Home() {
-  const { trees, clients, services, openPostServiceModal, weatherCity, setWeatherCity } = useAppStore();
+  const { trees, clients, services, openPostServiceModal, weatherCity, setWeatherCity, openServiceModal, userProfile, deleteService } = useAppStore();
   const navigate = useNavigate();
 
   // Estados locais para busca e UI
+  const [serviceToDelete, setServiceToDelete] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [weatherData, setWeatherData] = useState<any[]>([]);
@@ -608,35 +610,35 @@ export function Home() {
                       <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse inline-block" />
                       Atrasados
                     </h3>
-                    {groupedServices.atrasado.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    {groupedServices.atrasado.map(service => renderServiceCard(service, clients, trees, openPostServiceModal, openServiceModal, setServiceToDelete, userProfile))}
                   </div>
                 )}
 
                 {groupedServices.hoje.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 border-b border-slate-100 pb-1">Hoje</h3>
-                    {groupedServices.hoje.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    {groupedServices.hoje.map(service => renderServiceCard(service, clients, trees, openPostServiceModal, openServiceModal, setServiceToDelete, userProfile))}
                   </div>
                 )}
 
                 {groupedServices.amanha.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-yellow-600 border-b border-slate-100 pb-1">Amanhã</h3>
-                    {groupedServices.amanha.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    {groupedServices.amanha.map(service => renderServiceCard(service, clients, trees, openPostServiceModal, openServiceModal, setServiceToDelete, userProfile))}
                   </div>
                 )}
 
                 {groupedServices.esta_semana.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-purple-600 border-b border-slate-100 pb-1">Esta Semana</h3>
-                    {groupedServices.esta_semana.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    {groupedServices.esta_semana.map(service => renderServiceCard(service, clients, trees, openPostServiceModal, openServiceModal, setServiceToDelete, userProfile))}
                   </div>
                 )}
 
                 {groupedServices.em_breve.length > 0 && (
                   <div className="flex flex-col gap-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-600 border-b border-slate-100 pb-1">Em Breve</h3>
-                    {groupedServices.em_breve.map(service => renderServiceCard(service, clients, trees, openPostServiceModal))}
+                    {groupedServices.em_breve.map(service => renderServiceCard(service, clients, trees, openPostServiceModal, openServiceModal, setServiceToDelete, userProfile))}
                   </div>
                 )}
               </>
@@ -650,12 +652,35 @@ export function Home() {
           </button>
         </div>
       </div>
+
+      <ActionModal
+        isOpen={!!serviceToDelete}
+        onClose={() => setServiceToDelete(null)}
+        type="delete"
+        title="Confirmar Exclusão"
+        description={`Tem certeza de que deseja excluir permanentemente o agendamento de ${serviceToDelete?.tipo} agendado para ${serviceToDelete ? new Date(serviceToDelete.data + 'T00:00:00').toLocaleDateString('pt-BR') : ''}?`}
+        confirmLabel="Sim, excluir"
+        onConfirm={async () => {
+          if (serviceToDelete) {
+            await deleteService(serviceToDelete.id);
+            setServiceToDelete(null);
+          }
+        }}
+      />
     </div>
   );
 }
 
 // Helper para renderizar o card na Home
-function renderServiceCard(service: any, clients: any[], trees: any[], openPostServiceModal?: (id: string) => void) {
+function renderServiceCard(
+  service: any, 
+  clients: any[], 
+  trees: any[], 
+  openPostServiceModal?: (id: string) => void,
+  openServiceModal?: (id: string) => void,
+  onDeleteClick?: (service: any) => void,
+  userProfile?: any
+) {
   // Busca TODOS os proprietários únicos das árvores vinculadas ao serviço
   const ownerIds = new Set<string>();
   service.treeIds.forEach((treeId: string) => {
@@ -670,11 +695,32 @@ function renderServiceCard(service: any, clients: any[], trees: any[], openPostS
     <div key={service.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors group">
       <div className="flex justify-between items-start mb-2">
         <h4 className="font-semibold text-slate-800 text-sm">{service.tipo}</h4>
-        {/* Regra Operacional de Cores */}
-        <span className={`w-2.5 h-2.5 rounded-full mt-1.5 ${service.alertStatus === 'atrasado' ? 'bg-red-500 shadow-sm shadow-red-500/50 animate-pulse' :
-          service.alertStatus === 'semana' ? 'bg-yellow-400 shadow-sm shadow-yellow-400/50' :
-            'bg-emerald-500 shadow-sm shadow-emerald-500/50'
-          }`}></span>
+        <div className="flex items-center gap-1.5">
+          {/* Ações de Edição e Exclusão */}
+          {(service.status === 'agendado' || service.status === 'atrasado' || !service.status) && openServiceModal && (
+            <button
+              onClick={(e) => { e.stopPropagation(); openServiceModal(service.id); }}
+              title="Editar Agendamento"
+              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all md:opacity-0 group-hover:opacity-100"
+            >
+              <Pencil size={13} />
+            </button>
+          )}
+          {userProfile?.role === 'admin' && (service.status === 'agendado' || service.status === 'atrasado' || !service.status) && onDeleteClick && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDeleteClick(service); }}
+              title="Excluir Agendamento"
+              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all md:opacity-0 group-hover:opacity-100"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+          {/* Regra Operacional de Cores */}
+          <span className={`w-2.5 h-2.5 rounded-full ${service.alertStatus === 'atrasado' ? 'bg-red-500 shadow-sm shadow-red-500/50 animate-pulse' :
+            service.alertStatus === 'semana' ? 'bg-yellow-400 shadow-sm shadow-yellow-400/50' :
+              'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+            }`}></span>
+        </div>
       </div>
       {/* Badges de proprietários — todos os donos únicos */}
       {owners.length > 0 ? (
