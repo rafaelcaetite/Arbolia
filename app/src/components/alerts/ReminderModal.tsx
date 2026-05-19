@@ -70,7 +70,7 @@ export function ReminderModal() {
                   <h2 className="text-base font-bold text-slate-800 leading-tight">Emitir Aviso</h2>
                   <span className="text-[10px] font-bold uppercase text-slate-400">
                     Serviço de {service.tipo} · {new Date(service.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                    {service.horario && ` às ${service.horario}`}
+                    {service.horario && ` às ${service.horario.slice(0, 5)}`}
                   </span>
                 </div>
               </div>

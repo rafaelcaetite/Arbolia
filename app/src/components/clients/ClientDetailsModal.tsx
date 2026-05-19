@@ -165,7 +165,7 @@ export function ClientDetailsModal() {
                         </div>
                         <div className="flex justify-between">
                           <span>Data Agendada:</span>
-                          <strong className="text-slate-700">{new Date(service.data + 'T00:00:00').toLocaleDateString()}{service.horario && ` às ${service.horario}`}</strong>
+                          <strong className="text-slate-700">{new Date(service.data + 'T00:00:00').toLocaleDateString()}{service.horario && ` às ${service.horario.slice(0, 5)}`}</strong>
                         </div>
                         <div className="flex justify-between mt-1 pt-1 border-t border-slate-50">
                           <span>Árvores Envolvidas:</span>

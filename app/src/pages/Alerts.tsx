@@ -135,7 +135,7 @@ function AlertCard({ alert, focused, expanded, onToggle, cardRef }: AlertCardPro
           <span className="flex items-center gap-1">
             <Clock size={10} />
             {new Date(alert.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-            {alert.horario && ` às ${alert.horario}`}
+            {alert.horario && ` às ${alert.horario.slice(0, 5)}`}
           </span>
           <span>{alert.responsavel}</span>
         </div>

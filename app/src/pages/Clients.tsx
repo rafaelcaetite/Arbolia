@@ -71,7 +71,7 @@ function ClientPopover({ type, trees, services, docs, onClose }: {
                     <span className="text-xs font-semibold text-slate-700">{s.tipo}</span>
                     <span className="text-[10px] text-slate-400">
                       {new Date(s.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                      {s.horario && ` às ${s.horario}`}
+                      {s.horario && ` às ${s.horario.slice(0, 5)}`}
                     </span>
                   </div>
                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">

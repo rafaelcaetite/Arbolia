@@ -696,7 +696,7 @@ function renderServiceCard(service: any, clients: any[], trees: any[], openPostS
             {service.responsavel}
           </div>
           <div className="text-xs font-bold text-slate-600 bg-white px-2 py-1 rounded-md border border-slate-200 shadow-sm w-fit">
-            {new Date(service.data + 'T00:00:00').toLocaleDateString()}{service.horario && ` às ${service.horario}`}
+            {new Date(service.data + 'T00:00:00').toLocaleDateString()}{service.horario && ` às ${service.horario.slice(0, 5)}`}
           </div>
         </div>
 

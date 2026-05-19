@@ -306,7 +306,7 @@ export function TreeHistoryModal() {
 
                     {/* Dados */}
                     <div className="flex flex-col gap-1 text-xs text-slate-500 mb-1">
-                      <span><strong>Data:</strong> {new Date(svc.data + 'T00:00:00').toLocaleDateString()}{svc.horario && ` às ${svc.horario}`}</span>
+                      <span><strong>Data:</strong> {new Date(svc.data + 'T00:00:00').toLocaleDateString()}{svc.horario && ` às ${svc.horario.slice(0, 5)}`}</span>
                       <span><strong>Responsável:</strong> {svc.responsavel}</span>
                     </div>
 
