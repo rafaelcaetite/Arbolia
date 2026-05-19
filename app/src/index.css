@@ -28,6 +28,22 @@
   --color-slate-900: #ffffff;
 }
 
+/* Correção do bug de repaint do placeholder no Chrome/Webkit durante a troca de tema */
+input::placeholder,
+textarea::placeholder {
+  transition: color 0.3s ease;
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #71717a !important;
+}
+
+:root:not([data-theme="dark"]) input::placeholder,
+:root:not([data-theme="dark"]) textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
 /* =========================================================================
    PROTEÇÃO DE UX DO DARK MODE
    Garante que botões e fundos escuros não quebrem o contraste
