@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase, AlertCircle } from 'lucide-react';
+import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase, AlertCircle, Trash2 } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../../store/useAppStore';
 import { compressImageToBase64 } from '../../lib/imageCompression';
 
@@ -131,6 +131,30 @@ export function UserProfileModal() {
               </div>
             )}
           </div>
+
+          {displayUrl && (
+            <button
+              type="button"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setIsLoading(true);
+                try {
+                  setFormData(prev => ({ ...prev, foto_url: '' }));
+                  setDisplayUrl(null);
+                  await updateProfile({ foto_url: '' });
+                } catch (err) {
+                  console.error(err);
+                  setError('Erro ao remover foto.');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="z-10 -mt-2 text-red-400 hover:text-red-300 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 py-2 px-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5"
+            >
+              <Trash2 size={12} />
+              Remover Foto
+            </button>
+          )}
 
           <div className="text-center z-10">
             <h3 className="text-white font-bold text-lg truncate max-w-full">{userProfile.nome.split(' ')[0]}</h3>

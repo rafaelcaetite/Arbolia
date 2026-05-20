@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff, CheckCircle2, Trash2, Loader2 } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 
@@ -382,21 +382,90 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
   );
 }
 function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onClose: () => void }) {
+  const { updateEmployee, uploadFile } = useAppStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [displayUrl, setDisplayUrl] = useState<string | null>(employee.foto_url || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    try {
+      const base64Url = await uploadFile('profiles', file);
+      setDisplayUrl(base64Url);
+      await updateEmployee(employee.id, { foto_url: base64Url });
+    } catch (error) {
+      console.error('Erro ao atualizar foto de perfil do funcionário:', error);
+      alert('Erro ao fazer upload da foto.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-2xl rounded-[40px] overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-500 flex flex-col md:flex-row">
+        
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="image/*"
+          onChange={handleFileUpload} 
+        />
+
         {/* Banner Lateral / Foto */}
         <div className="md:w-56 bg-slate-900 p-8 flex flex-col items-center justify-center gap-4 relative overflow-hidden shrink-0">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-primary rounded-full blur-[60px]"></div>
           </div>
           
-          <SecureImage 
-            src={employee.foto_url}
-            alt={employee.nome}
-            className="w-32 h-32 rounded-[40px] border-2 border-white/20 shadow-xl z-10"
-            fallbackInitial={employee.nome.charAt(0).toUpperCase()}
-          />
+          <div 
+            className="group relative w-32 h-32 rounded-[40px] overflow-hidden border-2 border-white/20 shadow-xl cursor-pointer transition-transform hover:scale-105 active:scale-95 z-10"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {displayUrl ? (
+              <img src={displayUrl} alt={employee.nome} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-primary text-white flex items-center justify-center text-4xl font-black">
+                {employee.nome.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1 text-center p-2">
+              <Camera size={20} />
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-tight">Trocar Foto</span>
+            </div>
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Loader2 size={24} className="text-white animate-spin" />
+              </div>
+            )}
+          </div>
+
+          {displayUrl && (
+            <button
+              type="button"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setIsLoading(true);
+                try {
+                  setDisplayUrl(null);
+                  await updateEmployee(employee.id, { foto_url: '' });
+                } catch (err) {
+                  console.error(err);
+                  alert('Erro ao remover foto.');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="z-10 text-red-400 hover:text-red-300 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 py-2 px-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5"
+            >
+              <Trash2 size={12} />
+              Remover Foto
+            </button>
+          )}
           
           <div className="text-center z-10">
             <h3 className="text-white font-bold text-lg">{employee.nome.split(' ')[0]}</h3>
