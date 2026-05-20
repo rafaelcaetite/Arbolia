@@ -21,7 +21,8 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
     openClientDetailsModal,
     openTreeDetailsModal,
     auditLogs,
-    fetchAuditLogs
+    fetchAuditLogs,
+    weatherSettings
   } = useAppStore();
   const [currentTemp, setCurrentTemp] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,7 +115,9 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
     const fetchCurrentWeather = async () => {
       setIsLoading(true);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current_weather=true&timezone=auto`;
+        const tempParam = weatherSettings.tempUnit === 'fahrenheit' ? '&temperature_unit=fahrenheit' : '';
+        const windParam = weatherSettings.windSpeedUnit === 'ms' ? '&wind_speed_unit=ms' : '';
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current_weather=true&timezone=auto${tempParam}${windParam}`;
         const res = await fetch(url, {
           method: 'GET',
           headers: {
@@ -137,7 +140,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
     };
 
     fetchCurrentWeather();
-  }, [weatherCity]);
+  }, [weatherCity, weatherSettings]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -262,7 +265,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
         <div className="hidden lg:flex items-center gap-3 text-xs font-bold text-slate-500 bg-slate-50 px-4 py-2 rounded-full border border-slate-100 shadow-sm transition-all hover:bg-slate-100/80">
           <div className="flex items-center gap-1.5 text-blue-500">
             <CloudRain size={14} className="animate-pulse" />
-            <span>{isLoading ? '--' : `${currentTemp}°C`}</span>
+            <span>{isLoading ? '--' : `${currentTemp}${weatherSettings.tempUnit === 'fahrenheit' ? '°F' : '°C'}`}</span>
           </div>
           <div className="w-px h-3 bg-slate-200"></div>
           <div className="flex items-center gap-1.5 text-slate-400">

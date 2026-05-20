@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, User, Phone, Calendar, ShieldCheck, Camera, CheckCircle2, Loader2, Briefcase, AlertCircle } from 'lucide-react';
 import { useAppStore, type UserProfile } from '../../store/useAppStore';
-import { supabase } from '../../lib/supabase';
+import { compressImageToBase64 } from '../../lib/imageCompression';
 
 export function UserProfileModal() {
   const { isProfileModalOpen, userProfile, closeProfileModal, updateProfile } = useAppStore();
@@ -15,31 +15,7 @@ export function UserProfileModal() {
   useEffect(() => {
     const loadSecurePhoto = async () => {
       if (userProfile?.foto_url) {
-        // Se for uma URL externa ou Base64, usa direto
-        if (userProfile.foto_url.startsWith('http') && !userProfile.foto_url.includes('storage')) {
-          setDisplayUrl(userProfile.foto_url);
-        } else if (userProfile.foto_url.startsWith('data:')) {
-          setDisplayUrl(userProfile.foto_url);
-        } else {
-          // Se for do storage (contém o path), gera URL assinada (Privada)
-          try {
-            // Extrai o path se for uma URL completa do Supabase ou usa o path direto
-            const path = userProfile.foto_url.includes('Profiles/') 
-              ? userProfile.foto_url.split('Profiles/').pop() 
-              : userProfile.foto_url;
-
-            if (path) {
-              const { data, error: signedError } = await supabase.storage
-                .from('Profiles')
-                .createSignedUrl(path, 3600); // 1 hora de validade
-
-              if (data) setDisplayUrl(data.signedUrl);
-              if (signedError) setDisplayUrl(userProfile.foto_url); // Fallback
-            }
-          } catch (err) {
-            setDisplayUrl(userProfile.foto_url);
-          }
-        }
+        setDisplayUrl(userProfile.foto_url);
       }
     };
 
@@ -61,48 +37,16 @@ export function UserProfileModal() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-      setError('A foto deve ter no máximo 1MB.');
-      setTimeout(() => setError(null), 3000);
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userProfile.id}/${Math.random()}.${fileExt}`;
-      const filePath = fileName;
-
-      // Tenta o Plano A: Supabase Storage (Bucket Privado 'Profiles')
-      const { error: uploadError } = await supabase.storage
-        .from('Profiles')
-        .upload(filePath, file, { upsert: true });
-
-      if (!uploadError) {
-        // Salva apenas o path no banco para segurança
-        const storagePath = filePath;
-        setFormData(prev => ({ ...prev, foto_url: storagePath }));
-        await updateProfile({ foto_url: storagePath });
-        
-        // Gera a URL assinada para visualização imediata
-        const { data } = await supabase.storage
-          .from('Profiles')
-          .createSignedUrl(filePath, 3600);
-        if (data) setDisplayUrl(data.signedUrl);
-        
-      } else {
-        console.warn('Storage Privado falhou, tentando fallback Base64:', uploadError);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64String = reader.result as string;
-          setFormData(prev => ({ ...prev, foto_url: base64String }));
-          setDisplayUrl(base64String);
-          await updateProfile({ foto_url: base64String });
-        };
-        reader.readAsDataURL(file);
-      }
+      // Comprime a foto de perfil de avatar para no máximo 300px, mantendo excelente nitidez e tamanho ínfimo (<15KB)
+      const base64String = await compressImageToBase64(file, 300, 0.8);
+      
+      setFormData(prev => ({ ...prev, foto_url: base64String }));
+      setDisplayUrl(base64String);
+      await updateProfile({ foto_url: base64String });
     } catch (err: any) {
-      console.error('Erro crítico no upload:', err);
+      console.error('Erro crítico no upload da foto de perfil:', err);
       setError('Erro ao processar imagem.');
     } finally {
       setIsLoading(false);

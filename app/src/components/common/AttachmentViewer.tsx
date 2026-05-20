@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../lib/firebase';
 import { type ServiceAttachment } from '../../store/useAppStore';
 
 interface AttachmentViewerProps {
@@ -14,16 +15,23 @@ export function AttachmentViewer({ attachment, onClose }: AttachmentViewerProps)
   useEffect(() => {
     async function loadSecureUrl() {
       if (attachment.storagePath) {
-        const bucket = attachment.type === 'image' ? 'Gallery' : 'Documents';
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(attachment.storagePath, 3600);
-        
-        if (error) {
-          console.error('Erro ao gerar URL assinada:', error);
+        if (attachment.storagePath.startsWith('http') || attachment.storagePath.startsWith('data:')) {
+          setDisplayUrl(attachment.storagePath);
+          return;
+        }
+
+        try {
+          const bucket = attachment.type === 'image' ? 'Gallery' : 'Documents';
+          const fullPath = attachment.storagePath.includes(`${bucket}/`)
+            ? attachment.storagePath
+            : `${bucket}/${attachment.storagePath}`;
+
+          const storageRef = ref(storage, fullPath);
+          const url = await getDownloadURL(storageRef);
+          setDisplayUrl(url);
+        } catch (error) {
+          console.error('Erro ao obter URL de download do Firebase Storage:', error);
           setDisplayUrl(attachment.dataUrl || null);
-        } else {
-          setDisplayUrl(data.signedUrl);
         }
       } else if (attachment.type === 'pdf' && attachment.dataUrl?.startsWith('data:')) {
         try {

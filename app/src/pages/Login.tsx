@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { auth } from '../lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAppStore } from '../store/useAppStore';
 import { LogIn, Mail, Lock, AlertCircle, Sun, Moon } from 'lucide-react';
 
@@ -18,20 +19,23 @@ export function Login() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       window.history.replaceState(null, '', '/');
-      setUser(data.user);
+      setUser(userCredential.user as any);
     } catch (err: any) {
-      setError(err.message || 'Erro ao realizar login');
+      console.error(err);
+      let msg = err.message || 'Erro ao realizar login';
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        msg = 'E-mail ou senha incorretos.';
+      } else if (err.code === 'auth/invalid-email') {
+        msg = 'E-mail inválido.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative">

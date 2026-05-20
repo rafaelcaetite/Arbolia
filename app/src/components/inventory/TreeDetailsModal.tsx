@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Trees, MapPin, Ruler, Activity, Calendar, Building2, ChevronLeft, ChevronRight, ImageIcon, History, Loader2, FileText } from 'lucide-react';
 
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
-import { supabase } from '../../lib/supabase';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../lib/firebase';
 import { AttachmentViewer } from '../common/AttachmentViewer';
 import { formatTreeId } from '../../lib/treeUtils';
 
@@ -51,39 +52,63 @@ export function TreeDetailsModal() {
         if (galleryFiles.length > 0) {
           // Remove duplicates based on path, keeping the name
           const uniqueGallery = galleryFiles.filter((v, i, a) => a.findIndex(t => t.path === v.path) === i);
-          const paths = uniqueGallery.map(g => g.path);
-          const { data, error } = await supabase.storage.from('Gallery').createSignedUrls(paths, 3600);
-          if (!error && data) {
-            data.forEach((item, idx) => {
-              if (item.signedUrl) {
-                signedResults.push({ 
-                  url: item.signedUrl, 
-                  name: uniqueGallery[idx].name,
-                  path: uniqueGallery[idx].path,
+          await Promise.all(
+            uniqueGallery.map(async (g) => {
+              try {
+                if (g.path.startsWith('http') || g.path.startsWith('data:')) {
+                  signedResults.push({
+                    url: g.path,
+                    name: g.name,
+                    path: g.path,
+                    type: 'image'
+                  });
+                  return;
+                }
+                const storagePath = g.path.includes('Gallery/') ? g.path : `Gallery/${g.path}`;
+                const storageRef = ref(storage, storagePath);
+                const url = await getDownloadURL(storageRef);
+                signedResults.push({
+                  url,
+                  name: g.name,
+                  path: g.path,
                   type: 'image'
                 });
+              } catch (err) {
+                console.error(`Erro ao obter URL da imagem ${g.name}:`, err);
               }
-            });
-          }
+            })
+          );
         }
 
         // Sign Document Files
         if (documentFiles.length > 0) {
           const uniqueDocs = documentFiles.filter((v, i, a) => a.findIndex(t => t.path === v.path) === i);
-          const paths = uniqueDocs.map(d => d.path);
-          const { data, error } = await supabase.storage.from('Documents').createSignedUrls(paths, 3600);
-          if (!error && data) {
-            data.forEach((item, idx) => {
-              if (item.signedUrl) {
-                signedResults.push({ 
-                  url: item.signedUrl, 
-                  name: uniqueDocs[idx].name,
-                  path: uniqueDocs[idx].path,
+          await Promise.all(
+            uniqueDocs.map(async (d) => {
+              try {
+                if (d.path.startsWith('http') || d.path.startsWith('data:')) {
+                  signedResults.push({
+                    url: d.path,
+                    name: d.name,
+                    path: d.path,
+                    type: 'pdf'
+                  });
+                  return;
+                }
+                const storagePath = d.path.includes('Documents/') ? d.path : `Documents/${d.path}`;
+                const storageRef = ref(storage, storagePath);
+                const url = await getDownloadURL(storageRef);
+                signedResults.push({
+                  url,
+                  name: d.name,
+                  path: d.path,
                   type: 'pdf'
                 });
+              } catch (err) {
+                console.error(`Erro ao obter URL do documento ${d.name}:`, err);
               }
-            });
-          }
+            })
+          );
         }
 
         setSignedPhotos(signedResults);

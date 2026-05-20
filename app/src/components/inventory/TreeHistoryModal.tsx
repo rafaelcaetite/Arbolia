@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
 import { X, Calendar, Upload, ImagePlus, FileText, Image, Eye, ChevronDown, Pencil, Trash2, Download } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
-import { supabase } from '../../lib/supabase';
 import { ActionModal } from '../common/ActionModal';
 import { AttachmentViewer } from '../common/AttachmentViewer';
 import { formatTreeId } from '../../lib/treeUtils';
-
+import { compressImageToBase64, readFileToBase64 } from '../../lib/imageCompression';
 
 // ── Botões de Anexo por Serviço ──────────────────────────────────────────────
 function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; treeId: string; attachments: ServiceAttachment[] }) {
@@ -23,29 +22,28 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
   const hasImages = attachments.some(a => a.type === 'image');
 
   const readFile = async (file: File, type: 'pdf' | 'image') => {
-    const bucket = type === 'image' ? 'Gallery' : 'Documents';
-    const folder = type === 'image' ? 'history' : 'attachments';
-    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-    const storagePath = `${folder}/${fileName}`;
-
     try {
-      const { error } = await supabase.storage
-        .from(bucket)
-        .upload(storagePath, file);
+      let dataUrl = '';
+      if (type === 'image') {
+        // Comprime imagens de até 3MB+ de forma eficiente mantendo ótima qualidade (resolução máx 1200px, 75% qualidade)
+        dataUrl = await compressImageToBase64(file, 1200, 0.75);
+      } else {
+        dataUrl = await readFileToBase64(file);
+      }
 
-      if (error) throw error;
+      const approxSize = Math.round(dataUrl.length * 0.75);
 
       const attachment: ServiceAttachment = {
         id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: file.name,
         type,
-        storagePath,
-        size: file.size,
+        storagePath: dataUrl, // Salva o Base64 diretamente no storagePath para visualização offline direta
+        size: approxSize,
       };
       addServiceAttachment(serviceId, treeId, attachment);
     } catch (err) {
-      console.error('Erro ao subir arquivo:', err);
-      alert('Falha ao enviar arquivo para o Storage.');
+      console.error('Erro ao ler/comprimir arquivo:', err);
+      alert('Falha ao processar e anexar o arquivo localmente.');
     }
   };
 
@@ -149,23 +147,40 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
-                      const { data } = await supabase.storage.from(bucket).createSignedUrl(att.storagePath!, 3600);
-                      if (data?.signedUrl) {
-                        try {
-                          const response = await fetch(data.signedUrl);
-                          const blob = await response.blob();
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = att.name;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
-                        } catch (err) {
-                          window.open(data.signedUrl, '_blank');
+                      try {
+                        let downloadUrl = att.storagePath || '';
+                        if (downloadUrl && !downloadUrl.startsWith('http') && !downloadUrl.startsWith('data:')) {
+                          try {
+                            const { ref, getDownloadURL } = await import('firebase/storage');
+                            const { storage } = await import('../../lib/firebase');
+                            const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
+                            const fullPath = downloadUrl.includes(`${bucket}/`) ? downloadUrl : `${bucket}/${downloadUrl}`;
+                            const storageRef = ref(storage, fullPath);
+                            downloadUrl = await getDownloadURL(storageRef);
+                          } catch (err) {
+                            console.warn('Erro ao obter downloadURL do Storage:', err);
+                          }
                         }
+
+                        if (downloadUrl) {
+                          try {
+                            const response = await fetch(downloadUrl);
+                            const blob = await response.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = att.name;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          } catch (err) {
+                            window.open(downloadUrl, '_blank');
+                          }
+                        }
+                      } catch (err) {
+                        console.error('Erro ao baixar arquivo do Firebase Storage:', err);
+                        alert('Falha ao baixar o arquivo.');
                       }
                     }}
                     className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"

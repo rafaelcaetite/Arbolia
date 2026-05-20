@@ -1,7 +1,16 @@
 // Trigger Build: 2026-05-12 20:56
 import { create } from 'zustand'
-import type { User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { auth, storage } from '../lib/firebase'
+import type { User } from 'firebase/auth'
+
+export interface AppUser extends User {
+  id: string
+  user_metadata?: {
+    nome?: string
+    full_name?: string
+    avatar_url?: string
+  }
+}
 
 import type { Limitante, ResultadoISA, EntradaRisco } from '../lib/isaRiskEngine'
 
@@ -19,6 +28,13 @@ export interface Client {
   status: 'ativo' | 'inativo'
 }
 
+export interface WeatherSettings {
+  syncInterval: number // em minutos: 5, 15, 30, 60
+  alertsEnabled: boolean
+  tempUnit: 'celsius' | 'fahrenheit'
+  windSpeedUnit: 'kmh' | 'ms'
+}
+
 // Dados do técnico responsável (usados no rodapé do PDF com peso legal)
 export interface UserProfile {
   id: string
@@ -31,6 +47,7 @@ export interface UserProfile {
   data_nascimento?: string
   status: 'ativo' | 'inativo'
   data_cadastro?: string
+  weather_settings?: WeatherSettings
 }
 
 export interface AuditLog {
@@ -136,7 +153,7 @@ interface AppState {
   trees: Tree[]
   services: Service[]
   employees: UserProfile[]
-  user: User | null
+  user: AppUser | null
   userProfile: UserProfile | null
   setUser: (user: User | null) => void
   signOut: () => Promise<void>
@@ -264,6 +281,8 @@ interface AppState {
   // Clima
   weatherCity: { name: string, lat: number, lon: number }
   setWeatherCity: (city: { name: string, lat: number, lon: number }) => void
+  weatherSettings: WeatherSettings
+  updateWeatherSettings: (settings: Partial<WeatherSettings>) => Promise<void>
 
   fetchEmployees: () => Promise<void>
   createEmployee: (data: any) => Promise<void>
@@ -314,9 +333,31 @@ export const useAppStore = create<AppState>((set, get) => {
     set({ theme });
   },
 
-  setUser: (user) => set({ user }),
+  weatherSettings: {
+    syncInterval: 30,
+    alertsEnabled: true,
+    tempUnit: 'celsius',
+    windSpeedUnit: 'kmh'
+  },
+
+  setUser: (firebaseUser) => {
+    if (!firebaseUser) {
+      set({ user: null });
+      return;
+    }
+    const mappedUser = {
+      ...firebaseUser,
+      id: firebaseUser.uid,
+      user_metadata: {
+        nome: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuário',
+        full_name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuário',
+      }
+    };
+    set({ user: mappedUser as any });
+  },
   signOut: async () => {
-    await supabase.auth.signOut();
+    const { signOut: firebaseSignOut } = await import('firebase/auth');
+    await firebaseSignOut(auth);
     set({
       user: null,
       userProfile: null,
@@ -325,7 +366,13 @@ export const useAppStore = create<AppState>((set, get) => {
       services: [],
       employees: [],
       notifications: [],
-      weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 }
+      weatherCity: { name: 'Belo Horizonte, MG', lat: -19.9167, lon: -43.9345 },
+      weatherSettings: {
+        syncInterval: 30,
+        alertsEnabled: true,
+        tempUnit: 'celsius',
+        windSpeedUnit: 'kmh'
+      }
     });
   },
 
@@ -417,7 +464,11 @@ export const useAppStore = create<AppState>((set, get) => {
     set({ notifications: [...newNotifications, ...preservedNotifications] });
   },
   addWeatherNotification: (weatherData: any) => {
-    const { notifications } = get();
+    const { notifications, weatherSettings } = get();
+    
+    // Evita gerar notificações de clima se o alarme estiver desabilitado nas configurações
+    if (!weatherSettings.alertsEnabled) return;
+
     const today = new Date().toISOString().split('T')[0];
     const weatherId = `weather-${today}`;
     
@@ -432,7 +483,7 @@ export const useAppStore = create<AppState>((set, get) => {
     let titulo = 'Recomendação Climática';
     let tipo: 'aviso' | 'recomendacao' | 'critico' = 'recomendacao';
 
-    // Windspeed em km/h
+    // Windspeed da API
     const wind = weatherData.windspeed;
     const code = weatherData.weathercode;
 
@@ -440,12 +491,18 @@ export const useAppStore = create<AppState>((set, get) => {
     const isRaining = [61, 63, 65, 80, 81, 82].includes(code);
     const isStorming = [95, 96, 99].includes(code);
 
-    if (isStorming || wind > 40) {
+    // Limites de vento baseados na escala configurada (m/s vs km/h)
+    const isMs = weatherSettings.windSpeedUnit === 'ms';
+    const limitCritical = isMs ? 11.1 : 40; // 40 km/h = 11.1 m/s
+    const limitWarning = isMs ? 5.6 : 20;  // 20 km/h = 5.56 m/s
+    const unitLabel = isMs ? ' m/s' : ' km/h';
+
+    if (isStorming || wind > limitCritical) {
       titulo = 'Alerta Climático Crítico';
-      mensagem = `Condições perigosas detectadas (Ventos de ${wind}km/h ou Tempestade). Recomendamos suspender o trabalho em altura e poda com motosserras.`;
+      mensagem = `Condições perigosas detectadas (Ventos de ${wind}${unitLabel} ou Tempestade). Recomendamos suspender o trabalho em altura e poda com motosserras.`;
       tipo = 'critico';
-    } else if (isRaining || wind > 20) {
-      mensagem = `Condições instáveis (Chuva ou ventos de ${wind}km/h). Avalie com cautela a segurança para realização de podas hoje.`;
+    } else if (isRaining || wind > limitWarning) {
+      mensagem = `Condições instáveis (Chuva ou ventos de ${wind}${unitLabel}). Avalie com cautela a segurança para realização de podas hoje.`;
       tipo = 'aviso';
     } else {
       mensagem = 'Condições climáticas favoráveis para serviços de poda e supressão hoje.';
@@ -555,6 +612,19 @@ export const useAppStore = create<AppState>((set, get) => {
         }
       }
 
+      // Carrega as configurações de clima por usuário do localStorage como primeiro passo rápido
+      const savedSettings = localStorage.getItem(`arbolia_weather_settings_${user.id}`);
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed) {
+            set({ weatherSettings: { ...get().weatherSettings, ...parsed } });
+          }
+        } catch (e) {
+          console.error('Erro ao decodificar configurações de clima persistidas:', e);
+        }
+      }
+
       // 1. Tenta buscar o perfil do usuário logado
       let profile;
       try {
@@ -576,6 +646,10 @@ export const useAppStore = create<AppState>((set, get) => {
       
       if (profile) {
         set({ userProfile: profile });
+        if (profile.weather_settings) {
+          set({ weatherSettings: profile.weather_settings });
+          localStorage.setItem(`arbolia_weather_settings_${user.id}`, JSON.stringify(profile.weather_settings));
+        }
       }
 
       // 3. Carrega os dados principais
@@ -592,7 +666,7 @@ export const useAppStore = create<AppState>((set, get) => {
       const employees = await api.getEmployees();
       set({ employees });
     } catch (error) {
-      console.error('Erro ao carregar dados do Supabase:', error);
+      console.error('Erro ao carregar dados do Firebase:', error);
     }
   },
 
@@ -911,6 +985,29 @@ export const useAppStore = create<AppState>((set, get) => {
     }
     set({ weatherCity: city });
   },
+  updateWeatherSettings: async (settings) => {
+    const { user, weatherSettings, userProfile } = get();
+    const newSettings = { ...weatherSettings, ...settings };
+    set({ weatherSettings: newSettings });
+
+    if (user) {
+      // Persistência local rápida (offline-first)
+      localStorage.setItem(`arbolia_weather_settings_${user.id}`, JSON.stringify(newSettings));
+      
+      // Persistência remota assíncrona no Firebase
+      if (userProfile) {
+        try {
+          const updatedProfile = await api.updateProfile(userProfile.id, {
+            weather_settings: newSettings
+          });
+          set({ userProfile: updatedProfile });
+        } catch (dbError) {
+          console.warn('Erro ao salvar configurações de clima no banco, usando fallback local:', dbError);
+          // Falha graciosamente em ambiente sandbox/offline
+        }
+      }
+    }
+  },
 
   // Gestão de Funcionários
   fetchEmployees: async () => {
@@ -923,15 +1020,7 @@ export const useAppStore = create<AppState>((set, get) => {
   },
   updateEmployee: async (id, data) => {
     try {
-      const { data: updatedProfile, error } = await supabase
-        .from('profiles')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      const updatedProfile = await api.updateProfile(id, data);
       set(state => ({
         employees: state.employees.map(emp => emp.id === id ? updatedProfile : emp)
       }));
@@ -942,82 +1031,59 @@ export const useAppStore = create<AppState>((set, get) => {
   },
   uploadFile: async (bucket, file) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Tenta usar o bucket fornecido ou fallback para profiles
-      const targetBucket = bucket || 'profiles';
+      const { compressImageToBase64, readFileToBase64 } = await import('../lib/imageCompression');
       
-      const { error: uploadError } = await supabase.storage
-        .from(targetBucket)
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
+      let dataUrl = '';
+      if (file.type.startsWith('image/')) {
+        // Se for imagem de perfil, 300px max. Caso contrário (galeria) 1200px max.
+        const isProfile = bucket === 'profiles' || bucket === 'Profiles';
+        const maxDimension = isProfile ? 300 : 1200;
+        const quality = isProfile ? 0.8 : 0.75;
+        dataUrl = await compressImageToBase64(file, maxDimension, quality);
+      } else {
+        dataUrl = await readFileToBase64(file);
+      }
+      
+      return dataUrl;
     } catch (error) {
-      console.error('Erro no upload de arquivo:', error);
+      console.error('Erro no upload/conversão de arquivo:', error);
       throw error;
     }
   },
   createEmployee: async (data) => {
     try {
       const { email, password, ...profileData } = data;
-      
-      // 1. Criar instância temporária para evitar deslogar o Admin
-      const { createClient } = await import('@supabase/supabase-js');
-      const tempSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
-          }
-        }
-      );
 
-      // 2. Criar Usuário no Supabase Auth com metadados para satisfazer triggers do banco
-      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+      // 1. Criar app temporário para registrar o funcionário sem deslogar o Admin atual
+      const { initializeApp } = await import('firebase/app');
+      const { getAuth, createUserWithEmailAndPassword, signOut: tempSignOut } = await import('firebase/auth');
+
+      const firebaseConfig = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'mock-key',
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'mock.firebaseapp.com',
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'mock-project-id',
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'mock-bucket.appspot.com',
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+        appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:mockid'
+      };
+
+      const tempApp = initializeApp(firebaseConfig, `TempApp-${Date.now()}`);
+      const tempAuth = getAuth(tempApp);
+
+      const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
+      const newUid = userCredential.user.uid;
+
+      // Desloga do app temporário
+      await tempSignOut(tempAuth);
+
+      // 2. Criar perfil no Firestore
+      const profileResult = await api.createEmployee({
+        id: newUid,
         email,
-        password,
-        options: {
-          data: {
-            nome: profileData.nome,
-            full_name: profileData.nome,
-            role: profileData.role,
-            data_nascimento: profileData.data_nascimento
-          }
-        }
+        ...profileData,
+        status: 'ativo',
+        data_cadastro: new Date().toISOString()
       });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Falha ao criar usuário na autenticação.');
-
-      // 3. Criar ou Atualizar Perfil no Banco de Dados
-      // Usamos upsert caso um trigger no banco já tenha criado o perfil básico
-      const { data: profileResult, error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          email,
-          ...profileData,
-          status: 'ativo',
-          data_cadastro: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('Erro ao salvar perfil no banco:', profileError);
-        throw new Error(`Usuário criado no Auth, mas erro no Perfil: ${profileError.message}`);
-      }
 
       set(state => ({ employees: [profileResult, ...state.employees] }));
     } catch (error: any) {
@@ -1073,7 +1139,9 @@ export const useAppStore = create<AppState>((set, get) => {
       // 1. Remover do Storage se tiver storagePath
       if (attachmentToDelete.storagePath) {
         const bucket = attachmentToDelete.type === 'image' ? 'Gallery' : 'Documents';
-        await supabase.storage.from(bucket).remove([attachmentToDelete.storagePath]);
+        const { ref, deleteObject } = await import('firebase/storage');
+        const fileRef = ref(storage, `${bucket}/${attachmentToDelete.storagePath}`);
+        await deleteObject(fileRef).catch(err => console.warn('Erro ao deletar arquivo no Storage:', err));
       }
 
       // 2. Atualizar no banco

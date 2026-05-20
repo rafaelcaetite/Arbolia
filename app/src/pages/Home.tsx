@@ -6,7 +6,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { ActionModal } from '../components/common/ActionModal';
 
 export function Home() {
-  const { trees, clients, services, openPostServiceModal, weatherCity, setWeatherCity, openServiceModal, userProfile, deleteService } = useAppStore();
+  const { trees, clients, services, openPostServiceModal, weatherCity, setWeatherCity, openServiceModal, userProfile, deleteService, weatherSettings } = useAppStore();
   const navigate = useNavigate();
 
   // Estados locais para busca e UI
@@ -104,7 +104,9 @@ export function Home() {
     const fetchWeather = async () => {
       setIsLoadingWeather(true);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation,relative_humidity_2m,wind_speed_10m,wind_gusts_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`;
+        const tempParam = weatherSettings.tempUnit === 'fahrenheit' ? '&temperature_unit=fahrenheit' : '';
+        const windParam = weatherSettings.windSpeedUnit === 'ms' ? '&wind_speed_unit=ms' : '';
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${weatherCity.lat}&longitude=${weatherCity.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation,relative_humidity_2m,wind_speed_10m,wind_gusts_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto${tempParam}${windParam}`;
         const res = await fetch(url, {
           method: 'GET',
           headers: {
@@ -182,7 +184,13 @@ export function Home() {
     };
 
     fetchWeather();
-  }, [weatherCity]);
+
+    // Polling ativo baseado no intervalo de sincronização configurado
+    const intervalMs = weatherSettings.syncInterval * 60 * 1000;
+    const intervalId = setInterval(fetchWeather, intervalMs);
+
+    return () => clearInterval(intervalId);
+  }, [weatherCity, weatherSettings]);
 
   const currentStats = currentWeather || { temp: '--', humidity: '--', wind: '--', rain: '--', precipitation: '--' };
 
@@ -192,12 +200,16 @@ export function Home() {
     const maxRainProb = Math.max(...weatherData.map(d => d.rain || 0));
     const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
 
+    const isMs = weatherSettings.windSpeedUnit === 'ms';
+    const limitHigh = isMs ? 15 : 55;
+    const limitWarning = isMs ? 11 : 40;
+
     // 1. Risco Alto
-    if (maxGusts > 55 || (maxRainProb > 50 && maxRainVol > 10)) {
+    if (maxGusts > limitHigh || (maxRainProb > 50 && maxRainVol > 10)) {
       return "Risco alto de temporais ou ventania severa. Paralisação total das atividades em campo.";
     }
     // 2. Atenção
-    if (maxGusts > 40 || (maxRainProb > 30 && maxRainVol > 2)) {
+    if (maxGusts > limitWarning || (maxRainProb > 30 && maxRainVol > 2)) {
       return "Condições de atenção. O Responsável Técnico da equipe avalia o local. Suspende-se apenas podas críticas ou uso de cesto aéreo.";
     }
     // 3. Favorável
@@ -265,10 +277,14 @@ export function Home() {
     const maxRainProb = Math.max(...weatherData.map(d => d.rain || 0));
     const maxRainVol = Math.max(...weatherData.map(d => d.precipitation || 0));
 
-    if (maxGusts > 55 || (maxRainProb > 50 && maxRainVol > 10)) {
+    const isMs = weatherSettings.windSpeedUnit === 'ms';
+    const limitHigh = isMs ? 15 : 55;
+    const limitWarning = isMs ? 11 : 40;
+
+    if (maxGusts > limitHigh || (maxRainProb > 50 && maxRainVol > 10)) {
       recBg = 'bg-red-600 shadow-red-950/20';
       recTextHeader = 'text-red-100';
-    } else if (maxGusts > 40 || (maxRainProb > 30 && maxRainVol > 2)) {
+    } else if (maxGusts > limitWarning || (maxRainProb > 30 && maxRainVol > 2)) {
       recBg = 'bg-orange-500 shadow-orange-950/20';
       recTextHeader = 'text-orange-100';
     }
@@ -415,7 +431,7 @@ export function Home() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-blue-400 uppercase">Temperatura</span>
-                    <span className="text-sm font-black text-slate-700">{isLoadingWeather ? '--' : `${currentStats.temp}°C`}</span>
+                    <span className="text-sm font-black text-slate-700">{isLoadingWeather ? '--' : `${currentStats.temp}°${weatherSettings.tempUnit === 'fahrenheit' ? 'F' : 'C'}`}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3 bg-blue-50/50 border border-blue-100 rounded-2xl shadow-sm">
@@ -442,7 +458,7 @@ export function Home() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-emerald-400 uppercase">Vento</span>
-                    <span className="text-sm font-black text-emerald-700">{isLoadingWeather ? '--' : `${currentStats.wind}km/h`}</span>
+                    <span className="text-sm font-black text-emerald-700">{isLoadingWeather ? '--' : `${currentStats.wind}${weatherSettings.windSpeedUnit === 'ms' ? ' m/s' : ' km/h'}`}</span>
                   </div>
                 </div>
               </div>
@@ -481,7 +497,7 @@ export function Home() {
                   {/* Eixo Esquerdo: Temperatura Fixa (5-40) */}
                   <YAxis 
                     yAxisId="left"
-                    domain={[5, 40]} 
+                    domain={weatherSettings.tempUnit === 'fahrenheit' ? [40, 105] : [5, 40]} 
                     allowDecimals={false}
                     axisLine={false} 
                     tickLine={false} 
@@ -512,7 +528,7 @@ export function Home() {
                                   <Thermometer size={14} className="text-orange-500" />
                                   <span className="text-xs font-bold text-slate-600">Temperatura</span>
                                 </div>
-                                <span className="text-xs font-black text-slate-800">{data.temp}°C</span>
+                                <span className="text-xs font-black text-slate-800">{data.temp}°{weatherSettings.tempUnit === 'fahrenheit' ? 'F' : 'C'}</span>
                               </div>
                               <div className="flex items-center justify-between gap-8">
                                 <div className="flex items-center gap-2">
@@ -533,7 +549,9 @@ export function Home() {
                                   <Wind size={14} className="text-emerald-600" />
                                   <span className="text-xs font-bold text-slate-600">Vento / Rajada</span>
                                 </div>
-                                <span className="text-xs font-black text-slate-800">{data.wind} km/h / {data.gusts} km/h</span>
+                                <span className="text-xs font-black text-slate-800">
+                                  {data.wind} {weatherSettings.windSpeedUnit === 'ms' ? 'm/s' : 'km/h'} / {data.gusts} {weatherSettings.windSpeedUnit === 'ms' ? 'm/s' : 'km/h'}
+                                </span>
                               </div>
                             </div>
                           </div>

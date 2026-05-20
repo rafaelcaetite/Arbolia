@@ -82,7 +82,7 @@ export function TreeModal() {
       console.error('Erro ao salvar árvore:', err);
       const msg = err.message || 'Erro desconhecido';
       const code = err.code || '';
-      alert(`Erro ao salvar árvore: ${msg} [${code}]. Verifique as políticas de RLS no Supabase.`);
+      alert(`Erro ao salvar árvore: ${msg} [${code}]. Verifique as Regras de Segurança no Firestore.`);
     }
   };
 

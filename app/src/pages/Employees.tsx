@@ -240,10 +240,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
       }, 2000);
     } catch (error: any) {
       console.error('Erro detalhado ao salvar funcionário:', error);
-      // Se for o erro Database error saving new user, damos uma dica sobre Triggers
-      const msg = error.message === 'Database error saving new user' 
-        ? 'Erro no Trigger do Banco: Verifique se a função handle_new_user() no Supabase está correta.'
-        : error.message;
+      const msg = error.message || 'Erro desconhecido';
       alert(`Erro ao criar funcionário: ${msg}`);
     } finally {
       setIsSubmitting(false);

@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
-import { supabase } from '../lib/supabase';
 import { ActionModal } from '../components/common/ActionModal';
 import { formatTreeId } from '../lib/treeUtils';
 
@@ -31,13 +30,27 @@ function daysUntil(dateStr: string) {
   return Math.ceil((d.getTime() - today.getTime()) / (1000*60*60*24));
 }
 
+async function getAttachmentUrl(storagePath: string, bucket: 'Gallery' | 'Documents') {
+  if (storagePath.startsWith('http') || storagePath.startsWith('data:')) {
+    return storagePath;
+  }
+  try {
+    const { ref, getDownloadURL } = await import('firebase/storage');
+    const { storage } = await import('../lib/firebase');
+    const storageRef = ref(storage, `${bucket}/${storagePath}`);
+    return await getDownloadURL(storageRef);
+  } catch (e) {
+    console.error('Erro ao resolver URL do Firebase Storage:', e);
+    return null;
+  }
+}
+
 async function downloadAttachment(att: RichAttachment) {
   let url = att.dataUrl;
   
   if (!url && att.storagePath) {
     const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
-    const { data } = await supabase.storage.from(bucket).createSignedUrl(att.storagePath, 60);
-    if (data) url = data.signedUrl;
+    url = await getAttachmentUrl(att.storagePath, bucket) || undefined;
   }
 
   if (!url) return;
@@ -65,8 +78,8 @@ function Lightbox({ items, index, onClose }: {
       if (item.dataUrl) {
         setCurrentUrl(item.dataUrl);
       } else if (item.storagePath) {
-        const { data } = await supabase.storage.from('Gallery').createSignedUrl(item.storagePath, 3600);
-        if (data) setCurrentUrl(data.signedUrl);
+        const url = await getAttachmentUrl(item.storagePath, 'Gallery');
+        setCurrentUrl(url);
       }
     };
     resolveUrl();
@@ -150,8 +163,8 @@ function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => 
           setIsLoading(false);
         }
       } else if (item.storagePath) {
-        const { data } = await supabase.storage.from('Documents').createSignedUrl(item.storagePath!, 3600);
-        if (data) setPdfUrl(data.signedUrl);
+        const url = await getAttachmentUrl(item.storagePath!, 'Documents');
+        setPdfUrl(url);
         setIsLoading(false);
       } else {
         setPdfUrl(item.dataUrl || null);

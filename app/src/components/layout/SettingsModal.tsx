@@ -1,12 +1,18 @@
-import { X, Moon, Sun, Monitor, BellRing, LocateFixed, Eye } from 'lucide-react';
+import { X, Moon, Sun, Monitor, BellRing, LocateFixed, Eye, CloudRain } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useEffect, useState } from 'react';
 
 export function SettingsModal() {
-  const { isSettingsModalOpen, closeSettingsModal, theme, setTheme } = useAppStore();
+  const { 
+    isSettingsModalOpen, 
+    closeSettingsModal, 
+    theme, 
+    setTheme,
+    weatherSettings,
+    updateWeatherSettings
+  } = useAppStore();
   const [isVisible, setIsVisible] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
-  const [weatherAlerts, setWeatherAlerts] = useState(true);
 
   useEffect(() => {
     if (isSettingsModalOpen) {
@@ -95,23 +101,122 @@ export function SettingsModal() {
               <h3>Notificações</h3>
             </div>
             
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm">
               <div>
                 <h4 className="text-sm font-bold text-slate-800">Alertas Meteorológicos</h4>
                 <p className="text-xs text-slate-500 mt-1">Receber notificações sobre mudanças bruscas de clima.</p>
               </div>
               <button 
-                onClick={() => setWeatherAlerts(!weatherAlerts)}
+                onClick={() => updateWeatherSettings({ alertsEnabled: !weatherSettings.alertsEnabled })}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  weatherAlerts ? 'bg-primary' : 'bg-slate-200'
+                  weatherSettings.alertsEnabled ? 'bg-primary' : 'bg-slate-200'
                 }`}
               >
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    weatherAlerts ? 'translate-x-5' : 'translate-x-0'
+                    weatherSettings.alertsEnabled ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
+            </div>
+          </section>
+
+          {/* Sessão: Clima e Operações */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
+              <CloudRain size={16} />
+              <h3>Clima e Operações</h3>
+            </div>
+            
+            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 space-y-6 shadow-sm">
+              {/* Intervalo de Sincronização */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Intervalo de Sincronização</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Tempo de atualização automática do widget de clima.</p>
+                </div>
+                <div className="flex bg-slate-200/50 p-1 rounded-xl shrink-0 w-fit">
+                  {[5, 15, 30, 60].map((min) => (
+                    <button
+                      key={min}
+                      onClick={() => updateWeatherSettings({ syncInterval: min })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                        weatherSettings.syncInterval === min 
+                          ? 'bg-white text-slate-800 shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {min}m
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divisor */}
+              <div className="h-px bg-slate-200/50" />
+
+              {/* Escala de Temperatura */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Unidade de Temperatura</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Escala térmica para relatórios e exibição.</p>
+                </div>
+                <div className="flex bg-slate-200/50 p-1 rounded-xl shrink-0 w-fit">
+                  <button
+                    onClick={() => updateWeatherSettings({ tempUnit: 'celsius' })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      weatherSettings.tempUnit === 'celsius' 
+                        ? 'bg-white text-slate-800 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    °C
+                  </button>
+                  <button
+                    onClick={() => updateWeatherSettings({ tempUnit: 'fahrenheit' })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      weatherSettings.tempUnit === 'fahrenheit' 
+                        ? 'bg-white text-slate-800 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    °F
+                  </button>
+                </div>
+              </div>
+
+              {/* Divisor */}
+              <div className="h-px bg-slate-200/50" />
+
+              {/* Escala de Velocidade do Vento */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Velocidade do Vento</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">Unidade de velocidade para ventos e rajadas.</p>
+                </div>
+                <div className="flex bg-slate-200/50 p-1 rounded-xl shrink-0 w-fit">
+                  <button
+                    onClick={() => updateWeatherSettings({ windSpeedUnit: 'kmh' })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      weatherSettings.windSpeedUnit === 'kmh' 
+                        ? 'bg-white text-slate-800 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    km/h
+                  </button>
+                  <button
+                    onClick={() => updateWeatherSettings({ windSpeedUnit: 'ms' })}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      weatherSettings.windSpeedUnit === 'ms' 
+                        ? 'bg-white text-slate-800 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    m/s
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
 

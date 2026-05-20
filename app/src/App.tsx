@@ -17,7 +17,8 @@ import { SettingsModal } from './components/layout/SettingsModal';
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from './store/useAppStore';
-import { supabase } from './lib/supabase';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { userProfile } = useAppStore();
@@ -47,18 +48,13 @@ function App() {
   }, [user, checkingAuth]);
 
   useEffect(() => {
-    // 1. Verifica sessão inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    // Escuta mudanças de estado de autenticação do Firebase (inclui a inicial)
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser as any);
       setCheckingAuth(false);
     });
 
-    // 2. Ouve mudanças na autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [setUser]);
 
   useEffect(() => {

@@ -1,239 +1,126 @@
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/firebase';
+import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, limit } from 'firebase/firestore';
 import type { Tree, Client, Service, UserProfile, AuditLog } from '../store/useAppStore';
 
 export const api = {
   // --- Clientes ---
   async getClients() {
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('nome');
-    if (error) throw error;
-    return data as Client[];
+    const querySnapshot = await getDocs(query(collection(db, 'clients'), orderBy('nome')));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Client[];
   },
 
   async createClient(client: Omit<Client, 'id' | 'data_cadastro'>) {
-    const { data, error } = await supabase
-      .from('clients')
-      .insert([client])
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Client;
+    const dataCadastro = new Date().toISOString();
+    const docRef = await addDoc(collection(db, 'clients'), {
+      ...client,
+      data_cadastro: dataCadastro
+    });
+    const snap = await getDoc(docRef);
+    return { id: docRef.id, ...snap.data() } as Client;
   },
 
   async updateClient(id: string, updates: Partial<Client>) {
-    const { data, error } = await supabase
-      .from('clients')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Client;
+    const docRef = doc(db, 'clients', id);
+    await updateDoc(docRef, updates);
+    const snap = await getDoc(docRef);
+    return { id, ...snap.data() } as Client;
   },
 
-  // --- Profiles & Employees
+  // --- Profiles & Employees ---
   async getProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (error) throw error;
-    return data;
+    const docRef = doc(db, 'profiles', userId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) throw new Error('Perfil não encontrado');
+    return { id: userId, ...snap.data() } as UserProfile;
   },
 
   async getEmployees() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('nome');
-    if (error) throw error;
-    return data;
+    const querySnapshot = await getDocs(query(collection(db, 'profiles'), orderBy('nome')));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserProfile[];
   },
 
   async createEmployee(employeeData: any) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert([employeeData])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const { id, ...rest } = employeeData;
+    if (!id) {
+      throw new Error('ID (UID) é obrigatório para cadastrar um perfil.');
+    }
+    const docRef = doc(db, 'profiles', id);
+    await setDoc(docRef, {
+      ...rest,
+      status: rest.status || 'ativo',
+      data_cadastro: rest.data_cadastro || new Date().toISOString()
+    });
+    const snap = await getDoc(docRef);
+    return { id, ...snap.data() } as UserProfile;
   },
 
   async updateProfile(id: string, updates: Partial<UserProfile>) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    const docRef = doc(db, 'profiles', id);
+    await updateDoc(docRef, updates);
+    const snap = await getDoc(docRef);
+    return { id, ...snap.data() } as UserProfile;
   },
 
   // --- Árvores ---
   async getTrees() {
-    const { data, error } = await supabase
-      .from('trees')
-      .select('*')
-      .order('data_cadastro', { ascending: false });
-    if (error) throw error;
-    return data as Tree[];
+    const querySnapshot = await getDocs(query(collection(db, 'trees'), orderBy('data_cadastro', 'desc')));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tree[];
   },
 
   async createTree(tree: Omit<Tree, 'id' | 'data_cadastro'>) {
-    const { data, error } = await supabase
-      .from('trees')
-      .insert([tree])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Erro Supabase (createTree):', error);
-      throw error;
-    }
-    return data as Tree;
+    const dataCadastro = new Date().toISOString();
+    const docRef = await addDoc(collection(db, 'trees'), {
+      ...tree,
+      data_cadastro: dataCadastro
+    });
+    const snap = await getDoc(docRef);
+    return { id: docRef.id, ...snap.data() } as Tree;
   },
 
   async updateTree(id: string, updates: Partial<Tree>) {
-    const { data, error } = await supabase
-      .from('trees')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Erro Supabase (updateTree):', error);
-      throw error;
-    }
-    return data as Tree;
+    const docRef = doc(db, 'trees', id);
+    await updateDoc(docRef, updates);
+    const snap = await getDoc(docRef);
+    return { id, ...snap.data() } as Tree;
   },
 
   // --- Serviços ---
   async getServices() {
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-      .order('data', { ascending: false });
-    if (error) throw error;
-    
-    return (data || []).map(mapService);
+    const querySnapshot = await getDocs(query(collection(db, 'services'), orderBy('data', 'desc')));
+    const list = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return list.map(mapService);
   },
 
   async createService(service: Omit<Service, 'id'>) {
-    const { treeIds, laudoGerado, laudoData, attachmentsByTree, ...rest } = service as any;
-    const dbPayload = {
-      ...rest,
-      tree_ids: treeIds || [],
-      laudo_gerado: laudoGerado,
-      laudo_data: laudoData,
-      attachments_by_tree: attachmentsByTree || {}
-    };
-
-    // 1. Criar o serviço na tabela principal
-    const { data: newService, error: serviceError } = await supabase
-      .from('services')
-      .insert([dbPayload])
-      .select()
-      .single();
-    
-    if (serviceError) {
-      console.error('Erro ao criar serviço no Supabase:', serviceError);
-      throw serviceError;
-    }
-
-    // 2. Criar os vínculos na tabela de junção service_trees
-    if (treeIds && treeIds.length > 0) {
-      const relations = treeIds.map((tId: string) => ({
-        service_id: newService.id,
-        tree_id: tId
-      }));
-      
-      const { error: relError } = await supabase
-        .from('service_trees')
-        .insert(relations);
-        
-      if (relError) {
-        console.error('Erro ao criar vínculos service_trees:', relError);
-        // Não lançamos erro aqui para não invalidar a criação do serviço, 
-        // mas o ideal seria uma transação se o Supabase suportasse via JS (ou usar RPC)
-      }
-    }
-
-    return mapService(newService);
+    const docRef = await addDoc(collection(db, 'services'), service);
+    const snap = await getDoc(docRef);
+    return mapService({ id: docRef.id, ...snap.data() });
   },
 
   async updateService(id: string, updates: Partial<Service>) {
-    const { treeIds, laudoGerado, laudoData, attachmentsByTree, ...rest } = updates as any;
-    const dbPayload = { ...rest };
-    
-    if (treeIds !== undefined) dbPayload.tree_ids = treeIds;
-    if (laudoGerado !== undefined) dbPayload.laudo_gerado = laudoGerado;
-    if (laudoData !== undefined) dbPayload.laudo_data = laudoData;
-    if (attachmentsByTree !== undefined) dbPayload.attachments_by_tree = attachmentsByTree;
-
-    // 1. Atualizar o serviço
-    const { data: updatedService, error: serviceError } = await supabase
-      .from('services')
-      .update(dbPayload)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (serviceError) throw serviceError;
-
-    // 2. Sincronizar vínculos na tabela service_trees se treeIds foi alterado
-    if (treeIds !== undefined) {
-      // Deletar vínculos antigos
-      await supabase.from('service_trees').delete().eq('service_id', id);
-      
-      // Inserir novos vínculos
-      if (treeIds.length > 0) {
-        const relations = treeIds.map((tId: string) => ({
-          service_id: id,
-          tree_id: tId
-        }));
-        await supabase.from('service_trees').insert(relations);
-      }
-    }
-
-    return mapService(updatedService);
+    const docRef = doc(db, 'services', id);
+    await updateDoc(docRef, updates);
+    const snap = await getDoc(docRef);
+    return mapService({ id, ...snap.data() });
   },
 
   async deleteService(id: string) {
-    const { error: relError } = await supabase
-      .from('service_trees')
-      .delete()
-      .eq('service_id', id);
-    if (relError) throw relError;
-
-    const { error: serviceError } = await supabase
-      .from('services')
-      .delete()
-      .eq('id', id);
-    if (serviceError) throw serviceError;
+    const docRef = doc(db, 'services', id);
+    await deleteDoc(docRef);
   },
 
   // --- Audit Logs ---
   async getAuditLogs() {
-    const { data, error } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (error) throw error;
-    return data as AuditLog[];
+    const querySnapshot = await getDocs(query(collection(db, 'audit_logs'), orderBy('created_at', 'desc'), limit(100)));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AuditLog[];
   },
 
   async createAuditLog(log: Omit<AuditLog, 'id' | 'created_at'>) {
-    const { error } = await supabase
-      .from('audit_logs')
-      .insert([log]);
-    if (error) throw error;
+    const createdAt = new Date().toISOString();
+    await addDoc(collection(db, 'audit_logs'), {
+      ...log,
+      created_at: createdAt
+    });
   }
 };
 
@@ -253,9 +140,9 @@ function mapService(s: any): Service {
   return {
     ...s,
     status,
-    treeIds: s.tree_ids || [],
-    laudoGerado: s.laudo_gerado,
-    laudoData: s.laudo_data,
-    attachmentsByTree: s.attachments_by_tree || {}
+    treeIds: s.treeIds || s.tree_ids || [],
+    laudoGerado: s.laudoGerado !== undefined ? s.laudoGerado : s.laudo_gerado,
+    laudoData: s.laudoData || s.laudo_data,
+    attachmentsByTree: s.attachmentsByTree || s.attachments_by_tree || {}
   } as Service;
 }

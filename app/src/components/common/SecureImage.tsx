@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../lib/firebase';
 import { Loader2, User } from 'lucide-react';
 
 interface SecureImageProps {
@@ -11,7 +12,7 @@ interface SecureImageProps {
   onClick?: () => void;
 }
 
-// Cache global em memória para URLs assinadas (evita requisições repetidas ao Supabase)
+// Cache global em memória para URLs assinadas (evita requisições repetidas ao Firebase Storage)
 const signedUrlCache: Record<string, { url: string; expires: number }> = {};
 
 export function SecureImage({ src, alt, className = "", fallbackInitial, bucket = 'Profiles', onClick }: SecureImageProps) {
@@ -55,17 +56,16 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
           : src;
 
         if (path) {
-          const { data } = await supabase.storage
-            .from(bucket)
-            .createSignedUrl(path, 3600);
+          const storageRef = ref(storage, `${bucket}/${path}`);
+          const url = await getDownloadURL(storageRef);
 
-          if (isMounted && data) {
+          if (isMounted && url) {
             // Salva no cache por 55 minutos (para ter margem de segurança)
             signedUrlCache[cacheKey] = {
-              url: data.signedUrl,
+              url,
               expires: now + (55 * 60 * 1000)
             };
-            setDisplayUrl(data.signedUrl);
+            setDisplayUrl(url);
           } else if (isMounted) {
             setDisplayUrl(src);
           }
