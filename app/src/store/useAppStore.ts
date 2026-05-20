@@ -1056,7 +1056,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
       // 1. Criar app temporário para registrar o funcionário sem deslogar o Admin atual
       const { initializeApp } = await import('firebase/app');
-      const { getAuth, createUserWithEmailAndPassword, signOut: tempSignOut } = await import('firebase/auth');
+      const { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut: tempSignOut } = await import('firebase/auth');
 
       const firebaseConfig = {
         apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'mock-key',
@@ -1068,7 +1068,9 @@ export const useAppStore = create<AppState>((set, get) => {
       };
 
       const tempApp = initializeApp(firebaseConfig, `TempApp-${Date.now()}`);
-      const tempAuth = getAuth(tempApp);
+      const tempAuth = initializeAuth(tempApp, {
+        persistence: inMemoryPersistence
+      });
 
       const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
       const newUid = userCredential.user.uid;

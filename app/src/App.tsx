@@ -49,19 +49,24 @@ function App() {
 
   useEffect(() => {
     // Escuta mudanças de estado de autenticação do Firebase (inclui a inicial)
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser as any);
-      setCheckingAuth(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setCheckingAuth(false);
+      } else {
+        setUser(firebaseUser as any);
+        try {
+          await initializeData();
+        } catch (err) {
+          console.error('Erro ao inicializar dados no Firebase:', err);
+        } finally {
+          setCheckingAuth(false);
+        }
+      }
     });
 
     return () => unsubscribe();
-  }, [setUser]);
-
-  useEffect(() => {
-    if (user) {
-      initializeData();
-    }
-  }, [user, initializeData]);
+  }, [setUser, initializeData]);
 
   if (checkingAuth) {
     return (
