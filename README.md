@@ -3,7 +3,7 @@
 > **Status de Deploy:** Integração Supabase + Vercel (Produção Otimizada, Reativa e Segura)  
 > **Arquitetura:** Padrão de 3 Camadas A.N.T. (Architecture, Navigation, Tools) com leis invariantes de controle e segurança.
 
-Plataforma Web SaaS de altíssimo nível para **inventário georreferenciado, monitoramento fitossanitário em tempo real, conformidade legal, gestão de serviços de manejo arbóreo e auditoria florestal**. Projetada especificamente para engenheiros florestais, agrônomos, técnicos de campo, auditores e administradores de planejamento ambiental urbano.
+Plataforma Web SaaS de alto nível para **inventário georreferenciado, monitoramento fitossanitário em tempo real, conformidade legal, gestão de serviços de manejo arbóreo e auditoria florestal**. Projetada especificamente para engenheiros florestais, agrônomos, técnicos de campo, auditores e administradores de planejamento ambiental urbano.
 
 ---
 
@@ -252,7 +252,7 @@ erDiagram
 
 ## 📁 Estrutura de Diretórios Organizacional
 
-O projeto está estruturado de acordo com o padrão moderno de arquitetura de software, com total separação de camadas técnicas:
+O projeto está estruturado com total separação de camadas técnicas:
 
 ```
 arbolia/
@@ -335,4 +335,3 @@ arbolia/
 - **Verificação Dinâmica**: Antes de qualquer deploy, certifique-se de executar `npm run build` para garantir que o compilador do TypeScript e as diretrizes do Vite estejam 100% livres de falhas.
 
 ---
-*Desenvolvido com rigor técnico de engenharia de software, interfaces robustas e micro-interações fluidas. 🌳🚀*
