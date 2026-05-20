@@ -967,9 +967,11 @@ export const useAppStore = create<AppState>((set, get) => {
       const { userProfile } = get();
       if (!userProfile) return;
       
-      // No api.ts precisamos do updateProfile
       const updated = await api.updateProfile(userProfile.id, updates);
-      set({ userProfile: updated });
+      set(state => ({
+        userProfile: updated,
+        employees: state.employees.map(emp => emp.id === userProfile.id ? updated : emp)
+      }));
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       throw error;
@@ -1020,10 +1022,17 @@ export const useAppStore = create<AppState>((set, get) => {
   },
   updateEmployee: async (id, data) => {
     try {
+      const { userProfile } = get();
       const updatedProfile = await api.updateProfile(id, data);
-      set(state => ({
-        employees: state.employees.map(emp => emp.id === id ? updatedProfile : emp)
-      }));
+      set(state => {
+        const nextState: any = {
+          employees: state.employees.map(emp => emp.id === id ? updatedProfile : emp)
+        };
+        if (userProfile && id === userProfile.id) {
+          nextState.userProfile = updatedProfile;
+        }
+        return nextState;
+      });
     } catch (error: any) {
       console.error('Erro ao atualizar funcionário:', error);
       alert(`Erro ao atualizar: ${error.message}`);
