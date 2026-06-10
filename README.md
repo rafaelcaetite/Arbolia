@@ -1,6 +1,6 @@
 # Arbolia - Gestão de Arborização Urbana 🌳 (v2.0.0)
 
-> **Status de Deploy:** Infraestrutura 100% migrada para Google Firebase + Firebase Hosting (Resiliência Offline Extrema e Alta Disponibilidade)  
+> **Status de Deploy:** Backend 100% migrado para Google Firebase + Frontend hospedado na Vercel (Resiliência Offline Extrema e Alta Disponibilidade)  
 > **Arquitetura:** Camada A.N.T. (Architecture, Navigation, Tools) com persistência local reativa e banco de dados NoSQL distribuído.
 
 Plataforma Web SaaS de alto nível para **inventário georreferenciado, monitoramento fitossanitário em tempo real, conformidade legal, gestão de serviços de manejo arbóreo e auditoria florestal**. Projetada especificamente para engenheiros florestais, agrônomos, técnicos de campo, auditores e administradores de planejamento ambiental urbano.
@@ -93,9 +93,9 @@ A geração de PDFs no **Arbolia** é robusta e puramente desenvolvida no client
 
 ### 🧠 6. Laudo Assistido por Inteligência Artificial (Google Gemini)
 O **Arbolia** integra inteligência artificial nativa para aproximar os laudos biológicos complexos dos clientes finais leigos (como síndicos de condomínios, fiscais ou moradores):
-- **Modelo Utilizado**: `gemini-flash-latest` (velocidade e precisão estrutural).
+- **Modelos Utilizados (Failover System)**: Array de modelos em cascata iniciando pelo `gemini-2.0-flash` com fallback automático para o `gemini-2.5-flash` e `gemini-3.5-flash` em caso de instabilidade (Erro 429).
 - **Parâmetros Técnicos Rígidos**:
-  - Executa requisições POST para a API REST oficial do Gemini (`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${VITE_GEMINI_API_KEY}`).
+  - Executa requisições POST para a API REST oficial do Gemini com timeouts individuais de 25 segundos por tentativa.
   - Ajustado com **Temperatura: 0.1** para mitigar alucinações de dados e assegurar respostas puramente baseadas no payload técnico de vistoria.
 - **Prompt do Sistema (System Instruction)**: Atua estritamente como um especialista em arboricultura urbana encarregado de traduzir a inspeção técnica de forma empática e didática. É proibido criar dados ou presunções de riscos não contidos no payload original. Jargões como "Codominância" ou "Dano no Alburno" devem ser sucintamente explicados.
 - **Estrutura Determinística de Retorno (JSON Schema)**:
@@ -136,7 +136,7 @@ O **Arbolia** integra inteligência artificial nativa para aproximar os laudos b
 |---|---|---|
 | **Core** | `React 19` + `TypeScript 6` | SPA reativa ultrarápida com tipagem de dados estrita. |
 | **Backend / BD** | `Google Firebase` (Firestore, Auth, Storage) | Autenticação JWT, Banco de Dados NoSQL distribuído, Storage de alta disponibilidade. |
-| **Hospedagem** | `Firebase Hosting` | Hospedagem global escalável com SSL automático e suporte nativo a Single Page Applications (SPA). |
+| **Hospedagem** | `Vercel` | Hospedagem global escalável com SSL automático e suporte nativo a Single Page Applications (SPA) via `vercel.json`. |
 | **Bundler** | `Vite 8` | Compilação otimizada, Hot Module Replacement instantâneo. |
 | **Estilização** | `Tailwind CSS 4` | Estilização utilitária de alta fidelidade, suporte a Glassmorphism e Dark Mode nativos. |
 | **Estado Global** | `Zustand 5` | Gerenciamento leve do estado global reativo com persistência em cache local. |
@@ -230,7 +230,7 @@ classDiagram
    - **Endpoint**: `https://geocoding-api.open-meteo.com/v1/search`
    - **Finalidade**: Busca e autocomplete geográfico de municípios, com reordenação de relevância no cliente para dar preferência a localizações brasileiras (`country_code: 'BR'`).
 3. **Google Gemini REST API**
-   - **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`
+   - **Endpoint**: `https://generativelanguage.googleapis.com/{version}/models/{model}:generateContent`
    - **Finalidade**: Leitura e interpretação de inspeções de risco da metodologia ISA, transformando terminologias densas em descrições acessíveis para leigos sob uma formatação estruturada de retorno.
 4. **Google Firebase REST & SDK Services**
    - **Conectividade**: Acesso seguro via SDK oficial e endpoints REST para Firestore, Storage e Firebase Auth.
@@ -318,28 +318,23 @@ arbolia/
 
 ---
 
-## 🚀 Deploy no Firebase Hosting
+## 🚀 Deploy na Vercel
 
-Com o build validado e bem-sucedido na pasta `dist/`, você pode publicar a aplicação usando o Firebase CLI:
+O Front-end da aplicação está hospedado na **Vercel**, configurado com um arquivo `vercel.json` na raiz para garantir o roteamento correto de uma Single Page Application (SPA). O deploy pode ser feito via CI/CD automático ao dar push na branch `main` ou manualmente via Vercel CLI:
 
 1. **Acesse a pasta da aplicação:**
    ```bash
    cd app
    ```
 
-2. **Instale a ferramenta CLI do Firebase (se não tiver global):**
+2. **Instale a Vercel CLI:**
    ```bash
-   npm install -g firebase-tools
+   npm i -g vercel
    ```
 
-3. **Faça login no Firebase:**
+3. **Execute o Deploy de Produção:**
    ```bash
-   npx firebase-tools login
-   ```
-
-4. **Execute o Deploy:**
-   ```bash
-   npx firebase-tools deploy --only hosting
+   vercel --prod
    ```
 
 ---
