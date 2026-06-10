@@ -57,7 +57,10 @@ function App() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setUser(firebaseUser as any);
         try {
-          await initializeData();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout de inicialização')), 12000)
+          );
+          await Promise.race([initializeData(), timeoutPromise]);
         } catch (err) {
           console.error('Erro ao inicializar dados no Firebase:', err);
         } finally {

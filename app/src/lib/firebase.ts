@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Estas chaves você encontra nas configurações do seu projeto no Firebase Console
@@ -16,11 +16,11 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializa os serviços com cache offline persistente moderno (compatível com v10+)
-// O persistentLocalCache com persistentMultipleTabManager substitui o antigo enableIndexedDbPersistence
+// Inicializa os serviços com cache offline persistente moderno
+// Usando SingleTabManager com forceOwnership para evitar travamentos de lock no IndexedDB
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
+    tabManager: persistentSingleTabManager({ forceOwnership: true }),
   }),
 });
 
