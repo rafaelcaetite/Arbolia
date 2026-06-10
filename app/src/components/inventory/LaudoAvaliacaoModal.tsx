@@ -121,6 +121,8 @@ export function LaudoAvaliacaoModal() {
       dataLaudo: new Date().toISOString(),
     };
 
+    try {
+
     // ── INTERPRETAÇÃO IA ───────────────────────────────────────────────
     try {
       const mitigacoesLabels = mitigacoes.map(id => OPCOES_MITIGACAO.find(o => o.id === id)?.label).filter((l): l is string => Boolean(l));
@@ -145,9 +147,11 @@ export function LaudoAvaliacaoModal() {
 
     const loadLogo = (): Promise<string | null> => {
       return new Promise((resolve) => {
+        const timeout = setTimeout(() => resolve(null), 5000); // 5s timeout
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.onload = () => {
+          clearTimeout(timeout);
           const canvas = document.createElement('canvas');
           canvas.width = img.width;
           canvas.height = img.height;
@@ -159,14 +163,16 @@ export function LaudoAvaliacaoModal() {
             resolve(null);
           }
         };
-        img.onerror = () => resolve(null);
+        img.onerror = () => {
+          clearTimeout(timeout);
+          resolve(null);
+        };
         img.src = logoArbolia;
       });
     };
 
     const logoBase64 = await loadLogo();
 
-    try {
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 18;

@@ -41,8 +41,12 @@ SUAS REGRAS ESTRITAS:
   ${JSON.stringify(payload, null, 2)}`;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(API_URL, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -59,6 +63,8 @@ SUAS REGRAS ESTRITAS:
         }
       })
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Gemini API Error: ${response.statusText}`);
