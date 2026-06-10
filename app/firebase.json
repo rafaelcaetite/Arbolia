@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "arbolia",
+    "site": "arbolia-32947",
     "public": "dist",
     "ignore": [
       "firebase.json",
