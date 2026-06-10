@@ -391,14 +391,17 @@ export function LaudoAvaliacaoModal() {
       doc.text('ARBOLIA® ARBORICULTURA - INTELIGÊNCIA EM GESTÃO DE RISCO ARBÓREO', pageWidth / 2, 285, { align: 'center' });
       doc.text('PADRÃO INTERNACIONAL ISA TRAQ - DOCUMENTO AUTENTICADO ELETRONICAMENTE', pageWidth / 2, 289, { align: 'center' });
 
-      // BAIXAR PDF DIRETAMENTE E SALVAR APENAS METADADOS NO FIRESTORE
+      // UPLOAD DO PDF PARA O FIREBASE STORAGE
+      const { uploadToStorage } = await import('../../services/storageService');
+
       const attachmentId = `laudo-${crypto.randomUUID()}`;
       const attachmentName = `Laudo_ISA_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
 
-      // Faz o download direto do PDF para o dispositivo do usuário
-      doc.save(attachmentName);
+      // Converte o jsPDF para Blob e faz upload para o Storage
+      const pdfBlob = doc.output('blob');
+      const { storagePath } = await uploadToStorage(pdfBlob, 'Documents', attachmentName, service.id);
 
-      // Salva APENAS os metadados no Firestore (sem o base64 gigante)
+      // Salva metadados + storagePath no Firestore (sem base64)
       const prev = service.attachmentsByTree ?? {};
       const nextAttachments = { ...prev };
       service.treeIds.forEach(tId => {
@@ -406,7 +409,8 @@ export function LaudoAvaliacaoModal() {
           id: attachmentId,
           name: attachmentName,
           type: 'pdf' as const,
-          size: 0,
+          storagePath,
+          size: pdfBlob.size,
         }];
       });
 

@@ -1,7 +1,6 @@
 import type { AppSlice } from './types';
 import type { AppState, Tree, Service, AppNotification } from '../useAppStore';
 import { api } from '../../services/api';
-import { storage } from '../../lib/firebase';
 import { getLocalArray, addLocalId, calculateDiff } from '../utils';
 
 export type DataSliceType = Pick<AppState,
@@ -481,10 +480,8 @@ export const createDataSlice: AppSlice<DataSliceType> = (set, get) => ({
       };
 
       if (attachmentToDelete.storagePath) {
-        const bucket = attachmentToDelete.type === 'image' ? 'Gallery' : 'Documents';
-        const { ref, deleteObject } = await import('firebase/storage');
-        const fileRef = ref(storage, `${bucket}/${attachmentToDelete.storagePath}`);
-        await deleteObject(fileRef).catch(err => console.warn('Erro ao deletar arquivo no Storage:', err));
+        const { deleteFromStorage } = await import('../../services/storageService');
+        await deleteFromStorage(attachmentToDelete.storagePath);
       }
 
       const updated = await api.updateService(serviceId, { attachmentsByTree: nextAttachmentsByTree } as Partial<Service>);

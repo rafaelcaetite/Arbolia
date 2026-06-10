@@ -171,21 +171,26 @@ export const createAuthSlice: AppSlice<AuthSliceType> = (set, get) => {
     },
     uploadFile: async (bucket, file) => {
       try {
-        const { compressImageToBase64, readFileToBase64 } = await import('../../lib/imageCompression');
+        const { uploadToStorage, compressImageToBlob } = await import('../../services/storageService');
+        const { user } = get();
         
-        let dataUrl = '';
+        const isProfile = bucket === 'profiles' || bucket === 'Profiles';
+        const storageBucket = isProfile ? 'Profiles' : (file.type.startsWith('image/') ? 'Gallery' : 'Documents');
+        const subFolder = user?.id || 'unknown';
+
+        let uploadFile: File | Blob = file;
         if (file.type.startsWith('image/')) {
-          const isProfile = bucket === 'profiles' || bucket === 'Profiles';
           const maxDimension = isProfile ? 300 : 1200;
           const quality = isProfile ? 0.8 : 0.75;
-          dataUrl = await compressImageToBase64(file, maxDimension, quality);
-        } else {
-          dataUrl = await readFileToBase64(file);
+          uploadFile = await compressImageToBlob(file, maxDimension, quality);
         }
+
+        const uniqueName = `${Date.now()}-${file.name}`;
+        const { downloadURL } = await uploadToStorage(uploadFile, storageBucket, uniqueName, subFolder);
         
-        return dataUrl;
+        return downloadURL;
       } catch (error) {
-        console.error('Erro no upload/conversão de arquivo:', error);
+        console.error('Erro no upload de arquivo para Storage:', error);
         throw error;
       }
     },

@@ -4,7 +4,6 @@ import { useAppStore, type ServiceAttachment } from '../../store/useAppStore';
 import { ActionModal } from '../common/ActionModal';
 import { AttachmentViewer } from '../common/AttachmentViewer';
 import { formatTreeId } from '../../lib/treeUtils';
-import { compressImageToBase64, readFileToBase64 } from '../../lib/imageCompression';
 
 // ── Botões de Anexo por Serviço ──────────────────────────────────────────────
 function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; treeId: string; attachments: ServiceAttachment[] }) {
@@ -23,27 +22,30 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
 
   const readFile = async (file: File, type: 'pdf' | 'image') => {
     try {
-      let dataUrl = '';
+      const { uploadToStorage, compressImageToBlob } = await import('../../services/storageService');
+
+      const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
+      const bucket = type === 'image' ? 'Gallery' : 'Documents';
+
+      let uploadFile: File | Blob = file;
       if (type === 'image') {
-        // Comprime imagens de até 3MB+ de forma eficiente mantendo ótima qualidade (resolução máx 1200px, 75% qualidade)
-        dataUrl = await compressImageToBase64(file, 1200, 0.75);
-      } else {
-        dataUrl = await readFileToBase64(file);
+        // Comprime imagens mantendo boa qualidade (max 1200px, 75% qualidade)
+        uploadFile = await compressImageToBlob(file, 1200, 0.75);
       }
 
-      const approxSize = Math.round(dataUrl.length * 0.75);
+      const { storagePath } = await uploadToStorage(uploadFile, bucket, uniqueName, serviceId);
 
       const attachment: ServiceAttachment = {
         id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: file.name,
         type,
-        storagePath: dataUrl, // Salva o Base64 diretamente no storagePath para visualização offline direta
-        size: approxSize,
+        storagePath,
+        size: uploadFile.size || file.size,
       };
       addServiceAttachment(serviceId, treeId, attachment);
     } catch (err) {
-      console.error('Erro ao ler/comprimir arquivo:', err);
-      alert('Falha ao processar e anexar o arquivo localmente.');
+      console.error('Erro ao fazer upload do arquivo:', err);
+      alert('Falha ao enviar o arquivo para o Firebase Storage.');
     }
   };
 

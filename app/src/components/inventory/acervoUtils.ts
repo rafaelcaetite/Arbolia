@@ -17,19 +17,9 @@ export function daysUntil(dateStr: string) {
   return Math.ceil((d.getTime() - today.getTime()) / (1000*60*60*24));
 }
 
-export async function getAttachmentUrl(storagePath: string, bucket: 'Gallery' | 'Documents') {
-  if (storagePath.startsWith('http') || storagePath.startsWith('data:')) {
-    return storagePath;
-  }
-  try {
-    const { ref, getDownloadURL } = await import('firebase/storage');
-    const { storage } = await import('../../lib/firebase');
-    const storageRef = ref(storage, `${bucket}/${storagePath}`);
-    return await getDownloadURL(storageRef);
-  } catch (e) {
-    console.error('Erro ao resolver URL do Firebase Storage:', e);
-    return null;
-  }
+export async function getAttachmentUrl(storagePath: string, _bucket: 'Gallery' | 'Documents') {
+  const { getStorageDownloadURL } = await import('../../services/storageService');
+  return getStorageDownloadURL(storagePath);
 }
 
 export async function downloadAttachment(att: RichAttachment) {

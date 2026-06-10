@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
-import { ref, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../lib/firebase';
+import { getStorageDownloadURL } from '../../services/storageService';
 import { type ServiceAttachment } from '../../store/useAppStore';
 
 interface AttachmentViewerProps {
@@ -15,43 +14,12 @@ export function AttachmentViewer({ attachment, onClose }: AttachmentViewerProps)
   useEffect(() => {
     async function loadSecureUrl() {
       if (attachment.storagePath) {
-        if (attachment.storagePath.startsWith('http') || attachment.storagePath.startsWith('data:')) {
-          setDisplayUrl(attachment.storagePath);
-          return;
-        }
-
-        try {
-          const bucket = attachment.type === 'image' ? 'Gallery' : 'Documents';
-          const fullPath = attachment.storagePath.includes(`${bucket}/`)
-            ? attachment.storagePath
-            : `${bucket}/${attachment.storagePath}`;
-
-          const storageRef = ref(storage, fullPath);
-          const url = await getDownloadURL(storageRef);
-          setDisplayUrl(url);
-        } catch (error) {
-          console.error('Erro ao obter URL de download do Firebase Storage:', error);
-          setDisplayUrl(attachment.dataUrl || null);
-        }
-      } else if (attachment.type === 'pdf' && attachment.dataUrl?.startsWith('data:')) {
-        try {
-          const base64 = attachment.dataUrl.split(',')[1];
-          const byteCharacters = atob(base64);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          setDisplayUrl(url);
-          return () => URL.revokeObjectURL(url);
-        } catch (e) {
-          console.error('Erro ao converter PDF para Blob:', e);
-          setDisplayUrl(attachment.dataUrl || null);
-        }
+        const url = await getStorageDownloadURL(attachment.storagePath);
+        setDisplayUrl(url);
+      } else if (attachment.dataUrl) {
+        setDisplayUrl(attachment.dataUrl);
       } else {
-        setDisplayUrl(attachment.dataUrl || null);
+        setDisplayUrl(null);
       }
     }
 
