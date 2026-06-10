@@ -54,3 +54,20 @@ gemini.md
 
 # ── TypeScript ────────────────────────────────────────────────────────────────
 *.tsbuildinfo
+
+# ── Agent e IA ───────────────────────────────────────────────────────────────
+.agents/
+skills-lock.json
+
+# ── Scripts temporários e de teste ───────────────────────────────────────────
+fix_all*.py
+tools/
+parse.py
+refactor.cjs
+refactor.js
+testarPadroes.ts
+lint-output.txt
+lint-results.json
+
+# ── Firebase ──────────────────────────────────────────────────────────────────
+.firebase/
