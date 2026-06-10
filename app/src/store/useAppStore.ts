@@ -284,7 +284,7 @@ export interface AppState {
   updateWeatherSettings: (settings: Partial<WeatherSettings>) => Promise<void>
 
   fetchEmployees: () => Promise<void>
-  createEmployee: (data: Partial<UserProfile> & { id: string; password?: string }) => Promise<void>
+  createEmployee: (data: Partial<UserProfile> & { id?: string; password?: string }) => Promise<void>
   updateEmployee: (id: string, data: Partial<UserProfile>) => Promise<void>
   uploadFile: (bucket: string, file: File) => Promise<string>
 }

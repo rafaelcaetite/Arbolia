@@ -191,7 +191,7 @@ export const createAuthSlice: AppSlice<AuthSliceType> = (set, get) => {
     },
     createEmployee: async (data) => {
       try {
-        const { email, password, ...profileData } = data;
+        const { id: _ignoredId, email, password, ...profileData } = data;
 
         const { initializeApp } = await import('firebase/app');
         const { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut: tempSignOut } = await import('firebase/auth');
