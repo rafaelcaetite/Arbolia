@@ -1,6 +1,11 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-1.5-flash';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+// Lista de modelos ordenados por preferência (Tentativa 1 -> Tentativa 2)
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+
+// Função auxiliar para construir a URL com o modelo específico
+const getApiUrl = (model: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
 export interface GeminiResponse {
   resumo_estado_geral: string;
@@ -40,51 +45,70 @@ SUAS REGRAS ESTRITAS:
   const prompt = `Analise os seguintes dados de inspeção e gere o relatório em JSON:
   ${JSON.stringify(payload, null, 2)}`;
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+  // Percorre a lista de modelos sequencialmente
+  for (const model of GEMINI_MODELS) {
+    let timeoutId: NodeJS.Timeout | undefined;
 
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: systemInstruction + "\n\n" + prompt }]
+    try {
+      logger.log(`Tentando obter interpretação da IA com o modelo: ${model}`);
+
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const apiUrl = getApiUrl(model);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: systemInstruction + "\n\n" + prompt }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: 'application/json'
           }
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
+        })
+      });
 
-    clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error(`Gemini API Error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Status de erro HTTP: ${response.status} (${response.statusText})`);
+      }
+
+      const data = await response.json();
+      let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!textResponse) {
+        throw new Error('O modelo retornou uma resposta vazia.');
+      }
+
+      // Limpeza de markdown caso o modelo adicione formatação
+      textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      const parsedResponse = JSON.parse(textResponse) as GeminiResponse;
+
+      logger.log(`Interpretação IA recebida com sucesso utilizando o modelo: ${model}`);
+      return parsedResponse;
+
+    } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId);
+
+      logger.warn(
+        `Falha ao tentar utilizar o modelo ${model}. Detalhes: ${error instanceof Error ? error.message : error
+        }`
+      );
+      // O loop continuará para o próximo modelo da lista
     }
-
-    const data = await response.json();
-    let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!textResponse) {
-      logger.warn('Gemini retornou uma resposta vazia.');
-      return null;
-    }
-
-    // Limpeza de markdown caso a IA ignore a instrução de não usar markdown
-    textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    logger.log('Interpretação IA recebida com sucesso.');
-    return JSON.parse(textResponse) as GeminiResponse;
-  } catch (error) {
-    logger.error('Erro ao chamar API do Gemini:', error);
-    return null;
   }
+
+  // Se o fluxo chegar aqui, significa que todos os modelos falharam
+  logger.error('Todos os modelos de IA configurados falharam na tentativa de obter a interpretação.');
+  return null;
 };
