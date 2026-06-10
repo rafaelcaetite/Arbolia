@@ -1,7 +1,7 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 // Lista de modelos ordenados por preferência (Tentativa 1 -> Tentativa 2)
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 
 // Função auxiliar para construir a URL com o modelo específico
 const getApiUrl = (model: string) =>
