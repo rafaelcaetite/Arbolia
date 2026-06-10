@@ -329,29 +329,31 @@ export const createDataSlice: AppSlice<DataSliceType> = (set, get) => ({
       const serviceToComplete = state.services.find(s => s.id === id);
       if (!serviceToComplete) return;
 
-      const updatedService = await api.updateService(id, {
-        status: 'concluido',
-        data_reavaliacao: reavaliacao,
-        data_validade_servico: validade
-      });
+      const updateData: any = { status: 'concluido' };
+      if (reavaliacao) updateData.data_reavaliacao = reavaliacao;
+      if (validade) updateData.data_validade_servico = validade;
+
+      const updatedService = await api.updateService(id, updateData);
 
       let newServices = state.services.map(s => s.id === id ? updatedService : s);
 
       if (reavaliacao) {
         const [datePart, timePart] = reavaliacao.split('T');
-        const reavalService = await api.createService({
+        const newServiceData: any = {
           treeIds: serviceToComplete.treeIds,
           tipo: 'Avaliação',
           data: datePart,
-          horario: timePart || undefined,
           responsavel: serviceToComplete.responsavel,
           status: 'agendado'
-        } as Service);
+        };
+        if (timePart) newServiceData.horario = timePart;
+
+        const reavalService = await api.createService(newServiceData as Service);
         newServices = [reavalService, ...newServices];
       }
 
       set({ services: newServices });
-      get().logAudit('UPDATE', 'Atendimento', `Concluiu atendimento #${id.slice(0, 8)}`, { status: 'concluido', data_reavaliacao: reavaliacao, data_validade_servico: validade });
+      get().logAudit('UPDATE', 'Atendimento', `Concluiu atendimento #${id.slice(0, 8)}`, updateData);
     } catch (error) {
       console.error('Erro ao concluir serviço:', error);
       throw error;
