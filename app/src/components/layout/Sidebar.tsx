@@ -12,6 +12,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
   // Fecha o menu no mobile sempre que a rota mudar
   useEffect(() => {
     if (onClose) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const menuItems = [

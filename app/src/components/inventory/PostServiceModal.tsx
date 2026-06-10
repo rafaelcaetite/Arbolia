@@ -42,7 +42,7 @@ export function PostServiceModal() {
 
   const validadeDateStr = useMemo(() => {
     if (!cicloMeses) return null;
-    let m = cicloMeses === 'custom' ? parseInt(customMeses) || 0 : cicloMeses;
+    const m = cicloMeses === 'custom' ? parseInt(customMeses) || 0 : cicloMeses;
     if (m <= 0) return null;
     const d = new Date();
     d.setMonth(d.getMonth() + m);

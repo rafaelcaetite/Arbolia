@@ -10,7 +10,12 @@ export function TreeModal() {
   
   const [formData, setFormData] = useState<Partial<Tree>>({});
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isEditModalOpen);
+  const [prevTreeId, setPrevTreeId] = useState<string | null | undefined>(undefined);
+
+  if (isEditModalOpen !== prevIsOpen || editingTreeId !== prevTreeId) {
+    setPrevIsOpen(isEditModalOpen);
+    setPrevTreeId(editingTreeId);
     if (isEditModalOpen && editingTreeId) {
       const tree = trees.find(t => t.id === editingTreeId);
       if (tree) {
@@ -29,10 +34,11 @@ export function TreeModal() {
         ativo: true 
       });
     }
-  }, [isEditModalOpen, editingTreeId, trees]);
+  }
 
   useEffect(() => {
     if (pickedCoordinates) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(prev => ({ ...prev, latitude: pickedCoordinates.lat, longitude: pickedCoordinates.lng }));
       clearPickedCoordinates();
     }
@@ -78,10 +84,10 @@ export function TreeModal() {
         await createTree(treeData as Omit<Tree, 'id'>);
       }
       closeEditModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar árvore:', err);
-      const msg = err.message || 'Erro desconhecido';
-      const code = err.code || '';
+      const msg = (err as Error).message || 'Erro desconhecido';
+      const code = (err as any).code || '';
       alert(`Erro ao salvar árvore: ${msg} [${code}]. Verifique as Regras de Segurança no Firestore.`);
     }
   };

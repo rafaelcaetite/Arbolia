@@ -70,7 +70,7 @@ export function SecureImage({ src, alt, className = "", fallbackInitial, bucket 
             setDisplayUrl(src);
           }
         }
-      } catch (err) {
+      } catch {
         if (isMounted) setDisplayUrl(src);
       } finally {
         if (isMounted) setLoading(false);

@@ -121,8 +121,18 @@ export function TreeDetailsModal() {
     };
 
     loadPhotos();
-    setPhotoIdx(0);
   }, [tree, isTreeDetailsModalOpen, services]);
+
+  const [prevTreeId, setPrevTreeId] = useState<string | undefined>(undefined);
+  const [prevIsOpen, setPrevIsOpen] = useState(isTreeDetailsModalOpen);
+
+  if (isTreeDetailsModalOpen !== prevIsOpen || tree?.id !== prevTreeId) {
+    setPrevIsOpen(isTreeDetailsModalOpen);
+    setPrevTreeId(tree?.id);
+    if (isTreeDetailsModalOpen) {
+      setPhotoIdx(0);
+    }
+  }
 
   if (!isTreeDetailsModalOpen || !viewingTreeDetailsId || !tree) return null;
 

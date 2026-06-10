@@ -72,6 +72,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
     if (userProfile?.role === 'admin') {
       fetchAuditLogs();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userProfile?.role]);
 
   useEffect(() => {
@@ -140,6 +141,7 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
     };
 
     fetchCurrentWeather();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weatherCity, weatherSettings]);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -435,12 +437,13 @@ export function Header({ onMenuToggle }: { onMenuToggle?: () => void }) {
                               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {Object.entries(log.payload)
                                   .filter(([key, val]) => key !== 'id' && key !== 'created_at' && key !== 'updated_at' && val !== undefined && val !== null)
+                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                   .map(([key, value]: [string, any]) => {
                                     const isDiffObj = value && typeof value === 'object' && ('old' in value || 'new' in value);
                                     const oldVal = isDiffObj ? value.old : undefined;
                                     const newVal = isDiffObj ? value.new : value;
                                     
-                                    const formatVal = (v: any) => typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : typeof v === 'object' && v !== null ? JSON.stringify(v) : (String(v) || '-');
+                                    const formatVal = (v: unknown) => typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : typeof v === 'object' && v !== null ? JSON.stringify(v) : (String(v) || '-');
 
                                     return (
                                       <div key={key} className="bg-white border border-slate-100 rounded-md p-2 shadow-sm flex flex-col gap-0.5">

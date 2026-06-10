@@ -174,7 +174,7 @@ function AttachmentBar({ serviceId, treeId, attachments }: { serviceId: string; 
                             a.click();
                             document.body.removeChild(a);
                             URL.revokeObjectURL(url);
-                          } catch (err) {
+                          } catch {
                             window.open(downloadUrl, '_blank');
                           }
                         }

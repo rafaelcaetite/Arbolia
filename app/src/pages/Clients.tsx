@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, ArrowDownWideNarrow, ListFilter, Trees, Building2, Phone, Mail, FileText, Info, X, Calendar, Leaf, Download, Pencil, Users, Plus } from 'lucide-react';
-import { useAppStore, type Tree, type Service, type ServiceAttachment } from '../store/useAppStore';
+import { useAppStore, type Tree, type Service, type Client, type ServiceAttachment } from '../store/useAppStore';
 import { ClientDetailsModal } from '../components/clients/ClientDetailsModal';
 import { formatTreeId } from '../lib/treeUtils';
 import { ClientFormModal } from '../components/clients/ClientFormModal';
@@ -107,10 +107,10 @@ function ClientPopover({ type, trees, services, docs, onClose }: {
 
 // ── Card de Cliente com Popover ──────────────────────────────────────────────
 function ClientCard({ client, clientTrees, clientServices, clientDocs, onOpenDetails }: {
-  client: any;
+  client: Client;
   clientTrees: Tree[];
   clientServices: Service[];
-  clientDocs: any[];
+  clientDocs: ServiceAttachment[];
   onOpenDetails: () => void;
 }) {
   const { openClientModal } = useAppStore();

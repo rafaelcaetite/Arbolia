@@ -54,6 +54,7 @@ function App() {
         setUser(null);
         setCheckingAuth(false);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setUser(firebaseUser as any);
         try {
           await initializeData();

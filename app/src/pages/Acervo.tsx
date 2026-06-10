@@ -1,218 +1,18 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Search, Image as ImageIcon, FileText, Download, Eye,
-  X, ChevronLeft, ChevronRight, AlertTriangle, ArrowLeftRight,
-  SplitSquareHorizontal, List, LayoutGrid, Loader2, Pencil, Trash2
+  AlertTriangle, ArrowLeftRight,
+  SplitSquareHorizontal, List, LayoutGrid, Pencil, Trash2
 } from 'lucide-react';
-import { useAppStore, type ServiceAttachment } from '../store/useAppStore';
+import { useAppStore } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
 import { ActionModal } from '../components/common/ActionModal';
 import { formatTreeId } from '../lib/treeUtils';
 
-// ── Tipos ─────────────────────────────────────────────────────────────────────
-
-interface RichAttachment extends ServiceAttachment {
-  serviceId: string;
-  serviceTipo: string;
-  serviceData: string;
-  treeEspecie: string;
-  treeId: string;
-  clienteNome: string;
-  tags: string[];
-  docValidade?: string; // Para documentos com vencimento
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function daysUntil(dateStr: string) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const d = new Date(dateStr + 'T00:00:00'); d.setHours(0,0,0,0);
-  return Math.ceil((d.getTime() - today.getTime()) / (1000*60*60*24));
-}
-
-async function getAttachmentUrl(storagePath: string, bucket: 'Gallery' | 'Documents') {
-  if (storagePath.startsWith('http') || storagePath.startsWith('data:')) {
-    return storagePath;
-  }
-  try {
-    const { ref, getDownloadURL } = await import('firebase/storage');
-    const { storage } = await import('../lib/firebase');
-    const storageRef = ref(storage, `${bucket}/${storagePath}`);
-    return await getDownloadURL(storageRef);
-  } catch (e) {
-    console.error('Erro ao resolver URL do Firebase Storage:', e);
-    return null;
-  }
-}
-
-async function downloadAttachment(att: RichAttachment) {
-  let url = att.dataUrl;
-  
-  if (!url && att.storagePath) {
-    const bucket = att.type === 'image' ? 'Gallery' : 'Documents';
-    url = await getAttachmentUrl(att.storagePath, bucket) || undefined;
-  }
-
-  if (!url) return;
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = att.name;
-  a.click();
-}
-
-// ── Lightbox (Imagens) — fullscreen mobile friendly ───────────────────────────
-
-function Lightbox({ items, index, onClose }: {
-  items: RichAttachment[];
-  index: number;
-  onClose: () => void;
-}) {
-  const [current, setCurrent] = useState(index);
-  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
-  const item = items[current];
-
-  useEffect(() => {
-    setCurrentUrl(null);
-    const resolveUrl = async () => {
-      if (item.dataUrl) {
-        setCurrentUrl(item.dataUrl);
-      } else if (item.storagePath) {
-        const url = await getAttachmentUrl(item.storagePath, 'Gallery');
-        setCurrentUrl(url);
-      }
-    };
-    resolveUrl();
-  }, [item]);
-
-  if (!item) return null;
-
-  return (
-    <div className="fixed inset-0 z-[300] bg-slate-900/95 backdrop-blur-sm flex flex-col" onClick={onClose}>
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 shrink-0" onClick={e => e.stopPropagation()}>
-        <div className="flex flex-col min-w-0">
-          <p className="text-white text-sm font-bold truncate">{item.name}</p>
-          <p className="text-slate-400 text-xs truncate">{item.clienteNome} · {item.treeEspecie}</p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 ml-3">
-          <button onClick={() => downloadAttachment(item)}
-            className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all">
-            <Download size={13} /> Baixar
-          </button>
-          <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all">
-            <X size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Image */}
-      <div className="flex-1 flex items-center justify-center relative px-4 min-h-0" onClick={e => e.stopPropagation()}>
-        {currentUrl ? (
-          <img src={currentUrl} alt={item.name} className="max-h-full max-w-full object-contain rounded-xl" />
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-slate-400">
-            <Loader2 className="animate-spin" size={32} />
-            <span className="text-xs font-bold uppercase tracking-widest">Carregando...</span>
-          </div>
-        )}
-        {items.length > 1 && (
-          <>
-            <button onClick={() => setCurrent(p => Math.max(0, p-1))} disabled={current === 0}
-              className="absolute left-2 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-20 transition-all">
-              <ChevronLeft size={20} />
-            </button>
-            <button onClick={() => setCurrent(p => Math.min(items.length-1, p+1))} disabled={current === items.length-1}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white disabled:opacity-20 transition-all">
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Bottom counter */}
-      <div className="shrink-0 py-3 text-center text-xs text-slate-500 font-medium">
-        {current + 1} de {items.length}
-      </div>
-    </div>
-  );
-}
-
-// ── PDF Viewer — fullscreen modal (funciona em mobile) ────────────────────────
-
-function PdfSidePanel({ item, onClose }: { item: RichAttachment; onClose: () => void }) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setIsLoading(true);
-    const resolve = async () => {
-      if (item.dataUrl && item.dataUrl.startsWith('data:')) {
-        try {
-          const base64 = item.dataUrl.split(',')[1];
-          const byteCharacters = atob(base64);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
-          const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setIsLoading(false);
-          return () => URL.revokeObjectURL(url);
-        } catch (e) {
-          setPdfUrl(item.dataUrl || null);
-          setIsLoading(false);
-        }
-      } else if (item.storagePath) {
-        const url = await getAttachmentUrl(item.storagePath!, 'Documents');
-        setPdfUrl(url);
-        setIsLoading(false);
-      } else {
-        setPdfUrl(item.dataUrl || null);
-        setIsLoading(false);
-      }
-    };
-    resolve();
-  }, [item]);
-
-  return (
-    <div className="fixed inset-0 z-[300] flex flex-col bg-white animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 shrink-0 bg-white">
-        <button onClick={onClose} className="p-2 bg-slate-50 rounded-xl hover:bg-slate-100 text-slate-500 transition-all active:scale-95">
-          <X size={18} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-800 text-sm truncate">{item.name}</p>
-          <p className="text-xs text-slate-400 truncate">{item.clienteNome} · {item.serviceTipo}</p>
-        </div>
-        <button onClick={() => downloadAttachment(item)}
-          className="flex items-center gap-1.5 bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-primary/90 transition-all shrink-0 active:scale-95">
-          <Download size={13} /> Baixar
-        </button>
-      </div>
-
-      {/* PDF content */}
-      <div className="flex-1 relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">
-            <Loader2 className="animate-spin" size={32} />
-            <span className="text-xs font-bold uppercase tracking-widest">Carregando documento...</span>
-          </div>
-        )}
-        {pdfUrl && (
-          <iframe
-            src={pdfUrl}
-            title={item.name}
-            className="w-full h-full border-0"
-            onLoad={() => setIsLoading(false)}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Página Principal ──────────────────────────────────────────────────────────
+// Import extracted components and utilities
+import { daysUntil, downloadAttachment, type RichAttachment } from '../components/inventory/acervoUtils';
+import { Lightbox } from '../components/inventory/Lightbox';
+import { PdfSidePanel } from '../components/inventory/PdfSidePanel';
 
 export function Acervo() {
   const { services, trees, clients } = useAppStore();
@@ -235,17 +35,19 @@ export function Acervo() {
       if (!svc.attachmentsByTree) return;
       // Itera por treeId — cada árvore tem seus próprios anexos
       Object.entries(svc.attachmentsByTree).forEach(([treeId, atts]) => {
-        if (!atts?.length) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const typedAtts = atts as any[];
+        if (!typedAtts?.length) return;
         const tree = trees.find(t => t.id === treeId);
         const client = tree ? clients.find(c => c.id === tree.cliente_id) : undefined;
         const tags = [
           ...(client ? [client.nome] : []),
-          ...(tree ? [tree.especie, formatTreeId(tree)] : []),
+          ...(tree ? [tree.especie, formatTreeId(tree.id)] : []),
           svc.tipo,
           new Date(svc.data + 'T00:00:00').toLocaleDateString('pt-BR'),
         ].map(t => t.toLowerCase());
 
-        atts.forEach(att => {
+        typedAtts.forEach(att => {
           result.push({
             ...att,
             serviceId: svc.id,
@@ -379,7 +181,7 @@ export function Acervo() {
                       <div className="flex items-center gap-2 mb-3">
                         <ArrowLeftRight size={14} className="text-primary" />
                         <span className="text-xs font-bold text-slate-600">{photos[0].treeEspecie}</span>
-                        <span className="text-[9px] font-mono text-slate-400">{formatTreeId(trees.find(t => t.id === treeId) ?? treeId)}</span>
+                        <span className="text-[9px] font-mono text-slate-400">{formatTreeId(trees.find(t => t.id === treeId)?.id ?? treeId)}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         {photos.slice(0, 2).map((photo, i) => (

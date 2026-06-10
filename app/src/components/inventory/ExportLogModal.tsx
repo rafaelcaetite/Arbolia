@@ -34,7 +34,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
   }, [services]);
 
   const getClientName = (svc: Service) => {
-    const treeIds = svc?.treeIds || (svc as any)?.tree_ids || [];
+    const treeIds = svc?.treeIds || (svc as unknown as Record<string, unknown>)?.tree_ids || [];
     if (!Array.isArray(treeIds) || treeIds.length === 0) return 'N/A';
     
     const tree = trees.find(t => treeIds.includes(t.id));
@@ -60,7 +60,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
 
     if (filterClientId !== 'all') {
       filtered = filtered.filter(svc => {
-        const treeIds = svc.treeIds || (svc as any).tree_ids || [];
+        const treeIds = svc.treeIds || (svc as unknown as Record<string, unknown>).tree_ids || [];
         const svcClientIds = treeIds
           .map(tId => trees.find(t => t.id === tId)?.cliente_id)
           .filter(Boolean);
@@ -105,7 +105,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
     const headers = ['ID', 'Data', 'Horário', 'Cliente', 'Árvores', 'Tipo de Serviço', 'Responsável', 'CREA', 'Status'];
     
     const rows = data.map(svc => {
-      const treeIds = svc.treeIds || (svc as any).tree_ids || [];
+      const treeIds = svc.treeIds || (svc as unknown as Record<string, unknown>).tree_ids || [];
       const svcTrees = trees.filter(t => treeIds.includes(t.id));
       const treeSummary = svcTrees.length === 0 
         ? 'N/A' 
@@ -207,7 +207,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
 
     // Corpo da Tabela
     const tableData = data.map(svc => {
-      const treeIds = svc.treeIds || (svc as any).tree_ids || [];
+      const treeIds = svc.treeIds || (svc as unknown as Record<string, unknown>).tree_ids || [];
       const svcTrees = trees.filter(t => treeIds.includes(t.id));
       const treeSummary = svcTrees.length === 0 
         ? 'N/A' 
@@ -264,6 +264,7 @@ export function ExportLogModal({ onClose, services, trees, clients }: ExportLogM
     });
 
     // Rodapé
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { auth } from '../lib/firebase';
+import type { AppUser } from '../store/useAppStore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAppStore } from '../store/useAppStore';
 import { LogIn, Mail, Lock, AlertCircle, Sun, Moon } from 'lucide-react';
@@ -21,13 +22,14 @@ export function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       window.history.replaceState(null, '', '/');
-      setUser(userCredential.user as any);
-    } catch (err: any) {
-      console.error(err);
-      let msg = err.message || 'Erro ao realizar login';
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+      setUser(userCredential.user as unknown as AppUser);
+    } catch (err) {
+      const error = err as Error & { code?: string };
+      console.error(error);
+      let msg = error.message || 'Erro ao realizar login';
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         msg = 'E-mail ou senha incorretos.';
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (error.code === 'auth/invalid-email') {
         msg = 'E-mail inválido.';
       }
       setError(msg);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Building2, User, FileText, Mail, Phone, MapPin, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAppStore, type Client } from '../../store/useAppStore';
 
@@ -26,7 +26,12 @@ export function ClientFormModal() {
 
   const editingClient = editingClientId ? clients.find(c => c.id === editingClientId) : null;
 
-  useEffect(() => {
+  const [prevClientId, setPrevClientId] = useState<string | null | undefined>(undefined);
+  const [prevIsOpen, setPrevIsOpen] = useState(isClientModalOpen);
+
+  if (isClientModalOpen !== prevIsOpen || editingClientId !== prevClientId) {
+    setPrevIsOpen(isClientModalOpen);
+    setPrevClientId(editingClientId);
     setEmailError(false);
     if (editingClient) {
       setFormData({
@@ -47,7 +52,7 @@ export function ClientFormModal() {
         status: 'ativo'
       });
     }
-  }, [editingClient, isClientModalOpen]);
+  }
 
   if (!isClientModalOpen) return null;
 
@@ -162,7 +167,7 @@ export function ClientFormModal() {
                     let val = e.target.value.replace(/\D/g, '');
                     if (val.length > 14) val = val.slice(0, 14);
 
-                    let masked = val;
+                    let masked: string;
                     if (val.length <= 11) {
                       masked = val
                         .replace(/(\d{3})(\d)/, '$1.$2')
@@ -218,7 +223,7 @@ export function ClientFormModal() {
                       let val = e.target.value.replace(/\D/g, '');
                       if (val.length > 11) val = val.slice(0, 11);
                       
-                      let masked = val;
+                      let masked: string = val;
                       if (val.length > 0) {
                         masked = '(' + val;
                         if (val.length > 2) {

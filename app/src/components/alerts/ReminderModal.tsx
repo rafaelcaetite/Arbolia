@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Mail, MessageCircle, Send, CheckCircle2, Bell, User } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
@@ -8,12 +8,15 @@ export function ReminderModal() {
   // Agora é um Set — múltiplos canais podem ser selecionados simultaneamente
   const [selectedChannels, setSelectedChannels] = useState<Set<'email' | 'whatsapp'>>(new Set(['whatsapp']));
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isReminderModalOpen);
+
+  if (isReminderModalOpen !== prevIsOpen) {
+    setPrevIsOpen(isReminderModalOpen);
     if (isReminderModalOpen) {
       setSent(false);
       setSelectedChannels(new Set(['whatsapp']));
     }
-  }, [isReminderModalOpen]);
+  }
 
   if (!isReminderModalOpen || !activeReminderServiceId) return null;
 

@@ -21,8 +21,13 @@ export function ServiceModal() {
     return employees.filter(emp => (emp.role === 'tecnico' || emp.role === 'admin') && emp.status === 'ativo');
   }, [employees]);
 
+  const [prevIsOpen, setPrevIsOpen] = useState(isServiceModalOpen);
+  const [prevServiceId, setPrevServiceId] = useState<string | null | undefined>(undefined);
+
   // Sincronizar estado local com o serviço sendo editado ou resetar para novo
-  useEffect(() => {
+  if (isServiceModalOpen !== prevIsOpen || editingServiceId !== prevServiceId) {
+    setPrevIsOpen(isServiceModalOpen);
+    setPrevServiceId(editingServiceId);
     if (isServiceModalOpen) {
       if (editingService) {
         setFormData({
@@ -42,7 +47,7 @@ export function ServiceModal() {
         });
       }
     }
-  }, [editingService, isServiceModalOpen]);
+  }
 
   // Garantir que temos funcionários carregados
   useEffect(() => {
@@ -71,9 +76,9 @@ export function ServiceModal() {
         await createService(formData as Omit<Service, 'id' | 'treeIds'>);
       }
       closeServiceModal();
-    } catch (error: any) {
-      console.error('Erro ao processar serviço:', error);
-      alert(`Erro ao salvar serviço: ${error.message || 'Verifique sua conexão'}`);
+    } catch (err: unknown) {
+      console.error('Erro ao processar serviço:', err);
+      alert(`Erro ao salvar serviço: ${(err as Error).message || 'Verifique sua conexão'}`);
     } finally {
       setIsSubmitting(false);
     }

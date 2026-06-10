@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, limit, type DocumentData } from 'firebase/firestore';
 import type { Tree, Client, Service, UserProfile, AuditLog } from '../store/useAppStore';
 
 export const api = {
@@ -39,7 +39,7 @@ export const api = {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserProfile[];
   },
 
-  async createEmployee(employeeData: any) {
+  async createEmployee(employeeData: Partial<UserProfile> & { id: string }) {
     const { id, ...rest } = employeeData;
     if (!id) {
       throw new Error('ID (UID) é obrigatório para cadastrar um perfil.');
@@ -125,7 +125,7 @@ export const api = {
 };
 
 // Helper to map and dynamically evaluate logical service status
-function mapService(s: any): Service {
+function mapService(s: DocumentData): Service {
   let status = s.status;
   if (status === 'agendado') {
     const today = new Date();

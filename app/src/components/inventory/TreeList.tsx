@@ -61,6 +61,7 @@ export function TreeList() {
       return acc;
     }, {} as Record<string, Tree[]>);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trees, searchTerm, sortBy, groupBy, mapBounds]);
 
   if (trees.length === 0) {

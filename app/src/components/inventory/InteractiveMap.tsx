@@ -65,6 +65,7 @@ function MapBoundsListener() {
         window.clearTimeout(timeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
   return null;

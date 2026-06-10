@@ -90,7 +90,7 @@ export function LaudoAvaliacaoModal() {
   };
 
   const addAlvo = () => setAlvos(p => [...p, {
-    id: `alvo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`, alvo: '', parte: 'tronco' as ParteArvore, condicoesPreocupantes: '',
+    id: `alvo-${crypto.randomUUID()}`, alvo: '', parte: 'tronco' as ParteArvore, condicoesPreocupantes: '',
     probFalha: '' as ProbabilidadeFalha | '', probImpacto: '' as ProbabilidadeImpacto | '', consequencia: '' as Consequencia | ''
   }]);
   const removeAlvo = (id: string) => setAlvos(p => p.length > 1 ? p.filter(a => a.id !== id) : p);
@@ -123,7 +123,7 @@ export function LaudoAvaliacaoModal() {
 
     // ── INTERPRETAÇÃO IA ───────────────────────────────────────────────
     try {
-      const mitigacoesLabels = mitigacoes.map(id => OPCOES_MITIGACAO.find(o => o.id === id)?.label).filter(Boolean);
+      const mitigacoesLabels = mitigacoes.map(id => OPCOES_MITIGACAO.find(o => o.id === id)?.label).filter((l): l is string => Boolean(l));
       const aiResponse = await getAIInterpretation({
         especie: serviceTree?.especie || 'Árvore',
         defeitos,
@@ -172,7 +172,7 @@ export function LaudoAvaliacaoModal() {
       const margin = 18;
       let y = 20;
 
-      const themes: Record<string, any> = {
+      const themes: Record<string, { primary: number[], secondary: number[], title: string, accent: number[], bg: number[] }> = {
         tecnico:      { primary: [15, 23, 42], secondary: [71, 85, 105], title: 'LAUDO TÉCNICO DE RISCO (ISA TRAQ)', accent: [51, 65, 85], bg: [248, 250, 252] },
         simplificado: { primary: [22, 101, 52], secondary: [71, 85, 105], title: 'RELATÓRIO DE SEGURANÇA E MANUTENÇÃO', accent: [34, 197, 94], bg: [240, 253, 244] }
       }
@@ -296,6 +296,7 @@ export function LaudoAvaliacaoModal() {
         styles: { fontSize: 8, cellPadding: 3, fillColor: [248, 250, 252] },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 25 }, 2: { fontStyle: 'bold', cellWidth: 25 } }
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       y = (doc as any).lastAutoTable.finalY + 12;
 
       // ── TABELA DE ALVOS ────────────────────────────────────────────────
@@ -325,6 +326,7 @@ export function LaudoAvaliacaoModal() {
           }
         }
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       y = (doc as any).lastAutoTable.finalY + 12;
 
       // ── RECOMENDAÇÕES ──────────────────────────────────────────────────
@@ -384,7 +386,7 @@ export function LaudoAvaliacaoModal() {
       doc.text('PADRÃO INTERNACIONAL ISA TRAQ - DOCUMENTO AUTENTICADO ELETRONICAMENTE', pageWidth / 2, 289, { align: 'center' });
 
       // FINALIZAR E SALVAR DIRETAMENTE EM BASE64 NO FIRESTORE (100% OFFLINE E Spark-friendly)
-      const attachmentId = `laudo-${Date.now()}`;
+      const attachmentId = `laudo-${crypto.randomUUID()}`;
       const dataUrl = doc.output('datauristring');
       const attachmentName = `Laudo ISA — ${new Date().toLocaleDateString('pt-BR')}.pdf`;
       const attachmentSize = Math.round(dataUrl.length * 0.75);
@@ -443,7 +445,7 @@ export function LaudoAvaliacaoModal() {
           tecnicoNome: userProfile?.nome || 'Técnico', tecnicoCrea: userProfile?.crea || 'CREA-XX',
           dataLaudo:new Date().toISOString(),
           aiResumo: aiInterpretation || undefined
-        }} especie={especie} cliente={clienteNome} templateId={templateId as any} />
+        }} especie={especie} cliente={clienteNome} templateId={templateId as 'tecnico' | 'simplificado'} />
       )}
 
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -711,7 +713,7 @@ export function LaudoAvaliacaoModal() {
                       ].map(opt => (
                         <button 
                           key={opt.id} 
-                          onClick={() => setTemplateId(opt.id as any)}
+                          onClick={() => setTemplateId(opt.id as 'tecnico' | 'simplificado')}
                           className={`flex items-center gap-5 p-6 rounded-2xl border-2 transition-all text-left ${templateId === opt.id ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-slate-100 hover:border-slate-200'}`}
                         >
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${templateId === opt.id ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>

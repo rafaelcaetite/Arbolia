@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Pencil, Trash2, CheckCircle2 } from 'lucide-react';
 
 interface ActionModalProps {
@@ -27,7 +27,12 @@ export function ActionModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  useEffect(() => {
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevInitialValue, setPrevInitialValue] = useState(initialValue);
+
+  if (isOpen !== prevIsOpen || initialValue !== prevInitialValue) {
+    setPrevIsOpen(isOpen);
+    setPrevInitialValue(initialValue);
     if (isOpen) {
       if (type === 'rename') {
         const lastDot = initialValue.lastIndexOf('.');
@@ -45,7 +50,7 @@ export function ActionModal({
       setIsSuccess(false);
       setIsSubmitting(false);
     }
-  }, [isOpen, initialValue, type]);
+  }
 
   if (!isOpen) return null;
 

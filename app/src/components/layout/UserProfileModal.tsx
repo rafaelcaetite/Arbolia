@@ -20,6 +20,7 @@ export function UserProfileModal() {
     };
 
     if (userProfile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         nome: userProfile.nome,
         telefone: userProfile.telefone || '',
@@ -45,7 +46,7 @@ export function UserProfileModal() {
       setFormData(prev => ({ ...prev, foto_url: base64String }));
       setDisplayUrl(base64String);
       await updateProfile({ foto_url: base64String });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro crítico no upload da foto de perfil:', err);
       setError('Erro ao processar imagem.');
     } finally {
@@ -65,7 +66,7 @@ export function UserProfileModal() {
         setShowSuccess(false);
         closeProfileModal();
       }, 1500);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao salvar perfil:', err);
       setError('Falha ao sincronizar com o banco de dados.');
     } finally {

@@ -16,6 +16,7 @@ export function SettingsModal() {
 
   useEffect(() => {
     if (isSettingsModalOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true);
       setTimeout(() => setAnimateIn(true), 10);
     } else {

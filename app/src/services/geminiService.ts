@@ -7,9 +7,21 @@ export interface GeminiResponse {
   explicacao_mitigacao: string;
 }
 
-export const getAIInterpretation = async (payload: any): Promise<GeminiResponse | null> => {
+import { AppLogger } from '../lib/logger';
+
+export interface GeminiRequestPayload {
+  especie: string;
+  defeitos: string[];
+  risco_geral: string;
+  mitigacoes_sugeridas: string[];
+  observacoes_tecnicas: string;
+}
+
+export const getAIInterpretation = async (payload: GeminiRequestPayload): Promise<GeminiResponse | null> => {
+  const logger = AppLogger.getInstance();
+
   if (!GEMINI_API_KEY) {
-    console.warn('VITE_GEMINI_API_KEY não configurada. IA indisponível.');
+    logger.warn('VITE_GEMINI_API_KEY não configurada. IA indisponível.');
     return null;
   }
 
@@ -56,17 +68,17 @@ SUAS REGRAS ESTRITAS:
     let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!textResponse) {
-      console.warn('Gemini retornou uma resposta vazia.');
+      logger.warn('Gemini retornou uma resposta vazia.');
       return null;
     }
 
     // Limpeza de markdown caso a IA ignore a instrução de não usar markdown
     textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
-    console.log('Interpretação IA recebida com sucesso.');
+    logger.log('Interpretação IA recebida com sucesso.');
     return JSON.parse(textResponse) as GeminiResponse;
   } catch (error) {
-    console.error('Erro ao chamar API do Gemini:', error);
+    logger.error('Erro ao chamar API do Gemini:', error);
     return null;
   }
 };

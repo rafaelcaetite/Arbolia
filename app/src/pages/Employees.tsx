@@ -1,7 +1,14 @@
 import { useState, useMemo, useRef } from 'react';
 import { Search, UserPlus, Mail, Phone, ShieldCheck, Plus, FileText, X, Camera, Eye, EyeOff, CheckCircle2, Trash2, Loader2 } from 'lucide-react';
-import { useAppStore, type UserProfile } from '../store/useAppStore';
+import { useAppStore } from '../store/useAppStore';
+import type { UserProfile } from '../store/useAppStore';
 import { SecureImage } from '../components/common/SecureImage';
+
+const ROLE_PRIORITY = {
+  admin: 1,
+  tecnico: 2,
+  campo: 3
+};
 
 export function Employees() {
   const { employees, createEmployee, updateEmployee } = useAppStore();
@@ -9,12 +16,6 @@ export function Employees() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<UserProfile | null>(null);
   const [confirmationData, setConfirmationData] = useState<{ emp: UserProfile; action: 'ativar' | 'inativar' } | null>(null);
-
-  const rolePriority = {
-    admin: 1,
-    tecnico: 2,
-    campo: 3
-  };
 
   const filteredEmployees = useMemo(() => {
     return employees
@@ -26,8 +27,8 @@ export function Employees() {
         // Primeiro por status (ativos primeiro)
         if (a.status !== b.status) return a.status === 'ativo' ? -1 : 1;
         // Depois por hierarquia
-        return (rolePriority[a.role as keyof typeof rolePriority] || 99) - 
-               (rolePriority[b.role as keyof typeof rolePriority] || 99);
+        return (ROLE_PRIORITY[a.role as keyof typeof ROLE_PRIORITY] || 99) - 
+               (ROLE_PRIORITY[b.role as keyof typeof ROLE_PRIORITY] || 99);
       });
   }, [employees, searchTerm]);
 
@@ -40,7 +41,7 @@ export function Employees() {
   const confirmToggleStatus = async () => {
     if (!confirmationData) return;
     const { emp, action } = confirmationData;
-    await updateEmployee(emp.id, { status: action === 'inativar' ? 'inativo' : 'ativo' });
+    await (updateEmployee as any)(emp.id, { status: action === 'inativar' ? 'inativo' : 'ativo' });
     setConfirmationData(null);
   };
 
@@ -184,7 +185,17 @@ export function Employees() {
 
 function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data: any) => Promise<void> }) {
   const { uploadFile } = useAppStore();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    nome: string;
+    email: string;
+    password?: string;
+    role: 'admin' | 'tecnico' | 'campo';
+    crea: string;
+    telefone: string;
+    foto_url: string;
+    data_nascimento: string;
+    id?: string;
+  }>({
     nome: '',
     email: '',
     password: '',
@@ -238,9 +249,9 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (error: any) {
-      console.error('Erro detalhado ao salvar funcionário:', error);
-      const msg = error.message || 'Erro desconhecido';
+    } catch (err) {
+      console.error('Erro detalhado ao salvar funcionário:', err);
+      const msg = (err as Error).message || 'Erro desconhecido';
       alert(`Erro ao criar funcionário: ${msg}`);
     } finally {
       setIsSubmitting(false);
@@ -340,7 +351,7 @@ function EmployeeModal({ onClose, onSave }: { onClose: () => void, onSave: (data
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase ml-1">Cargo / Role</label>
-              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as any})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-slate-700">
+              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as 'admin' | 'tecnico' | 'campo'})} className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-slate-700">
                 <option value="tecnico">Técnico</option>
                 <option value="admin">Administrador</option>
                 <option value="campo">Assistente de Campo</option>
@@ -395,7 +406,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
     try {
       const base64Url = await uploadFile('profiles', file);
       setDisplayUrl(base64Url);
-      await updateEmployee(employee.id, { foto_url: base64Url });
+      await (updateEmployee as any)(employee.id, { foto_url: base64Url });
     } catch (error) {
       console.error('Erro ao atualizar foto de perfil do funcionário:', error);
       alert('Erro ao fazer upload da foto.');
@@ -452,7 +463,7 @@ function EmployeeDetailModal({ employee, onClose }: { employee: UserProfile, onC
                 setIsLoading(true);
                 try {
                   setDisplayUrl(null);
-                  await updateEmployee(employee.id, { foto_url: '' });
+                  await (updateEmployee as any)(employee.id, { foto_url: '' });
                 } catch (err) {
                   console.error(err);
                   alert('Erro ao remover foto.');
