@@ -188,17 +188,16 @@
                     API, construção de prompts formatados) e expõe apenas métodos de alto nível para a aplicação, como
                     <code>getAIInterpretation()</code>.
                 </div>
-                <pre><code class="language-typescript" data-trim data-line-numbers="1,4-6,9-10">
+                <pre><code class="language-typescript" data-trim data-line-numbers="1,4-5,8-9">
 // src/services/geminiService.ts
-export async function getAIInterpretation(params: RiskData) {
+export const getAIInterpretation = async (payload: GeminiRequestPayload) => {
   // Complexidade interna ocultada da UI
-  const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  const prompt = buildPrompt(params);
+  const API_URL = `https://.../gemini-2.0-flash:generateContent?key=${API_KEY}`;
+  const response = await fetch(API_URL, { body: buildPrompt(payload) });
 
   // Componentes React só veem esta função simples
-  const result = await model.generateContent(prompt);
-  return parseResponse(result.response.text());
+  const data = await response.json();
+  return parseResponse(data);
 }
                 </code></pre>
             </section>
@@ -265,15 +264,15 @@ onAuthStateChanged(auth, async (firebaseUser) => {
                 </div>
                 <pre><code class="language-typescript" data-trim data-line-numbers="1-2,6,9-10">
 // Algoritmo de cálculo encapsulado em sua própria estratégia
-export function calcularRiscoISA(alvos: EntradaRisco[]): ISAResultado {
-  const matriz1 = calcularMatriz1(alvos);
+export function calcularRiscoISA(entradas: EntradaRisco[]): ResultadoISA {
+  const matriz1 = calcularMatriz1(entradas);
   const matriz2 = calcularMatriz2(matriz1);
   
   return aplicarMitigacoes(matriz2); // Resultado computado
 }
 
 // O componente LaudoModal consome a estratégia sem acoplamento
-const resultadoRisco = calcularRiscoISA(alvosConfigurados);
+const resultadoRisco = calcularRiscoISA(entradasConfiguradas);
                 </code></pre>
             </section>
 
@@ -290,15 +289,15 @@ const resultadoRisco = calcularRiscoISA(alvosConfigurados);
                 </div>
                 <pre><code class="language-typescript" data-trim data-line-numbers="1-2,4,7-8">
 // uiSlice.ts: Encapsula puramente regras e mutações de UI
-export const createUiSlice: StateCreator<AppStore, [], [], UiSlice> = (set) => ({
+export const createUISlice: AppSlice<UISliceType> = (set) => ({
   isSidebarOpen: false,
   toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
 });
 
 // useAppStore.ts: Composição modular (Store final)
-export const useAppStore = create<AppStore>()((...a) => ({
+export const useAppStore = create<AppState>()((...a) => ({
   ...createAuthSlice(...a),
-  ...createUiSlice(...a),
+  ...createUISlice(...a),
   ...createDataSlice(...a),
 }));
                 </code></pre>
