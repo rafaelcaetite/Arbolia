@@ -47,7 +47,7 @@ SUAS REGRAS ESTRITAS:
 
   // Percorre a lista de modelos sequencialmente
   for (const model of GEMINI_MODELS) {
-    let timeoutId: NodeJS.Timeout | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     try {
       logger.log(`Tentando obter interpretação da IA com o modelo: ${model}`);
