@@ -338,7 +338,7 @@ export function WeatherWidget({ formattedTime }: WeatherWidgetProps) {
 
       <div className="w-full h-[320px] relative z-10 mt-6 flex-1 min-h-[300px]">
         {weatherData.length > 0 && (
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={100}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} debounce={100}>
             <ComposedChart 
               data={weatherData} 
               margin={{ top: 10, right: -20, left: -20, bottom: 30 }}

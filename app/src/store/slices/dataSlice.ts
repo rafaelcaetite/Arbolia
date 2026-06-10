@@ -379,11 +379,11 @@ export const createDataSlice: AppSlice<DataSliceType> = (set, get) => ({
       const service = state.services.find(s => s.id === serviceId);
       if (!service) return;
 
-      const updates: Partial<Service> = {
+      const updates = JSON.parse(JSON.stringify({
         laudoGerado: true,
         laudoData,
         attachmentsByTree
-      };
+      })) as Partial<Service>;
 
       const updated = await api.updateService(serviceId, updates);
       
