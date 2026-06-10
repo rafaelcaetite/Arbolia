@@ -1,11 +1,20 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Lista de modelos ordenados por preferência (Tentativa 1 -> Tentativa 2)
-const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+// Definimos pares de modelo e versão da API para testar
+interface ModelConfig {
+  name: string;
+  apiVersion: 'v1' | 'v1beta';
+}
 
-// Função auxiliar para construir a URL com o modelo específico
-const getApiUrl = (model: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+const CONFIGS_TO_TRY: ModelConfig[] = [
+  { name: 'gemini-2.0-flash', apiVersion: 'v1' },     // 1ª Tentativa: 2.0 Estável
+  { name: 'gemini-2.0-flash', apiVersion: 'v1beta' }, // 2ª Tentativa: 2.0 Beta
+  { name: 'gemini-2.5-flash', apiVersion: 'v1beta' }, // 3ª Tentativa: 2.5 Beta (Alta compatibilidade)
+  { name: 'gemini-3.5-flash', apiVersion: 'v1beta' }  // 4ª Tentativa: 3.5 Beta
+];
+
+const getApiUrl = (model: string, version: string) =>
+  `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
 export interface GeminiResponse {
   resumo_estado_geral: string;
@@ -34,9 +43,8 @@ export const getAIInterpretation = async (payload: GeminiRequestPayload): Promis
 
 Você receberá um JSON contendo os dados brutos de uma inspeção de campo (espécie da árvore, defeitos encontrados, classificação de risco calculada e mitigações sugeridas).
 
-SUAS REGRAS ESTRITAS:
-1. Seja empático, claro e profissional.
-2. NÃO invente, adicione ou presuma nenhum dado, defeito, risco ou mitigação que não esteja explicitamente presente no JSON de entrada fornecido.
+1. Leia os dados JSON e formule um laudo técnico narrativo.
+2. Não adicione saudações, nem notas de rodapé, apenas responda com o conteúdo solicitado.
 3. Explique os jargões técnicos de forma breve (Ex: se o JSON citar 'Codominância' ou 'Dano no alburno', explique rapidamente o que isso significa para a estrutura da árvore).
 4. Você deve retornar EXCLUSIVAMENTE um objeto JSON válido, sem formatação markdown (\`\`\`json), contendo exatamente duas chaves:
    - "resumo_estado_geral": Um parágrafo de 4 a 5 linhas resumindo a saúde da árvore, os principais defeitos estruturais encontrados e justificando, de forma simples, por que a árvore atingiu a classificação de risco informada.
@@ -45,17 +53,16 @@ SUAS REGRAS ESTRITAS:
   const prompt = `Analise os seguintes dados de inspeção e gere o relatório em JSON:
   ${JSON.stringify(payload, null, 2)}`;
 
-  // Percorre a lista de modelos sequencialmente
-  for (const model of GEMINI_MODELS) {
+  for (const config of CONFIGS_TO_TRY) {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     try {
-      logger.log(`Tentando obter interpretação da IA com o modelo: ${model}`);
+      logger.log(`Tentando requisição com o modelo: ${config.name} via endpoint: ${config.apiVersion}`);
 
       const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 30000);
+      timeoutId = setTimeout(() => controller.abort(), 25000); // 25 segundos por tentativa
 
-      const apiUrl = getApiUrl(model);
+      const apiUrl = getApiUrl(config.name, config.apiVersion);
       const response = await fetch(apiUrl, {
         method: 'POST',
         signal: controller.signal,
@@ -79,36 +86,32 @@ SUAS REGRAS ESTRITAS:
       if (timeoutId) clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Status de erro HTTP: ${response.status} (${response.statusText})`);
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
       }
 
       const data = await response.json();
       let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!textResponse) {
-        throw new Error('O modelo retornou uma resposta vazia.');
+        throw new Error('O modelo retornou uma resposta sem conteúdo de texto.');
       }
 
-      // Limpeza de markdown caso o modelo adicione formatação
       textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-
       const parsedResponse = JSON.parse(textResponse) as GeminiResponse;
 
-      logger.log(`Interpretação IA recebida com sucesso utilizando o modelo: ${model}`);
+      logger.log(`Interpretação obtida com sucesso via ${config.name} (${config.apiVersion}).`);
       return parsedResponse;
 
     } catch (error) {
       if (timeoutId) clearTimeout(timeoutId);
 
       logger.warn(
-        `Falha ao tentar utilizar o modelo ${model}. Detalhes: ${error instanceof Error ? error.message : error
+        `Falha na tentativa com ${config.name} (${config.apiVersion}). Erro: ${error instanceof Error ? error.message : error
         }`
       );
-      // O loop continuará para o próximo modelo da lista
     }
   }
 
-  // Se o fluxo chegar aqui, significa que todos os modelos falharam
-  logger.error('Todos os modelos de IA configurados falharam na tentativa de obter a interpretação.');
+  logger.error('Nenhum modelo ou versão da API obteve resposta com sucesso.');
   return null;
 };
