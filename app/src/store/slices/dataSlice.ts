@@ -425,7 +425,9 @@ export const createDataSlice: AppSlice<DataSliceType> = (set, get) => ({
         [treeId]: [...(prev[treeId] ?? []), attachment],
       };
 
-      const updated = await api.updateService(serviceId, { attachmentsByTree: newAttachments });
+      // Sanitiza para remover valores não-serializáveis antes de enviar ao Firestore
+      const sanitized = JSON.parse(JSON.stringify({ attachmentsByTree: newAttachments }));
+      const updated = await api.updateService(serviceId, sanitized);
       set((state) => ({
         services: state.services.map(s => s.id === serviceId ? updated : s)
       }));
