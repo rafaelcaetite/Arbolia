@@ -266,7 +266,6 @@ arbolia/
 │   ├── test_firebase.py        # Validador de handshake com as APIs e buckets do Firebase
 │   ├── test_weather.py         # Validador de comunicação com a API de clima
 │   └── test_db_schema.py       # Validadores auxiliares
-├── gemini.md                   # Constituição do Projeto (Invariantes e leis imutáveis)
 └── README.md                   # Documentação corporativa da plataforma (esta folha)
 ```
 
